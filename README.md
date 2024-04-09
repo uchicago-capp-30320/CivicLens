@@ -1,7 +1,9 @@
 ##### Set Up Environment Variable for API Key
-For security reasons, we would want to use an Environment Variable to store the REgulations.gov API key.
+To obtain a regulations.gov API key, request one on [the API page](https://open.gsa.gov/api/regulationsgov/#getting-started)
 
-To set up the API key token as an environment variable:
+For security reasons, we would want to use an Environment Variable to store the API key.
+
+To set up the API key as an environment variable:
 
 for MacOS and Linux (bash):
 ```bash
@@ -11,7 +13,7 @@ $ source ~/.bashrc
 
 for MacOS and Linux (zsh):
 ```zsh
-$ echo 'export ENV_VAR="your_token_here"' >> ~/.zshenv
+$ echo 'export REG_GOV_API_KEY="your_token_here"' >> ~/.zshenv
 ```
 
 for Windows:

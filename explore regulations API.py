@@ -6,8 +6,6 @@ from requests.adapters import HTTPAdapter
 import pandas as pd
 import matplotlib as plt
 
-api_key = "0ckJnyYQwb3TzMYXej49nsvrrveRtODdyqZDt4HA"
-
 
 def get_document_ids(docket_id, api_key):
     docs_url = "https://api.regulations.gov/v4/documents?filter[docketId]={}&api_key={}".format(
