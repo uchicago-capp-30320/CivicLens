@@ -185,5 +185,4 @@ def pull_reg_gov_data(
                 if r_json["meta"]["lastPage"]:
                     return doc_data
 
-    print(r_json)
     raise RuntimeError(f"Unrecoverable error; {r_json}")
