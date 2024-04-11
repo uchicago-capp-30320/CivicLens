@@ -21,3 +21,5 @@ Run the following command to set the environment variable in the current session
 ```bash
 $ set REG_GOV_API_KEY=your_token_here
 ```
+
+For testing or temporary purposes, you can also set ```REG_GOV_API_KEY="DEMO_KEY"```. This is a demo functionality built into regulations.gov for cursory API access. 
