@@ -1,4 +1,4 @@
-import access_api_data
+from civiclens.data_engineering import access_api_data
 
 api_key = "DEMO_KEY"
 
