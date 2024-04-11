@@ -2,3 +2,5 @@
 __pycache__/access_api_data.cpython-311.pyc
 __pycache__/pull_reg_gov_data.cpython-311.pyc
 explore api.ipynb
+.DS_Store
+tests/__pycache__/test_access_api_data.cpython-311-pytest-8.1.1.pyc
