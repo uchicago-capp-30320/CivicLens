@@ -10,6 +10,9 @@ python = "^3.10"
 requests = "^2.31.0"
 pytest = "^8.1.1"
 pytest-mock = "^3.14.0"
+django = "^5.0.4"
+python-dotenv = "^1.0.1"
+psycopg2 = "^2.9.9"
 
 
 [tool.poetry.group.dev.dependencies]
