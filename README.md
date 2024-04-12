@@ -2,7 +2,7 @@
 
 CivicLens is a platform designed to abstract procedures and bureaucracy from the public commenting process. Our aim is to promote effective, accessible public commenting while providing transparency into the process, use plain language and human ideas to discuss federal rulemaking, and educate users on how commenting impacts government.
 
-![Test badge](https://github.com/uchicago-capp-30320/CivicLens/workflows/Test%20&%20Lint/badge.svg)
+![Test badge](https://github.com/uchicago-capp-30320/CivicLens/actions/workflows/lint-test.yml/badge.svg)
 
 ## Public Commenting
 
