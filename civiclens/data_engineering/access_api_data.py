@@ -4,11 +4,6 @@ from datetime import datetime
 from requests.adapters import HTTPAdapter
 import time
 
-api_key = os.getenv("REG_GOV_API_KEY")
-if not api_key:
-    print("Regulations.gov API key not found in environment variables, using DEMO_KEY")
-    api_key = "DEMO_KEY"
-
 """
 This code pulls heavily from the following existing repositories: 
 
