@@ -1,9 +1,10 @@
 import os
 import requests
 import xml.etree.ElementTree as ET
-
 from access_api_data import pull_reg_gov_data
-from constants import API_KEY
+import psycopg2
+from civiclens.utils import constants
+
 
 def fetch_fr_document_details(fr_doc_num):
     api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{fr_doc_num}.json?fields[]=full_text_xml_url"
@@ -26,7 +27,6 @@ def fetch_xml_content(url):
         print(f"Error fetching XML content from {url}: {response.status_code}")
         return None
     
-
 def parse_xml_content(xml_content):
     """
     Parses XML content and extracts relevant data such as agency type, CFR, RIN, title, summary, etc.
@@ -83,7 +83,7 @@ def parse_xml_content(xml_content):
 
     return extracted_data
 
-def process_documents(doc):
+def extract_xml_text_from_doc(doc):
     """
     Processes each document in the data_list, fetching and parsing its XML content.
     """
@@ -98,9 +98,29 @@ def process_documents(doc):
 
     return processed_data
 
+def verify_database_existence(table, db_field, api_field='Id'):
+    connection = psycopg2.connect(
+        database=constants.DATABASE_NAME,
+        user=constants.DATABASE_USER,
+        password=constants.DATABASE_PASSWORD,
+        host=constants.DATABASE_HOST,
+        port=constants.DATABASE_PORT,
+    )
+
+    cursor = connection.cursor()
+    command = f"SELECT * \
+                FROM {table} \
+                WHERE {db_field} = {api_field};"
+    cursor.execute(command)
+    response = cursor.fetchall()
+    connection.close()
+
+    return response
+
+
 # get documents
 doc_list = pull_reg_gov_data(
-    API_KEY, "documents", start_date="2024-01-01", end_date="2024-04-11"
+    constants.REG_GOV_API_KEY, "documents", start_date="2024-01-01", end_date="2024-04-11"
 )
 
 """ 
@@ -111,38 +131,38 @@ the documents being put into a database, or with a while loop
 commentable_docs = []
 for doc in doc_list:
     if doc["openForComment"]:
-        if doc["id"] not in DOCUMENTS_DATABASE:
+        if not verify_database_existence('Documents', doc["id"]):
             commentable_docs.append(doc)
             # extract the document text using the general register API
-
             fr_doc_num = doc.get('attributes', {}).get('frDocNum')
             if fr_doc_num:
+                # does this work or make sense??????
                 full_text_url = fetch_fr_document_details(fr_doc_num)
-                data_list.append({'Docket ID': docket_id, 'FR Doc Number': fr_doc_num, 'Full Text XML URL': full_text_url})
+                extract_xml_text_from_doc(doc)
 
             # add this doc to the documents table in the database
 
 for doc in commentable_docs:
     docket_id = doc["docketId"]
     document_id = doc["id"]
-    if docket_id not in DOCKET_DATABASE:
+    if not verify_database_existence('Dockets', docket_id):
         docket_data = pull_reg_gov_data(
-            API_KEY, "dockets", params={"filter[searchTerm]": docket_id}
+            constants.REG_GOV_API_KEY, "dockets", params={"filter[searchTerm]": docket_id}
         )
         # add docket_data to docket table in the database
 
     # get the other documents
     docket_docs = pull_reg_gov_data(
-        API_KEY, "documents", params={"filter[searchTerm]": docket_id}
+        constants.REG_GOV_API_KEY, "documents", params={"filter[searchTerm]": docket_id}
     )
 
-    for doc in docket_docs:
-        if doc not in DOCUMENTS_DATABASE:
+    for dock_doc in docket_docs:
+        if not verify_database_existence('Documents', doc["id"]):
             # add doc to the database
 
-    if document_id not in COMMENTS_DATABASE:
+    if not verify_database_existence('Comments', 'objectId',document_id):
         comment_data = pull_reg_gov_data(
-            API_KEY, "comments", params={"filter[searchTerm]": document_id}
+            constants.REG_GOV_API_KEY, "comments", params={"filter[searchTerm]": document_id}
         )
         # add comment data to comments table in the database
         # potentially go one step further and get the comment text, as well
@@ -153,7 +173,7 @@ for doc in commentable_docs:
 
         # CHECK THAT WE ARE FILTERING ON THE RIGHT FIELD FOR DATE
         comment_data = pull_reg_gov_data(
-            API_KEY,
+            constants.REG_GOV_API_KEY,
             "comments",
             params={
                 "filter[searchTerm]": document_id,
@@ -169,7 +189,7 @@ for comment in comment_data:
     comment_id = comment['Id']
 
     comment_text_data = pull_reg_gov_data(
-        API_KEY, "comments", params={"filter[searchTerm]": comment_id}
+        constants.REG_GOV_API_KEY, "comments", params={"filter[searchTerm]": comment_id}
     )
 
     # put comment_text_data into comments table 
