@@ -3,6 +3,7 @@ import requests
 import xml.etree.ElementTree as ET
 from access_api_data import pull_reg_gov_data
 import psycopg2
+import json
 from civiclens.utils import constants
 
 
@@ -98,7 +99,7 @@ def extract_xml_text_from_doc(doc):
 
     return processed_data
 
-def verify_database_existence(table, db_field, api_field='Id'):
+def connect_db_and_get_cursor():
     connection = psycopg2.connect(
         database=constants.DATABASE_NAME,
         user=constants.DATABASE_USER,
@@ -106,16 +107,37 @@ def verify_database_existence(table, db_field, api_field='Id'):
         host=constants.DATABASE_HOST,
         port=constants.DATABASE_PORT,
     )
-
     cursor = connection.cursor()
-    command = f"SELECT * \
-                FROM {table} \
-                WHERE {db_field} = {api_field};"
-    cursor.execute(command)
-    response = cursor.fetchall()
-    connection.close()
+    return connection, cursor
 
-    return response
+def verify_database_existence(table, db_field, api_field='Id'):
+    connection, cursor = connect_db_and_get_cursor()
+    with connection:
+        with cursor:
+            command = f"SELECT * \
+                        FROM {table} \
+                        WHERE {db_field} = {api_field};"
+            cursor.execute(command)
+            response = cursor.fetchall()
+
+    return response is not None
+
+def insert_docket_into_db(docket_data):
+
+    # need to check that docket_data is in the right format
+
+    data_for_db = json.loads(docket_data)
+
+    connection, cursor = connect_db_and_get_cursor()
+
+    connection.close()
+    return
+
+def insert_document_into_db():
+    return
+
+def insert_comment_into_db():
+    return
 
 
 # get documents
