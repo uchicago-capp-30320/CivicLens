@@ -110,28 +110,49 @@ def connect_db_and_get_cursor():
     cursor = connection.cursor()
     return connection, cursor
 
-def verify_database_existence(table, db_field, api_field='Id'):
+def verify_database_existence(table, api_field_val, db_field = 'id'):
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            command = f"SELECT * \
+            query = f"SELECT * \
                         FROM {table} \
-                        WHERE {db_field} = {api_field};"
-            cursor.execute(command)
+                        WHERE {db_field} = '{api_field_val}';"
+            cursor.execute(query)
             response = cursor.fetchall()
 
-    return response is not None
+    return response != []
+
+def get_most_recent_doc_comment_date(doc_id):
+    connection, cursor = connect_db_and_get_cursor()
+    with connection:
+        with cursor:
+            query = f"SELECT MAX(postedDate) \
+                        FROM Comments \
+                        WHERE commentOnDocumentId = '{doc_id}';"
+            cursor.execute(query)
+            response = cursor.fetchall()
+
+    return response
 
 def insert_docket_into_db(docket_data):
 
     # need to check that docket_data is in the right format
 
     data_for_db = json.loads(docket_data)
+    attributes = data_for_db['attributes']
+    try:
 
-    connection, cursor = connect_db_and_get_cursor()
-
-    connection.close()
-    return
+        connection, cursor = connect_db_and_get_cursor()
+    
+        with connection:
+            with cursor:
+                """
+                    INSERT INTO dockets (id, docket_type, last_modified_date, agency_id, title, object_id, highlighted_content)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (data_for_db['id'], attributes['docketType'], attributes['lastModifiedDate'],
+                    attributes['agencyId'], attributes['title'], attributes['objectId'], attributes['highlightedContent'])
+    except psycopg2.Error as e:
+        print("Error inserting data:", e)
 
 def insert_document_into_db():
     return
@@ -152,7 +173,7 @@ the documents being put into a database, or with a while loop
 
 commentable_docs = []
 for doc in doc_list:
-    if doc["openForComment"]:
+    if doc['attributes']["openForComment"]:
         if not verify_database_existence('Documents', doc["id"]):
             commentable_docs.append(doc)
             # extract the document text using the general register API
@@ -165,13 +186,14 @@ for doc in doc_list:
             # add this doc to the documents table in the database
 
 for doc in commentable_docs:
-    docket_id = doc["docketId"]
-    document_id = doc["id"]
+    docket_id = doc['attributes']["docketId"]
+    document_id = doc['attributes']["id"]
     if not verify_database_existence('Dockets', docket_id):
         docket_data = pull_reg_gov_data(
             constants.REG_GOV_API_KEY, "dockets", params={"filter[searchTerm]": docket_id}
         )
         # add docket_data to docket table in the database
+        insert_docket_into_db(docket_data)
 
     # get the other documents
     docket_docs = pull_reg_gov_data(
@@ -182,7 +204,7 @@ for doc in commentable_docs:
         if not verify_database_existence('Documents', doc["id"]):
             # add doc to the database
 
-    if not verify_database_existence('Comments', 'objectId',document_id):
+    if not verify_database_existence('Comments', 'objectId', document_id):
         comment_data = pull_reg_gov_data(
             constants.REG_GOV_API_KEY, "comments", params={"filter[searchTerm]": document_id}
         )
@@ -191,7 +213,7 @@ for doc in commentable_docs:
 
     else:
         # get date of most recent comment on this doc
-        most_recent_comment_data = 0  # change this
+        most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
 
         # CHECK THAT WE ARE FILTERING ON THE RIGHT FIELD FOR DATE
         comment_data = pull_reg_gov_data(
@@ -199,19 +221,18 @@ for doc in commentable_docs:
             "comments",
             params={
                 "filter[searchTerm]": document_id,
-                "filter[lastModifiedDate][ge]": most_recent_comment_data,
+                "filter[lastModifiedDate][ge]": most_recent_comment_date,
             },
         )
 
-        # add comment data to comments table in the database
-        # potentially go one step further and get the comment text, as well
+        # add comment text to DB
 
-for comment in comment_data:
-    # extract the comment text
-    comment_id = comment['Id']
+        for comment in comment_data:
+            # extract the comment text
+            comment_id = comment['Id']
 
-    comment_text_data = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY, "comments", params={"filter[searchTerm]": comment_id}
-    )
+            comment_text_data = pull_reg_gov_data(
+                constants.REG_GOV_API_KEY, "comments", params={"filter[searchTerm]": comment_id}
+            )
 
-    # put comment_text_data into comments table 
+            # put comment_text_data into comments table 
