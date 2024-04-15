@@ -12,11 +12,14 @@ def fetch_fr_document_details(fr_doc_num):
     response = requests.get(api_endpoint)
     if response.status_code == 200:
         data = response.json()
-        return data.get('full_text_xml_url')
+        return data.get("full_text_xml_url")
     else:
-        print(f"Error fetching FR document details for {fr_doc_num}: {response.status_code}")
+        print(
+            f"Error fetching FR document details for {fr_doc_num}: {response.status_code}"
+        )
         return None
-    
+
+
 def fetch_xml_content(url):
     """
     Fetches XML content from a given URL.
@@ -27,7 +30,8 @@ def fetch_xml_content(url):
     else:
         print(f"Error fetching XML content from {url}: {response.status_code}")
         return None
-    
+
+
 def parse_xml_content(xml_content):
     """
     Parses XML content and extracts relevant data such as agency type, CFR, RIN, title, summary, etc.
@@ -40,35 +44,39 @@ def parse_xml_content(xml_content):
 
     # Extract Agency Type
     agency_type = root.find('.//AGENCY[@TYPE="S"]')
-    extracted_data['Agency Type'] = agency_type.text if agency_type is not None else 'Not Found'
+    extracted_data["agencyType"] = (
+        agency_type.text if agency_type is not None else "Not Found"
+    )
 
     # Extract CFR
-    cfr = root.find('.//CFR')
-    extracted_data['CFR'] = cfr.text if cfr is not None else 'Not Found'
+    cfr = root.find(".//CFR")
+    extracted_data["CFR"] = cfr.text if cfr is not None else "Not Found"
 
     # Extract RIN
-    rin = root.find('.//RIN')
-    extracted_data['RIN'] = rin.text if rin is not None else 'Not Found'
+    rin = root.find(".//RIN")
+    extracted_data["RIN"] = rin.text if rin is not None else "Not Found"
 
     # Extract Title (Subject)
-    title = root.find('.//SUBJECT')
-    extracted_data['Title'] = title.text if title is not None else 'Not Found'
+    title = root.find(".//SUBJECT")
+    extracted_data["title"] = title.text if title is not None else "Not Found"
 
     # Extract Summary
-    summary = root.find('.//SUM/P')
-    extracted_data['Summary'] = summary.text if summary is not None else 'Not Found'
+    summary = root.find(".//SUM/P")
+    extracted_data["summary"] = summary.text if summary is not None else "Not Found"
 
     # Extract DATES
-    dates = root.find('.//DATES/P')
-    extracted_data['Dates'] = dates.text if dates is not None else 'Not Found'
+    dates = root.find(".//DATES/P")
+    extracted_data["dates"] = dates.text if dates is not None else "Not Found"
 
     # Extract Further Information
-    furinf = root.find('.//FURINF/P')
-    extracted_data['Further Information'] = furinf.text if furinf is not None else 'Not Found'
+    furinf = root.find(".//FURINF/P")
+    extracted_data["furtherInformation"] = (
+        furinf.text if furinf is not None else "Not Found"
+    )
 
     # Extract Supplementary Information
     supl_info_texts = []
-    supl_info_elements = root.findall('.//SUPLINF/*')
+    supl_info_elements = root.findall(".//SUPLINF/*")
     for element in supl_info_elements:
         # Assuming we want to gather all text from children tags within <SUPLINF>
         if element.text is not None:
@@ -78,11 +86,12 @@ def parse_xml_content(xml_content):
                 supl_info_texts.append(sub_element.text.strip())
 
     # Join all pieces of supplementary information text into a single string
-    extracted_data['Supplementary Information'] = " ".join(supl_info_texts)
+    extracted_data["supplementaryInformation"] = " ".join(supl_info_texts)
 
     # Add more based on discussion with Backend team
 
     return extracted_data
+
 
 def extract_xml_text_from_doc(doc):
     """
@@ -90,7 +99,7 @@ def extract_xml_text_from_doc(doc):
     """
     processed_data = []
 
-    xml_url = doc.get('Full Text XML URL')
+    xml_url = doc.get("Full Text XML URL")
     if xml_url:
         xml_content = fetch_xml_content(xml_url)
         if xml_content:
@@ -98,6 +107,7 @@ def extract_xml_text_from_doc(doc):
             processed_data.append({**doc, **extracted_data})
 
     return processed_data
+
 
 def connect_db_and_get_cursor():
     connection = psycopg2.connect(
@@ -110,7 +120,8 @@ def connect_db_and_get_cursor():
     cursor = connection.cursor()
     return connection, cursor
 
-def verify_database_existence(table, api_field_val, db_field = 'id'):
+
+def verify_database_existence(table, api_field_val, db_field="id"):
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
@@ -121,6 +132,7 @@ def verify_database_existence(table, api_field_val, db_field = 'id'):
             response = cursor.fetchall()
 
     return response != []
+
 
 def get_most_recent_doc_comment_date(doc_id):
     connection, cursor = connect_db_and_get_cursor()
@@ -134,28 +146,124 @@ def get_most_recent_doc_comment_date(doc_id):
 
     return response
 
+
 def insert_docket_into_db(docket_data):
 
     # need to check that docket_data is in the right format
 
     data_for_db = json.loads(docket_data)
-    attributes = data_for_db['attributes']
+    attributes = data_for_db["attributes"]
     try:
 
         connection, cursor = connect_db_and_get_cursor()
-    
+
         with connection:
             with cursor:
-                """
-                    INSERT INTO dockets (id, docket_type, last_modified_date, agency_id, title, object_id, highlighted_content)
+                cursor.execute(
+                    """
+                    INSERT INTO Dockets (id, docket_type, last_modified_date, agency_id, title, object_id, highlighted_content)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """, (data_for_db['id'], attributes['docketType'], attributes['lastModifiedDate'],
-                    attributes['agencyId'], attributes['title'], attributes['objectId'], attributes['highlightedContent'])
+                """,
+                    (
+                        data_for_db["id"],
+                        attributes["docketType"],
+                        attributes["lastModifiedDate"],
+                        attributes["agencyId"],
+                        attributes["title"],
+                        attributes["objectId"],
+                        attributes["highlightedContent"],
+                    ),
+                )
     except psycopg2.Error as e:
-        print("Error inserting data:", e)
+        print(f"Error inserting docket {docket_data['id']} into dockets table: {e}")
 
-def insert_document_into_db():
-    return
+
+def query_register_API_and_merge_document_data(doc):
+    """
+    Attempts to pull document text via federal register API and merge with reg gov API data
+
+    Inputs:
+        doc (json): the raw json for a document from regulations.gov API
+
+    Outputs:
+        merged_doc (json): the json with fields for text from federal register API
+    """
+
+    # extract the document text using the general register API
+    fr_doc_num = doc.get("attributes", {}).get("frDocNum")
+    if fr_doc_num:
+        xml_url = fetch_fr_document_details(fr_doc_num)
+        xml_content = fetch_xml_content(xml_url)
+        parsed_xml_content = parse_xml_content(xml_content)
+        doc.update(parsed_xml_content)
+    else:
+        blank_xml_fields = {
+            "agencyType": None,
+            "CFR": None,
+            "RIN": None,
+            "title": None,
+            "summary": None,
+            "dates": None,
+            "furtherInformation": None,
+            "supplementaryInformation": None,
+        }
+        doc.update(blank_xml_fields)
+
+    return doc
+
+
+def insert_document_into_db(document_data):
+    data_for_db = json.loads(document_data)
+    attributes = data_for_db["attributes"]
+
+    try:
+
+        connection, cursor = connect_db_and_get_cursor()
+
+        # TODO: update this SQL code
+
+        with connection:
+            with cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO Documents (id, documentType, lastModifiedDate, frDocNum, withdrawn, agencyId, commentEndDate,
+                                           postedDate, docTitle, docketId, subtype, commentStartDate, openForComment,
+                                           objectId, fullTextXmlUrl, subAgy, agencyType, CFR, RIN, title, summary,
+                                           dates, furtherInformation, supplementaryInformation, fullText)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                    (
+                        data_for_db["id"],
+                        attributes["documentType"],
+                        attributes["lastModifiedDate"],
+                        attributes["frDocNum"],
+                        attributes["withdrawn"],
+                        attributes["agencyId"],
+                        attributes["commentEndDate"],
+                        attributes["postedDate"],
+                        attributes["title"],
+                        attributes["docketId"],
+                        attributes["subtype"],
+                        attributes["commentStartDate"],
+                        attributes["openForComment"],
+                        attributes["objectId"],
+                        data_for_db["links"]["self"],
+                        None,
+                        None,
+                        None,
+                        None,
+                        attributes["title"],
+                        None,
+                        None,
+                        None,
+                        None,
+                    ),
+                )
+    except psycopg2.Error as e:
+        print(
+            f"Error inserting document {document_data['id']} into documents table: {e}"
+        )
+
 
 def insert_comment_into_db():
     return
@@ -163,7 +271,10 @@ def insert_comment_into_db():
 
 # get documents
 doc_list = pull_reg_gov_data(
-    constants.REG_GOV_API_KEY, "documents", start_date="2024-01-01", end_date="2024-04-11"
+    constants.REG_GOV_API_KEY,
+    "documents",
+    start_date="2024-01-01",
+    end_date="2024-04-11",
 )
 
 """ 
@@ -173,24 +284,20 @@ the documents being put into a database, or with a while loop
 
 commentable_docs = []
 for doc in doc_list:
-    if doc['attributes']["openForComment"]:
-        if not verify_database_existence('Documents', doc["id"]):
+    if doc["attributes"]["openForComment"]:
+        if not verify_database_existence("Documents", doc["id"]):
             commentable_docs.append(doc)
-            # extract the document text using the general register API
-            fr_doc_num = doc.get('attributes', {}).get('frDocNum')
-            if fr_doc_num:
-                # does this work or make sense??????
-                full_text_url = fetch_fr_document_details(fr_doc_num)
-                extract_xml_text_from_doc(doc)
 
             # add this doc to the documents table in the database
 
 for doc in commentable_docs:
-    docket_id = doc['attributes']["docketId"]
-    document_id = doc['attributes']["id"]
-    if not verify_database_existence('Dockets', docket_id):
+    docket_id = doc["attributes"]["docketId"]
+    document_id = doc["attributes"]["id"]
+    if not verify_database_existence("Dockets", docket_id):
         docket_data = pull_reg_gov_data(
-            constants.REG_GOV_API_KEY, "dockets", params={"filter[searchTerm]": docket_id}
+            constants.REG_GOV_API_KEY,
+            "dockets",
+            params={"filter[searchTerm]": docket_id},
         )
         # add docket_data to docket table in the database
         insert_docket_into_db(docket_data)
@@ -201,12 +308,15 @@ for doc in commentable_docs:
     )
 
     for dock_doc in docket_docs:
-        if not verify_database_existence('Documents', doc["id"]):
-            # add doc to the database
+        if not verify_database_existence("Documents", dock_doc["id"]):
+            full_doc_info = query_register_API_and_merge_document_data(doc)
+            insert_document_into_db(full_doc_info)
 
-    if not verify_database_existence('Comments', 'objectId', document_id):
+    if not verify_database_existence("Comments", "objectId", document_id):
         comment_data = pull_reg_gov_data(
-            constants.REG_GOV_API_KEY, "comments", params={"filter[searchTerm]": document_id}
+            constants.REG_GOV_API_KEY,
+            "comments",
+            params={"filter[searchTerm]": document_id},
         )
         # add comment data to comments table in the database
         # potentially go one step further and get the comment text, as well
@@ -229,10 +339,12 @@ for doc in commentable_docs:
 
         for comment in comment_data:
             # extract the comment text
-            comment_id = comment['Id']
+            comment_id = comment["Id"]
 
             comment_text_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY, "comments", params={"filter[searchTerm]": comment_id}
+                constants.REG_GOV_API_KEY,
+                "comments",
+                params={"filter[searchTerm]": comment_id},
             )
 
-            # put comment_text_data into comments table 
+            # put comment_text_data into comments table
