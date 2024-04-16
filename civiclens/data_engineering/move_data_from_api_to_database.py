@@ -159,9 +159,9 @@ def verify_database_existence(table, api_field_val, db_field="id"):
     with connection:
         with cursor:
             query = f"SELECT * \
-                        FROM {table} \
-                        WHERE {db_field} = '{api_field_val}';"
-            cursor.execute(query)
+                    FROM {table} \
+                    WHERE {db_field} = %s;"
+            cursor.execute(query, (api_field_val,))
             response = cursor.fetchall()
 
     return response != []
@@ -179,7 +179,7 @@ def get_most_recent_doc_comment_date(doc_id):
     with connection:
         with cursor:
             query = f"SELECT MAX(postedDate) \
-                        FROM Comments \
+                        FROM PublicComments \
                         WHERE commentOnDocumentId = '{doc_id}';"
             cursor.execute(query)
             response = cursor.fetchall()
@@ -541,7 +541,8 @@ for doc in doc_list:
 
 for doc in commentable_docs:
     docket_id = doc["attributes"]["docketId"]
-    document_id = doc["attributes"]["id"]
+    document_id = doc["id"]
+    # if docket not in db, add it
     if not verify_database_existence("Dockets", docket_id):
         docket_data = pull_reg_gov_data(
             constants.REG_GOV_API_KEY,
@@ -556,18 +557,22 @@ for doc in commentable_docs:
         constants.REG_GOV_API_KEY, "documents", params={"filter[searchTerm]": docket_id}
     )
 
+    # for documents of the docket, if they're not in db, add them
     for dock_doc in docket_docs:
         if not verify_database_existence("Documents", dock_doc["id"]):
             # add this doc to the documents table in the database
-            full_doc_info = query_register_API_and_merge_document_data(doc)
+            full_doc_info = query_register_API_and_merge_document_data(dock_doc)
             insert_document_into_db(full_doc_info)
 
+    document_object_id = doc["attributes"]["objectId"]
     # get the comments, comment text, and add to db
-    if not verify_database_existence("Comments", "objectId", document_id):
+    if not verify_database_existence(
+        "PublicComments", document_id, "commentOnDocumentId"
+    ):
         comment_data = pull_reg_gov_data(
             constants.REG_GOV_API_KEY,
             "comments",
-            params={"filter[searchTerm]": document_id},
+            params={"filter[commentOnId]": document_object_id},
         )
         # add comment data to comments table in the database
         for comment in comment_data:
@@ -585,7 +590,7 @@ for doc in commentable_docs:
             constants.REG_GOV_API_KEY,
             "comments",
             params={
-                "filter[searchTerm]": document_id,
+                "filter[commentOnId]": document_object_id,
                 "filter[lastModifiedDate][ge]": most_recent_comment_date,
             },
         )
