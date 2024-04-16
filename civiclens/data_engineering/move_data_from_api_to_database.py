@@ -12,6 +12,13 @@ from civiclens.utils import constants
 
 
 def fetch_fr_document_details(fr_doc_num):
+    """
+    Retrieves xml url for document text from federal register.
+
+    Input: fr_doc_num (str): the unique id (comes from regulations.gov api info)
+
+    Returns: xml url (str)
+    """
     api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{fr_doc_num}.json?fields[]=full_text_xml_url"
     response = requests.get(api_endpoint)
     if response.status_code == 200:
@@ -25,6 +32,10 @@ def fetch_fr_document_details(fr_doc_num):
 def fetch_xml_content(url):
     """
     Fetches XML content from a given URL.
+
+    Input: url (str): the xml url that we want to retrive text from
+
+    Returns: response.text (str): the text
     """
     response = requests.get(url)
     if response.status_code == 200:
@@ -37,6 +48,10 @@ def fetch_xml_content(url):
 def parse_xml_content(xml_content):
     """
     Parses XML content and extracts relevant data such as agency type, CFR, RIN, title, summary, etc.
+
+    Input: xml_content (str): xml formatted text
+
+    Returns: extracted_data (dict): contains key parts of the extracted text
     """
     # Convert the XML string to an ElementTree object
     root = ET.fromstring(xml_content)
@@ -90,19 +105,22 @@ def parse_xml_content(xml_content):
     # Join all pieces of supplementary information text into a single string
     extracted_data["supplementaryInformation"] = " ".join(supl_info_texts)
 
-    # Add more based on discussion with Backend team
-
     return extracted_data
 
 
 def extract_xml_text_from_doc(doc):
     """
-    Processes each document in the data_list, fetching and parsing its XML content.
+    Take a document's json object, pull the xml text, add the text to the object
+
+    Input: doc (json): the object from regulations.gov API
+
+    Returns: processed_data (json): the object with added text
     """
     processed_data = []
 
-    xml_url = doc.get("Full Text XML URL")
-    if xml_url:
+    fr_doc_num = doc["attributes"]["frDocNum"]
+    if fr_doc_num:
+        xml_url = fetch_fr_document_details(fr_doc_num)
         xml_content = fetch_xml_content(xml_url)
         if xml_content:
             extracted_data = parse_xml_content(xml_content)
@@ -112,6 +130,9 @@ def extract_xml_text_from_doc(doc):
 
 
 def connect_db_and_get_cursor():
+    """
+    Connect to the CivicLens database and return the objects
+    """
     connection = psycopg2.connect(
         database=constants.DATABASE_NAME,
         user=constants.DATABASE_USER,
@@ -124,6 +145,16 @@ def connect_db_and_get_cursor():
 
 
 def verify_database_existence(table, api_field_val, db_field="id"):
+    """
+    Use regulations.gov API to confirm a row exists in a db table
+
+    Inputs:
+        table (str): one of the tables in the CivicLens db
+        api_field_val (str): the value we're looking for in the table
+        db_field (str): the field in the table where we're looking for the value
+
+    Returns: boolean indicating the value was found
+    """
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
@@ -137,6 +168,13 @@ def verify_database_existence(table, api_field_val, db_field="id"):
 
 
 def get_most_recent_doc_comment_date(doc_id):
+    """
+    Returns the date of the most recent comment for a doc
+
+    Input: doc_id (str): the regulations.gov doc id
+
+    Returns: response (datetime): the most recent date
+    """
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
@@ -150,6 +188,13 @@ def get_most_recent_doc_comment_date(doc_id):
 
 
 def insert_docket_into_db(docket_data):
+    """
+    Insert the info on a docket into the dockets table
+
+    Input: docket_data (json): the docket info from regulations.gov API
+
+    Returns: nothing unless an error; adds the info into the table
+    """
 
     # need to check that docket_data is in the right format
 
@@ -187,10 +232,9 @@ def query_register_API_and_merge_document_data(doc):
     """
     Attempts to pull document text via federal register API and merge with reg gov API data
 
-    Inputs:
-        doc (json): the raw json for a document from regulations.gov API
+    Input: doc (json): the raw json for a document from regulations.gov API
 
-    Outputs:
+    Returns:
         merged_doc (json): the json with fields for text from federal register API
     """
 
@@ -223,6 +267,13 @@ def query_register_API_and_merge_document_data(doc):
 
 
 def insert_document_into_db(document_data):
+    """
+    Insert the info on a document into the documents table
+
+    Input: document_data (json): the document info from regulations.gov API
+
+    Returns: nothing unless an error; adds the info into the table
+    """
     data_for_db = json.loads(document_data)
     attributes = data_for_db["attributes"]
 
@@ -275,6 +326,15 @@ def insert_document_into_db(document_data):
 
 
 def get_comment_text(api_key, comment_id):
+    """
+    Get the text of a comment
+
+    Inputs:
+        api_key (str): key for the regulations.gov API
+        comment_id (str): the id for the comment
+
+    Returns: the json object for the comment text
+    """
     api_url = "https://api.regulations.gov/v4/comments/"
     endpoint = f"{api_url}{comment_id}?include=attachments&api_key={api_key}"
     response = requests.get(endpoint)
@@ -286,6 +346,15 @@ def get_comment_text(api_key, comment_id):
 
 
 def merge_comment_text_and_data(api_key, comment_data):
+    """
+    Combine comment json object with the comment text json object
+
+    Inputs:
+        api_key (str): key for the regulations.gov API
+        comment_data (json): the json object from regulations.gov
+
+    Returns: the combined json object for the comment and text
+    """
 
     comment_text_data = get_comment_text(api_key, comment_data["id"])
 
@@ -297,6 +366,13 @@ def merge_comment_text_and_data(api_key, comment_data):
 
 
 def insert_comment_into_db(comment_data):
+    """
+    Insert the info on a comment into the PublicComments table
+
+    Input: comment_data (json): the comment info from regulations.gov API
+
+    Returns: nothing unless an error; adds the info into the table
+    """
     connection, cursor = connect_db_and_get_cursor()
 
     data_for_db = json.loads(comment_data)
