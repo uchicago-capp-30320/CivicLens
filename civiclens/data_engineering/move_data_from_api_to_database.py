@@ -1,9 +1,13 @@
 import os
 import requests
 import xml.etree.ElementTree as ET
-from access_api_data import pull_reg_gov_data
 import psycopg2
 import json
+from requests.adapters import HTTPAdapter
+from datetime import datetime
+
+from access_api_data import pull_reg_gov_data
+import access_api_data
 from civiclens.utils import constants
 
 
@@ -14,10 +18,8 @@ def fetch_fr_document_details(fr_doc_num):
         data = response.json()
         return data.get("full_text_xml_url")
     else:
-        print(
-            f"Error fetching FR document details for {fr_doc_num}: {response.status_code}"
-        )
-        return None
+        error_message = f"Error fetching FR document details for {fr_doc_num}: {response.status_code}"
+        raise Exception(error_message)
 
 
 def fetch_xml_content(url):
@@ -28,8 +30,8 @@ def fetch_xml_content(url):
     if response.status_code == 200:
         return response.text
     else:
-        print(f"Error fetching XML content from {url}: {response.status_code}")
-        return None
+        error_message = f"Error fetching XML content from {url}: {response.status_code}"
+        raise Exception(error_message)
 
 
 def parse_xml_content(xml_content):
@@ -175,7 +177,10 @@ def insert_docket_into_db(docket_data):
                     ),
                 )
     except psycopg2.Error as e:
-        print(f"Error inserting docket {docket_data['id']} into dockets table: {e}")
+        error_message = (
+            f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
+        )
+        print(error_message)
 
 
 def query_register_API_and_merge_document_data(doc):
@@ -192,10 +197,15 @@ def query_register_API_and_merge_document_data(doc):
     # extract the document text using the general register API
     fr_doc_num = doc.get("attributes", {}).get("frDocNum")
     if fr_doc_num:
-        xml_url = fetch_fr_document_details(fr_doc_num)
-        xml_content = fetch_xml_content(xml_url)
-        parsed_xml_content = parse_xml_content(xml_content)
-        doc.update(parsed_xml_content)
+        try:
+            xml_url = fetch_fr_document_details(fr_doc_num)
+            xml_content = fetch_xml_content(xml_url)
+            parsed_xml_content = parse_xml_content(xml_content)
+            doc.update(parsed_xml_content)
+        except:
+            error_message = f"Error accessing federal register xml data {fr_doc_num}"
+            raise Exception(error_message)
+
     else:
         blank_xml_fields = {
             "agencyType": None,
@@ -220,7 +230,7 @@ def insert_document_into_db(document_data):
 
         connection, cursor = connect_db_and_get_cursor()
 
-        # TODO: update this SQL code
+        # TODO: confirm this SQL code
 
         with connection:
             with cursor:
@@ -228,8 +238,8 @@ def insert_document_into_db(document_data):
                     """
                     INSERT INTO Documents (id, documentType, lastModifiedDate, frDocNum, withdrawn, agencyId, commentEndDate,
                                            postedDate, docTitle, docketId, subtype, commentStartDate, openForComment,
-                                           objectId, fullTextXmlUrl, subAgy, agencyType, CFR, RIN, title, summary,
-                                           dates, furtherInformation, supplementaryInformation, fullText)
+                                           objectId, fullTextXmlUrl, agencyType, CFR, RIN, title, summary,
+                                           dates, furtherInformation, supplementaryInformation)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                     (
@@ -248,15 +258,14 @@ def insert_document_into_db(document_data):
                         attributes["openForComment"],
                         attributes["objectId"],
                         data_for_db["links"]["self"],
-                        None,
-                        None,
-                        None,
-                        None,
+                        data_for_db["agencyType"],
+                        data_for_db["CFR"],
+                        data_for_db["RIN"],
                         attributes["title"],
-                        None,
-                        None,
-                        None,
-                        None,
+                        data_for_db["summary"],
+                        data_for_db["dates"],
+                        data_for_db["furtherInformation"],
+                        data_for_db["supplementaryInformation"],
                     ),
                 )
     except psycopg2.Error as e:
@@ -265,9 +274,177 @@ def insert_document_into_db(document_data):
         )
 
 
-def insert_comment_into_db():
-    return
+def get_comment_text(api_key, comment_id):
+    api_url = "https://api.regulations.gov/v4/comments/"
+    endpoint = f"{api_url}{comment_id}?include=attachments&api_key={api_key}"
+    response = requests.get(endpoint)
 
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Failed to retrieve data. Status code: {response.status_code}")
+
+
+def merge_comment_text_and_data(api_key, comment_data):
+
+    comment_text_data = get_comment_text(api_key, comment_data["id"])
+
+    # DECISION: only track the comment data; don't include the info on comment
+    # attachments which is found elsewhere in comment_text_data
+
+    all_comment_data = {**comment_data, **comment_text_data}
+    return all_comment_data
+
+
+def insert_comment_into_db(comment_data):
+    connection, cursor = connect_db_and_get_cursor()
+
+    data_for_db = json.loads(comment_data)
+    attributes = data_for_db["attributes"]
+    comment_text_attributes = data_for_db["data"]["attributes"]
+
+    # Map JSON attributes to corresponding table columns
+    comment_id = data_for_db["id"]
+    objectId = attributes.get("objectId", "")
+    # commentOn = .get("commentOn", "") # what is this? comment title?
+    commentOnDocumentId = comment_text_attributes.get("commentOnDocumentId", "")
+    duplicateComments = comment_text_attributes.get("duplicateComments", 0)
+    stateProvinceRegion = comment_text_attributes.get("stateProvinceRegion", "")
+    subtype = comment_text_attributes.get("subtype", "")
+    comment = comment_text_attributes.get("comment", "")
+    firstName = comment_text_attributes.get("firstName", "")
+    lastName = comment_text_attributes.get("lastName", "")
+    address1 = comment_text_attributes.get("address1", "")
+    address2 = comment_text_attributes.get("address2", "")
+    city = comment_text_attributes.get("city", "")
+    category = comment_text_attributes.get("category", "")
+    country = comment_text_attributes.get("country", "")
+    email = comment_text_attributes.get("email", "")
+    phone = comment_text_attributes.get("phone", "")
+    govAgency = comment_text_attributes.get("govAgency", "")
+    govAgencyType = comment_text_attributes.get("govAgencyType", "")
+    organization = comment_text_attributes.get("organization", "")
+    originalDocumentId = comment_text_attributes.get("originalDocumentId", "")
+    modifyDate = comment_text_attributes.get("modifyDate", "")
+    modifyDate = (
+        datetime.strptime(modifyDate, "%Y-%m-%dT%H:%M:%SZ") if modifyDate else None
+    )
+    pageCount = comment_text_attributes.get("pageCount", 0)
+    postedDate = comment_text_attributes.get("postedDate", "")
+    postedDate = (
+        datetime.strptime(postedDate, "%Y-%m-%dT%H:%M:%SZ") if postedDate else None
+    )
+    receiveDate = comment_text_attributes.get("receiveDate", "")
+    receiveDate = (
+        datetime.strptime(receiveDate, "%Y-%m-%dT%H:%M:%SZ") if receiveDate else None
+    )
+    commentTitle = attributes.get("title", "")
+    trackingNbr = comment_text_attributes.get("trackingNbr", "")
+    withdrawn = comment_text_attributes.get("withdrawn", False)
+    reasonWithdrawn = comment_text_attributes.get("reasonWithdrawn", "")
+    zip = comment_text_attributes.get("zip", "")
+    restrictReason = comment_text_attributes.get("restrictReason", "")
+    restrictReasonType = comment_text_attributes.get("restrictReasonType", "")
+    submitterRep = comment_text_attributes.get("submitterRep", "")
+    submitterRepAddress = comment_text_attributes.get("submitterRepAddress", "")
+    submitterRepCityState = comment_text_attributes.get("submitterRepCityState", "")
+
+    # SQL INSERT statement
+    sql = """
+    INSERT INTO PublicComments (
+        id,
+        objectId,
+        commentOn,
+        commentOnDocumentId,
+        duplicateComments,
+        stateProvinceRegion,
+        subtype,
+        comment,
+        firstName,
+        lastName,
+        address1,
+        address2,
+        city,
+        category,
+        country,
+        email,
+        phone,
+        govAgency,
+        govAgencyType,
+        organization,
+        originalDocumentId,
+        modifyDate,
+        pageCount,
+        postedDate,
+        receiveDate,
+        commentTitle,
+        trackingNbr,
+        withdrawn,
+        reasonWithdrawn,
+        zip,
+        restrictReason,
+        restrictReasonType,
+        submitterRep,
+        submitterRepAddress,
+        submitterRepCityState
+    ) VALUES (
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+    );
+    """
+
+    # Execute the SQL statement
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                sql,
+                (
+                    comment_id,
+                    objectId,
+                    commentOn,
+                    commentOnDocumentId,
+                    duplicateComments,
+                    stateProvinceRegion,
+                    subtype,
+                    comment,
+                    firstName,
+                    lastName,
+                    address1,
+                    address2,
+                    city,
+                    category,
+                    country,
+                    email,
+                    phone,
+                    govAgency,
+                    govAgencyType,
+                    organization,
+                    originalDocumentId,
+                    modifyDate,
+                    pageCount,
+                    postedDate,
+                    receiveDate,
+                    commentTitle,
+                    trackingNbr,
+                    withdrawn,
+                    reasonWithdrawn,
+                    zip,
+                    restrictReason,
+                    restrictReasonType,
+                    submitterRep,
+                    submitterRepAddress,
+                    submitterRepCityState,
+                ),
+            )
+
+    except psycopg2.Error as e:
+        print(f"Error inserting comment {comment_data['id']} into dockets table: {e}")
+
+
+### Rough sketch of the final code process
+""" 
+need to check that we've gotten all documents -- could do this manually with 
+the documents being put into a database, or with a while loop
+"""
 
 # get documents
 doc_list = pull_reg_gov_data(
@@ -277,18 +454,14 @@ doc_list = pull_reg_gov_data(
     end_date="2024-04-11",
 )
 
-""" 
-need to check that we've gotten all documents -- could do this manually with 
-the documents being put into a database, or with a while loop
-"""
-
 commentable_docs = []
 for doc in doc_list:
     if doc["attributes"]["openForComment"]:
         if not verify_database_existence("Documents", doc["id"]):
             commentable_docs.append(doc)
-
             # add this doc to the documents table in the database
+            full_doc_info = query_register_API_and_merge_document_data(doc)
+            insert_document_into_db(full_doc_info)
 
 for doc in commentable_docs:
     docket_id = doc["attributes"]["docketId"]
@@ -309,9 +482,11 @@ for doc in commentable_docs:
 
     for dock_doc in docket_docs:
         if not verify_database_existence("Documents", dock_doc["id"]):
+            # add this doc to the documents table in the database
             full_doc_info = query_register_API_and_merge_document_data(doc)
             insert_document_into_db(full_doc_info)
 
+    # get the comments, comment text, and add to db
     if not verify_database_existence("Comments", "objectId", document_id):
         comment_data = pull_reg_gov_data(
             constants.REG_GOV_API_KEY,
@@ -319,10 +494,14 @@ for doc in commentable_docs:
             params={"filter[searchTerm]": document_id},
         )
         # add comment data to comments table in the database
-        # potentially go one step further and get the comment text, as well
+        for comment in comment_data:
+            all_comment_data = merge_comment_text_and_data(
+                constants.REG_GOV_API_KEY, comment
+            )
+            insert_comment_into_db(all_comment_data)
 
     else:
-        # get date of most recent comment on this doc
+        # get date of most recent comment on this doc in the db
         most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
 
         # CHECK THAT WE ARE FILTERING ON THE RIGHT FIELD FOR DATE
@@ -335,16 +514,8 @@ for doc in commentable_docs:
             },
         )
 
-        # add comment text to DB
-
         for comment in comment_data:
-            # extract the comment text
-            comment_id = comment["Id"]
-
-            comment_text_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY,
-                "comments",
-                params={"filter[searchTerm]": comment_id},
+            all_comment_data = merge_comment_text_and_data(
+                constants.REG_GOV_API_KEY, comment
             )
-
-            # put comment_text_data into comments table
+            insert_comment_into_db(all_comment_data)
