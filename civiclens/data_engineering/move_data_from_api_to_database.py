@@ -184,7 +184,7 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     with connection:
         with cursor:
             query = f"SELECT MAX(postedDate) \
-                        FROM PublicComments \
+                        FROM regulations_publiccomments \
                         WHERE commentOnDocumentId = '{doc_id}';"
             cursor.execute(query)
             response = cursor.fetchall()
@@ -213,7 +213,7 @@ def insert_docket_into_db(docket_data: json) -> None:
             with cursor:
                 cursor.execute(
                     """
-                    INSERT INTO Dockets (id, docket_type, last_modified_date, agency_id, title, object_id, highlighted_content)
+                    INSERT INTO regulations_docket (id, docket_type, last_modified_date, agency_id, title, object_id, highlighted_content)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                     (
@@ -292,7 +292,7 @@ def insert_document_into_db(document_data: json) -> None:
             with cursor:
                 cursor.execute(
                     """
-                    INSERT INTO Documents (id, documentType, lastModifiedDate, frDocNum, withdrawn, agencyId, commentEndDate,
+                    INSERT INTO regulations_documents (id, documentType, lastModifiedDate, frDocNum, withdrawn, agencyId, commentEndDate,
                                            postedDate, docTitle, docketId, subtype, commentStartDate, openForComment,
                                            objectId, fullTextXmlUrl, agencyType, CFR, RIN, title, summary,
                                            dates, furtherInformation, supplementaryInformation)
@@ -432,7 +432,7 @@ def insert_comment_into_db(comment_data: json) -> None:
 
     # SQL INSERT statement
     sql = """
-    INSERT INTO PublicComments (
+    INSERT INTO regulations_publiccomments (
         id,
         objectId,
         commentOn,
@@ -518,7 +518,7 @@ def insert_comment_into_db(comment_data: json) -> None:
             )
 
     except psycopg2.Error as e:
-        print(f"Error inserting comment {comment_data['id']} into dockets table: {e}")
+        print(f"Error inserting comment {comment_data['id']} into comments table: {e}")
 
 
 ### Rough sketch of the final code process
@@ -541,7 +541,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
     commentable_docs = []
     for doc in doc_list:
         if doc["attributes"]["openForComment"]:
-            if not verify_database_existence("Documents", doc["id"]):
+            if not verify_database_existence("regulations_documents", doc["id"]):
                 commentable_docs.append(doc)
                 # add this doc to the documents table in the database
                 full_doc_info = query_register_API_and_merge_document_data(doc)
@@ -552,7 +552,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
         docket_id = doc["attributes"]["docketId"]
         document_id = doc["id"]
         # if docket not in db, add it
-        if not verify_database_existence("Dockets", docket_id):
+        if not verify_database_existence("regulations_docket", docket_id):
             docket_data = pull_reg_gov_data(
                 constants.REG_GOV_API_KEY,
                 "dockets",
@@ -570,7 +570,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
 
         # for documents of the docket, if they're not in db, add them
         for dock_doc in docket_docs:
-            if not verify_database_existence("Documents", dock_doc["id"]):
+            if not verify_database_existence("regulations_documents", dock_doc["id"]):
                 # add this doc to the documents table in the database
                 full_doc_info = query_register_API_and_merge_document_data(dock_doc)
                 insert_document_into_db(full_doc_info)
@@ -578,7 +578,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
         document_object_id = doc["attributes"]["objectId"]
         # get the comments, comment text, and add to db
         if not verify_database_existence(
-            "PublicComments", document_id, "commentOnDocumentId"
+            "regulations_publiccomments", document_id, "commentOnDocumentId"
         ):
             comment_data = pull_reg_gov_data(
                 constants.REG_GOV_API_KEY,
