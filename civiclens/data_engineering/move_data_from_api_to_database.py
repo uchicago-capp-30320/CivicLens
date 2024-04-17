@@ -3,6 +3,7 @@ import requests
 import xml.etree.ElementTree as ET
 import psycopg2
 import json
+import argparse
 from requests.adapters import HTTPAdapter
 from datetime import datetime
 
@@ -11,7 +12,7 @@ import access_api_data
 from civiclens.utils import constants
 
 
-def fetch_fr_document_details(fr_doc_num):
+def fetch_fr_document_details(fr_doc_num: str) -> str:
     """
     Retrieves xml url for document text from federal register.
 
@@ -29,7 +30,7 @@ def fetch_fr_document_details(fr_doc_num):
         raise Exception(error_message)
 
 
-def fetch_xml_content(url):
+def fetch_xml_content(url: str) -> str:
     """
     Fetches XML content from a given URL.
 
@@ -45,7 +46,7 @@ def fetch_xml_content(url):
         raise Exception(error_message)
 
 
-def parse_xml_content(xml_content):
+def parse_xml_content(xml_content: str) -> dict:
     """
     Parses XML content and extracts relevant data such as agency type, CFR, RIN, title, summary, etc.
 
@@ -108,7 +109,7 @@ def parse_xml_content(xml_content):
     return extracted_data
 
 
-def extract_xml_text_from_doc(doc):
+def extract_xml_text_from_doc(doc: json) -> json:
     """
     Take a document's json object, pull the xml text, add the text to the object
 
@@ -124,12 +125,14 @@ def extract_xml_text_from_doc(doc):
         xml_content = fetch_xml_content(xml_url)
         if xml_content:
             extracted_data = parse_xml_content(xml_content)
-            processed_data.append({**doc, **extracted_data})
+            processed_data.append({**doc, **extracted_data})  # merge the json objects
 
     return processed_data
 
 
-def connect_db_and_get_cursor():
+def connect_db_and_get_cursor() -> (
+    tuple[psycopg2.extensions.connection, psycopg2.extensions.cursor]
+):
     """
     Connect to the CivicLens database and return the objects
     """
@@ -144,7 +147,9 @@ def connect_db_and_get_cursor():
     return connection, cursor
 
 
-def verify_database_existence(table, api_field_val, db_field="id"):
+def verify_database_existence(
+    table: str, api_field_val: str, db_field: str = "id"
+) -> bool:
     """
     Use regulations.gov API to confirm a row exists in a db table
 
@@ -167,7 +172,7 @@ def verify_database_existence(table, api_field_val, db_field="id"):
     return response != []
 
 
-def get_most_recent_doc_comment_date(doc_id):
+def get_most_recent_doc_comment_date(doc_id: str) -> str:
     """
     Returns the date of the most recent comment for a doc
 
@@ -187,7 +192,7 @@ def get_most_recent_doc_comment_date(doc_id):
     return response
 
 
-def insert_docket_into_db(docket_data):
+def insert_docket_into_db(docket_data: json) -> None:
     """
     Insert the info on a docket into the dockets table
 
@@ -228,7 +233,7 @@ def insert_docket_into_db(docket_data):
         print(error_message)
 
 
-def query_register_API_and_merge_document_data(doc):
+def query_register_API_and_merge_document_data(doc: json) -> None:
     """
     Attempts to pull document text via federal register API and merge with reg gov API data
 
@@ -245,7 +250,7 @@ def query_register_API_and_merge_document_data(doc):
             xml_url = fetch_fr_document_details(fr_doc_num)
             xml_content = fetch_xml_content(xml_url)
             parsed_xml_content = parse_xml_content(xml_content)
-            doc.update(parsed_xml_content)
+            doc.update(parsed_xml_content)  # merge the json objects
         except:
             error_message = f"Error accessing federal register xml data {fr_doc_num}"
             raise Exception(error_message)
@@ -261,12 +266,12 @@ def query_register_API_and_merge_document_data(doc):
             "furtherInformation": None,
             "supplementaryInformation": None,
         }
-        doc.update(blank_xml_fields)
+        doc.update(blank_xml_fields)  # merge the json objects
 
     return doc
 
 
-def insert_document_into_db(document_data):
+def insert_document_into_db(document_data: json) -> None:
     """
     Insert the info on a document into the documents table
 
@@ -325,7 +330,7 @@ def insert_document_into_db(document_data):
         )
 
 
-def get_comment_text(api_key, comment_id):
+def get_comment_text(api_key: str, comment_id: str) -> json:
     """
     Get the text of a comment
 
@@ -345,7 +350,7 @@ def get_comment_text(api_key, comment_id):
         print(f"Failed to retrieve data. Status code: {response.status_code}")
 
 
-def merge_comment_text_and_data(api_key, comment_data):
+def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
     """
     Combine comment json object with the comment text json object
 
@@ -365,7 +370,7 @@ def merge_comment_text_and_data(api_key, comment_data):
     return all_comment_data
 
 
-def insert_comment_into_db(comment_data):
+def insert_comment_into_db(comment_data: json) -> None:
     """
     Insert the info on a comment into the PublicComments table
 
@@ -382,7 +387,7 @@ def insert_comment_into_db(comment_data):
     # Map JSON attributes to corresponding table columns
     comment_id = data_for_db["id"]
     objectId = attributes.get("objectId", "")
-    # commentOn = .get("commentOn", "") # what is this? comment title?
+    commentOn = comment_text_attributes.get("commentOn", "")
     commentOnDocumentId = comment_text_attributes.get("commentOnDocumentId", "")
     duplicateComments = comment_text_attributes.get("duplicateComments", 0)
     stateProvinceRegion = comment_text_attributes.get("stateProvinceRegion", "")
@@ -522,81 +527,109 @@ need to check that we've gotten all documents -- could do this manually with
 the documents being put into a database, or with a while loop
 """
 
-# get documents
-doc_list = pull_reg_gov_data(
-    constants.REG_GOV_API_KEY,
-    "documents",
-    start_date="2024-01-01",
-    end_date="2024-04-11",
-)
 
-commentable_docs = []
-for doc in doc_list:
-    if doc["attributes"]["openForComment"]:
-        if not verify_database_existence("Documents", doc["id"]):
-            commentable_docs.append(doc)
-            # add this doc to the documents table in the database
-            full_doc_info = query_register_API_and_merge_document_data(doc)
-            insert_document_into_db(full_doc_info)
-
-for doc in commentable_docs:
-    docket_id = doc["attributes"]["docketId"]
-    document_id = doc["id"]
-    # if docket not in db, add it
-    if not verify_database_existence("Dockets", docket_id):
-        docket_data = pull_reg_gov_data(
-            constants.REG_GOV_API_KEY,
-            "dockets",
-            params={"filter[searchTerm]": docket_id},
-        )
-        # add docket_data to docket table in the database
-        insert_docket_into_db(docket_data)
-
-    # get the other documents
-    docket_docs = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY, "documents", params={"filter[searchTerm]": docket_id}
+def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
+    # get documents
+    doc_list = pull_reg_gov_data(
+        constants.REG_GOV_API_KEY,
+        "documents",
+        start_date=start_date,
+        end_date=end_date,
     )
 
-    # for documents of the docket, if they're not in db, add them
-    for dock_doc in docket_docs:
-        if not verify_database_existence("Documents", dock_doc["id"]):
-            # add this doc to the documents table in the database
-            full_doc_info = query_register_API_and_merge_document_data(dock_doc)
-            insert_document_into_db(full_doc_info)
+    # pull the commentable docs from that list
+    commentable_docs = []
+    for doc in doc_list:
+        if doc["attributes"]["openForComment"]:
+            if not verify_database_existence("Documents", doc["id"]):
+                commentable_docs.append(doc)
+                # add this doc to the documents table in the database
+                full_doc_info = query_register_API_and_merge_document_data(doc)
+                insert_document_into_db(full_doc_info)
 
-    document_object_id = doc["attributes"]["objectId"]
-    # get the comments, comment text, and add to db
-    if not verify_database_existence(
-        "PublicComments", document_id, "commentOnDocumentId"
-    ):
-        comment_data = pull_reg_gov_data(
-            constants.REG_GOV_API_KEY,
-            "comments",
-            params={"filter[commentOnId]": document_object_id},
-        )
-        # add comment data to comments table in the database
-        for comment in comment_data:
-            all_comment_data = merge_comment_text_and_data(
-                constants.REG_GOV_API_KEY, comment
+    # get the dockets for the commentable docs
+    for doc in commentable_docs:
+        docket_id = doc["attributes"]["docketId"]
+        document_id = doc["id"]
+        # if docket not in db, add it
+        if not verify_database_existence("Dockets", docket_id):
+            docket_data = pull_reg_gov_data(
+                constants.REG_GOV_API_KEY,
+                "dockets",
+                params={"filter[searchTerm]": docket_id},
             )
-            insert_comment_into_db(all_comment_data)
+            # add docket_data to docket table in the database
+            insert_docket_into_db(docket_data)
 
-    else:
-        # get date of most recent comment on this doc in the db
-        most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
-
-        # CHECK THAT WE ARE FILTERING ON THE RIGHT FIELD FOR DATE
-        comment_data = pull_reg_gov_data(
+        # get the other documents
+        docket_docs = pull_reg_gov_data(
             constants.REG_GOV_API_KEY,
-            "comments",
-            params={
-                "filter[commentOnId]": document_object_id,
-                "filter[lastModifiedDate][ge]": most_recent_comment_date,
-            },
+            "documents",
+            params={"filter[searchTerm]": docket_id},
         )
 
-        for comment in comment_data:
-            all_comment_data = merge_comment_text_and_data(
-                constants.REG_GOV_API_KEY, comment
+        # for documents of the docket, if they're not in db, add them
+        for dock_doc in docket_docs:
+            if not verify_database_existence("Documents", dock_doc["id"]):
+                # add this doc to the documents table in the database
+                full_doc_info = query_register_API_and_merge_document_data(dock_doc)
+                insert_document_into_db(full_doc_info)
+
+        document_object_id = doc["attributes"]["objectId"]
+        # get the comments, comment text, and add to db
+        if not verify_database_existence(
+            "PublicComments", document_id, "commentOnDocumentId"
+        ):
+            comment_data = pull_reg_gov_data(
+                constants.REG_GOV_API_KEY,
+                "comments",
+                params={"filter[commentOnId]": document_object_id},
             )
-            insert_comment_into_db(all_comment_data)
+            # add comment data to comments table in the database
+            for comment in comment_data:
+                all_comment_data = merge_comment_text_and_data(
+                    constants.REG_GOV_API_KEY, comment
+                )
+                insert_comment_into_db(all_comment_data)
+
+        else:
+            # get date of most recent comment on this doc in the db
+            most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
+
+            # CHECK THAT WE ARE FILTERING ON THE RIGHT FIELD FOR DATE
+            comment_data = pull_reg_gov_data(
+                constants.REG_GOV_API_KEY,
+                "comments",
+                params={
+                    "filter[commentOnId]": document_object_id,
+                    "filter[lastModifiedDate][ge]": most_recent_comment_date,
+                },
+            )
+
+            for comment in comment_data:
+                all_comment_data = merge_comment_text_and_data(
+                    constants.REG_GOV_API_KEY, comment
+                )
+                insert_comment_into_db(all_comment_data)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Pull info for a date range from API")
+    parser.add_argument(
+        "-s",
+        "--start_date",
+        type=str,
+        help="Start date (str) for the date range (format: YYYY-MM-DD)",
+    )
+    parser.add_argument(
+        "-e",
+        "--end_date",
+        type=str,
+        help="End date (str) for the date range (format: YYYY-MM-DD)",
+    )
+
+    args = parser.parse_args()
+    pull_all_api_data_for_date_range(
+        args.start_date,
+        args.end_date,
+    )
