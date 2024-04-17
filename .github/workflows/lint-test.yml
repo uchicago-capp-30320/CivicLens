@@ -1,0 +1,49 @@
+name: CivicLens
+
+on:
+  push:
+    branches: [ "main", "develop", "frontend", "backend", "devops" ]
+  pull_request:
+    branches: [ "main", "develop", "frontend", "backend"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10.12'
+
+    - name: Cache Poetry install
+      uses: actions/cache@v3
+      with:
+        path: ~/.local
+        key: poetry-1.8.2
+    - uses: snok/install-poetry@v1
+      with:
+        version: 1.8.2
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pypoetry
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
+          
+    - run: poetry install
+
+    - name: lint with ruff
+      run: poetry run ruff check --output-format=github .
+
+    - name: run tests with pytest
+      run: poetry run pytest
+
