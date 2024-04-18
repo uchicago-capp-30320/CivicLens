@@ -213,8 +213,17 @@ def insert_docket_into_db(docket_data: json) -> None:
             with cursor:
                 cursor.execute(
                     """
-                    INSERT INTO regulations_docket (id, docket_type, last_modified_date, agency_id, title, object_id, highlighted_content)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO regulations_docket (
+                        "id",
+                        "docket_type",
+                        "last_modified_date",
+                        "agency_id",
+                        "title",
+                        "object_id",
+                        "highlighted_content"
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s
+                    )
                 """,
                     (
                         data_for_db["id"],
@@ -436,44 +445,44 @@ def insert_comment_into_db(comment_data: json) -> None:
     # SQL INSERT statement
     sql = """
     INSERT INTO regulations_publiccomments (
-        id,
-        objectId,
-        commentOn,
-        commentOnDocumentId,
-        duplicateComments,
-        stateProvinceRegion,
-        subtype,
-        comment,
-        firstName,
-        lastName,
-        address1,
-        address2,
-        city,
-        category,
-        country,
-        email,
-        phone,
-        govAgency,
-        govAgencyType,
-        organization,
-        originalDocumentId,
-        modifyDate,
-        pageCount,
-        postedDate,
-        receiveDate,
-        commentTitle,
-        trackingNbr,
-        withdrawn,
-        reasonWithdrawn,
-        zip,
-        restrictReason,
-        restrictReasonType,
-        submitterRep,
-        submitterRepAddress,
-        submitterRepCityState
+        "id",
+        "objectId",
+        "commentOn",
+        "commentOnDocumentId",
+        "duplicateComments",
+        "stateProvinceRegion",
+        "subtype",
+        "comment",
+        "firstName",
+        "lastName",
+        "address1",
+        "address2",
+        "city",
+        "category",
+        "country",
+        "email",
+        "phone",
+        "govAgency",
+        "govAgencyType",
+        "organization",
+        "originalDocumentId",
+        "modifyDate",
+        "pageCount",
+        "postedDate",
+        "receiveDate",
+        "commentTitle",
+        "trackingNbr",
+        "withdrawn",
+        "reasonWithdrawn",
+        "zip",
+        "restrictReason",
+        "restrictReasonType",
+        "submitterRep",
+        "submitterRepAddress",
+        "submitterRepCityState"
     ) VALUES (
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-    );
+    )
     """
 
     # Execute the SQL statement
