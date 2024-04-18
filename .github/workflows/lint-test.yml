@@ -47,3 +47,10 @@ jobs:
     - name: run tests with pytest
       run: poetry run pytest
 
+    # - name: Install modules
+    #  run: yarn
+    # - name: Run ESLint
+    # run: eslint . --ext .js,.jsx,.ts,.tsx
+    # - name: Test JS with Jest
+    #  run: yarn test
+
