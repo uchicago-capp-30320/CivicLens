@@ -203,7 +203,7 @@ def insert_docket_into_db(docket_data: json) -> None:
 
     # need to check that docket_data is in the right format
 
-    data_for_db = json.loads(docket_data)
+    data_for_db = docket_data
     attributes = data_for_db["attributes"]
     try:
 
@@ -279,9 +279,42 @@ def insert_document_into_db(document_data: json) -> None:
 
     Returns: nothing unless an error; adds the info into the table
     """
-    data_for_db = json.loads(document_data)
+    data_for_db = document_data
     attributes = data_for_db["attributes"]
 
+    fields_to_insert = (
+        data_for_db["id"],
+        attributes["documentType"],
+        attributes["lastModifiedDate"],
+        attributes["frDocNum"],
+        attributes["withdrawn"],
+        attributes["agencyId"],
+        attributes["commentEndDate"],
+        attributes["postedDate"],
+        attributes["docketId"],
+        attributes["subtype"],
+        attributes["commentStartDate"],
+        attributes["openForComment"],
+        attributes["objectId"],
+        data_for_db["links"]["self"],
+        data_for_db["agencyType"],
+        data_for_db["CFR"],
+        data_for_db["RIN"],
+        attributes["title"],
+        data_for_db["summary"],
+        data_for_db["dates"],
+        data_for_db["furtherInformation"],
+        data_for_db["supplementaryInformation"],
+    )
+
+    # print(f"{fields_to_insert=}")
+    # annoying quirk: https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-column-of-relation-does-not-exist
+    query = """INSERT INTO regulations_documents ("id", "documentType", "lastModifiedDate", "frDocNum", "withdrawn", "agencyId", "commentEndDate",
+                                   "postedDate", "docket_id", "subtype", "commentStartDate", "openForComment",
+                                   "objectId", "fullTextXmlUrl", "agencyType", "CFR", "RIN", "title", "summary",
+                                   "dates", "furtherInformation", "supplementaryInformation") \
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+    # print(f"{query=}")
     try:
 
         connection, cursor = connect_db_and_get_cursor()
@@ -291,38 +324,8 @@ def insert_document_into_db(document_data: json) -> None:
         with connection:
             with cursor:
                 cursor.execute(
-                    """
-                    INSERT INTO regulations_documents (id, documentType, lastModifiedDate, frDocNum, withdrawn, agencyId, commentEndDate,
-                                           postedDate, docTitle, docketId, subtype, commentStartDate, openForComment,
-                                           objectId, fullTextXmlUrl, agencyType, CFR, RIN, title, summary,
-                                           dates, furtherInformation, supplementaryInformation)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                    (
-                        data_for_db["id"],
-                        attributes["documentType"],
-                        attributes["lastModifiedDate"],
-                        attributes["frDocNum"],
-                        attributes["withdrawn"],
-                        attributes["agencyId"],
-                        attributes["commentEndDate"],
-                        attributes["postedDate"],
-                        attributes["title"],
-                        attributes["docketId"],
-                        attributes["subtype"],
-                        attributes["commentStartDate"],
-                        attributes["openForComment"],
-                        attributes["objectId"],
-                        data_for_db["links"]["self"],
-                        data_for_db["agencyType"],
-                        data_for_db["CFR"],
-                        data_for_db["RIN"],
-                        attributes["title"],
-                        data_for_db["summary"],
-                        data_for_db["dates"],
-                        data_for_db["furtherInformation"],
-                        data_for_db["supplementaryInformation"],
-                    ),
+                    query,
+                    fields_to_insert,
                 )
     except psycopg2.Error as e:
         print(
@@ -380,7 +383,7 @@ def insert_comment_into_db(comment_data: json) -> None:
     """
     connection, cursor = connect_db_and_get_cursor()
 
-    data_for_db = json.loads(comment_data)
+    data_for_db = comment_data
     attributes = data_for_db["attributes"]
     comment_text_attributes = data_for_db["data"]["attributes"]
 
@@ -530,13 +533,15 @@ the documents being put into a database, or with a while loop
 
 def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
     # get documents
+    print("getting list of documents within date range")
     doc_list = pull_reg_gov_data(
         constants.REG_GOV_API_KEY,
         "documents",
         start_date=start_date,
         end_date=end_date,
     )
-
+    print(f"got {len(doc_list)} documents")
+    print("now extracting docs open for comments from that list")
     # pull the commentable docs from that list
     commentable_docs = []
     for doc in doc_list:
@@ -546,7 +551,11 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
                 # add this doc to the documents table in the database
                 full_doc_info = query_register_API_and_merge_document_data(doc)
                 insert_document_into_db(full_doc_info)
-
+                print(f'added doc {doc["id"]} to db')
+    print(f"{len(commentable_docs)} documents open for comment")
+    print(
+        "getting dockets and other documents associated with the documents open for comment"
+    )
     # get the dockets for the commentable docs
     for doc in commentable_docs:
         docket_id = doc["attributes"]["docketId"]
@@ -560,6 +569,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
             )
             # add docket_data to docket table in the database
             insert_docket_into_db(docket_data)
+            print(f"added docket {docket_id} to the db")
 
         # get the other documents
         docket_docs = pull_reg_gov_data(
@@ -577,9 +587,11 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
 
         document_object_id = doc["attributes"]["objectId"]
         # get the comments, comment text, and add to db
+
         if not verify_database_existence(
             "regulations_publiccomments", document_id, "commentOnDocumentId"
         ):
+            print(f"no comments found for document {document_id}")
             comment_data = pull_reg_gov_data(
                 constants.REG_GOV_API_KEY,
                 "comments",
@@ -595,6 +607,9 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
         else:
             # get date of most recent comment on this doc in the db
             most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
+            print(
+                f"comments found for document {document_id}, most recent  was {most_recent_comment_date}"
+            )
 
             # CHECK THAT WE ARE FILTERING ON THE RIGHT FIELD FOR DATE
             comment_data = pull_reg_gov_data(
@@ -616,14 +631,12 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pull info for a date range from API")
     parser.add_argument(
-        "-s",
-        "--start_date",
+        "start_date",
         type=str,
         help="Start date (str) for the date range (format: YYYY-MM-DD)",
     )
     parser.add_argument(
-        "-e",
-        "--end_date",
+        "end_date",
         type=str,
         help="End date (str) for the date range (format: YYYY-MM-DD)",
     )
@@ -633,3 +646,4 @@ if __name__ == "__main__":
         args.start_date,
         args.end_date,
     )
+    print("process finished")

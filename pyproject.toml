@@ -12,6 +12,7 @@ pytest = "^8.1.1"
 pytest-mock = "^3.14.0"
 psycopg2 = "^2.9.9"
 ipykernel = "^6.29.4"
+python-dotenv = "^1.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
