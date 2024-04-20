@@ -168,17 +168,16 @@ def pull_reg_gov_data(
     for i in range(1, 21):  # Fetch up to 20 pages
         params["page[number]"] = str(i)  # Add page number to the params
 
-        for _ in range(1, int(60 / WAIT_MINUTES) + 3):
-            success, r_json = poll_for_response(api_key, wait_for_requests)
+        success, r_json = poll_for_response(api_key, wait_for_requests)
 
-            if success or (_is_duplicated_on_server(r_json) and skip_duplicates):
-                if doc_data is not None:
-                    doc_data += r_json["data"]
-                else:
-                    doc_data = r_json["data"]
+        if success or (_is_duplicated_on_server(r_json) and skip_duplicates):
+            if doc_data is not None:
+                doc_data += r_json["data"]
+            else:
+                doc_data = r_json["data"]
 
-                # Break if it's the last page
-                if r_json["meta"]["lastPage"]:
-                    return doc_data
+            # Break if it's the last page
+            if r_json["meta"]["lastPage"]:
+                return doc_data
 
     raise RuntimeError(f"Unrecoverable error; {r_json}")
