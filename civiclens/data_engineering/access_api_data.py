@@ -1,16 +1,20 @@
 import os
-import requests
-from datetime import datetime
-from requests.adapters import HTTPAdapter
 import time
+from datetime import datetime
+
+import requests
+from requests.adapters import HTTPAdapter
+
 
 api_key = os.getenv("REG_GOV_API_KEY")
 if not api_key:
-    print("Regulations.gov API key not found in environment variables, using DEMO_KEY")
+    print(
+        "Regulations.gov API key not found in environment variables, using DEMO_KEY"
+    )
     api_key = "DEMO_KEY"
 
 """
-This code pulls heavily from the following existing repositories: 
+This code pulls heavily from the following existing repositories:
 
 https://github.com/willjobs/regulations-public-comments
 https://github.com/jacobfeldgoise/regulations-comments-downloader
@@ -32,7 +36,9 @@ def _is_duplicated_on_server(response_json):
     return (
         ("errors" in response_json.keys())
         and (response_json["errors"][0]["status"] == "500")
-        and (response_json["errors"][0]["detail"][:21] == "Incorrect result size")
+        and (
+            response_json["errors"][0]["detail"][:21] == "Incorrect result size"
+        )
     )
 
 
@@ -56,7 +62,9 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
                 {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
             )
         if end_date:
-            date_param.update({"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"})
+            date_param.update(
+                {"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"}
+            )
     else:
         if start_date:
             date_param.update({"filter[postedDate][ge]": start_date})
@@ -109,9 +117,7 @@ def pull_reg_gov_data(
     # with threads, but that gets more complicated than it needs to be.
     STATUS_CODE_OVER_RATE_LIMIT = 429
     WAIT_MINUTES = 20  # time between attempts to get a response
-    POLL_SECONDS = (
-        10  # run time.sleep() for this long, so we can check if we've been interrupted
-    )
+    POLL_SECONDS = 10  # run time.sleep() for this long, so we can check if we've been interrupted
 
     params = params if params is not None else {}
 
@@ -147,7 +153,10 @@ def pull_reg_gov_data(
 
             return [True, r.json()]
         else:
-            if r.status_code == STATUS_CODE_OVER_RATE_LIMIT and wait_for_rate_limits:
+            if (
+                r.status_code == STATUS_CODE_OVER_RATE_LIMIT
+                and wait_for_rate_limits
+            ):
                 else_func()
             elif _is_duplicated_on_server(r.json()) and skip_duplicates:
                 print("****Duplicate entries on server. Skipping.")
@@ -176,7 +185,9 @@ def pull_reg_gov_data(
         for _ in range(1, int(60 / WAIT_MINUTES) + 3):
             success, r_json = poll_for_response(api_key, wait_for_requests)
 
-            if success or (_is_duplicated_on_server(r_json) and skip_duplicates):
+            if success or (
+                _is_duplicated_on_server(r_json) and skip_duplicates
+            ):
                 if doc_data is not None:
                     doc_data += r_json["data"]
                 else:
