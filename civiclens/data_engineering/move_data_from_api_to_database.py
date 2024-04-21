@@ -254,6 +254,7 @@ def query_register_API_and_merge_document_data(doc: json) -> None:
 
     # extract the document text using the general register API
     fr_doc_num = doc.get("attributes", {}).get("frDocNum")
+    document_id = doc["id"]
     if fr_doc_num:
         try:
             xml_url = fetch_fr_document_details(fr_doc_num)
@@ -261,8 +262,20 @@ def query_register_API_and_merge_document_data(doc: json) -> None:
             parsed_xml_content = parse_xml_content(xml_content)
             doc.update(parsed_xml_content)  # merge the json objects
         except:
-            error_message = f"Error accessing federal register xml data {fr_doc_num}"
-            raise Exception(error_message)
+            error_message = f"Error accessing federal register xml data for frDocNum {fr_doc_num}, document id {document_id}"
+            print(error_message)
+            # raise Exception(error_message)
+            blank_xml_fields = {
+                "agencyType": None,
+                "CFR": None,
+                "RIN": None,
+                "title": None,
+                "summary": None,
+                "dates": None,
+                "furtherInformation": None,
+                "supplementaryInformation": None,
+            }
+            doc.update(blank_xml_fields)  # merge the json objects
 
     else:
         blank_xml_fields = {
@@ -558,7 +571,8 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
     # pull the commentable docs from that list
     commentable_docs = []
     for doc in doc_list:
-        if doc["attributes"]["openForComment"]:
+        docket_id = doc["attributes"]["docketId"]
+        if docket_id and doc["attributes"]["openForComment"]:
             # if not verify_database_existence("regulations_documents", doc["id"]):
             commentable_docs.append(doc)
             # # add this doc to the documents table in the database
@@ -598,6 +612,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
             # add this doc to the documents table in the database
             full_doc_info = query_register_API_and_merge_document_data(doc)
             insert_document_into_db(full_doc_info)
+            print(f"added document {document_id} to the db")
 
     for doc in commentable_docs:
         document_id = doc["id"]
