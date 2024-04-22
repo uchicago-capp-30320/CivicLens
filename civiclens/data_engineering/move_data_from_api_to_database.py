@@ -5,6 +5,7 @@ import psycopg2
 import json
 import argparse
 from requests.adapters import HTTPAdapter
+import datetime
 from datetime import datetime
 
 from access_api_data import pull_reg_gov_data
@@ -183,13 +184,22 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"SELECT MAX(postedDate) \
+            query = f"""SELECT MAX("postedDate") \
                         FROM regulations_publiccomments \
-                        WHERE commentOnDocumentId = '{doc_id}';"
+                        WHERE "document_id" = '{doc_id}';"""
             cursor.execute(query)
             response = cursor.fetchall()
 
-    return response
+    # format the text
+    # it seems that the regulations.gov API returns postedDate rounded to the hour
+    # if we used that naively as the most recent date, we might miss some comments
+    # when we pull comments again. By backing up one hour, we trade off some
+    # unnecessary API calls for ensuring we don't miss anything
+    date_datetime = response[0][0]
+    one_hour_prior = date_datetime - datetime.timedelta(hours=1)
+    most_recent_date = one_hour_prior.strftime("%Y-%m-%d %H:%M:%S")
+
+    return most_recent_date
 
 
 def insert_docket_into_db(docket_data: json) -> None:
@@ -541,6 +551,7 @@ def insert_comment_into_db(comment_data: json) -> None:
                     submitterRepCityState,
                 ),
             )
+            connection.commit()
 
     except psycopg2.Error as e:
         print(f"Error inserting comment {comment_data['id']} into comments table: {e}")
@@ -639,6 +650,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
         else:
             # get date of most recent comment on this doc in the db
             most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
+
             print(
                 f"comments found for document {document_id}, most recent  was {most_recent_comment_date}"
             )
