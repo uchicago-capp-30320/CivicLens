@@ -98,29 +98,6 @@ class BulkDl:
             df = pd.DataFrame(all_docket_ids).drop_duplicates()
             df.to_csv('dockets.csv', index=False)
 
-    def get_all_documents_by_dockets(self, docket_csv):
-        '''
-        Helper function to retrieve all document ids. loops through n agencie depending on input
-        '''
-        dockets_df = pd.read_csv(docket_csv)
-        all_document_ids = set()
-
-        for docket_id in dockets_df['Docket ID']:
-            # Regulations API argument for retrieving documents by dockets
-            filter_params = {
-                'filter[docketId]': docket_id
-            }
-
-            documents = self.fetch_all_pages('documents', filter_params)
-
-            for document in documents:
-                if 'id' in document:
-                    all_document_ids.add(document['id'])
-
-        # Store all document IDs into a CSV file
-        documents_df = pd.DataFrame(list(all_document_ids), columns=['Document ID'])
-        documents_df.to_csv('document_ids.csv', index=False)
-
     def fetch_documents_by_date_ranges(self, start_date, end_date):
         '''
         Fetches documents posted within the given date ranges and saves them to a CSV file.
