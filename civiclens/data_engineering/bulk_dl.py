@@ -114,11 +114,11 @@ class BulkDl:
 
         print(f"Total documents fetched: {len(all_documents)}")
 
-        # Extract document IDs
-        document_lst = [doc['id'] for doc in all_documents if 'id' in doc]
+        # Extract document IDs, openForComment
+        document_lst = [(doc['id'], doc['attributes']['openForComment']) for doc in all_documents]
 
         # Save to DataFrame and CSV
-        df = pd.DataFrame(document_lst, columns=['Doc_ID'])
+        df = pd.DataFrame(document_lst, columns=['Doc_ID', 'openForComment'])
         print(f"Unique documents before deduplication: {len(df)}")
         df = df.drop_duplicates()
         print(f"Unique documents after deduplication: {len(df)}")
