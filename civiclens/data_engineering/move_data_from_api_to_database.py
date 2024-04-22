@@ -5,7 +5,7 @@ import psycopg2
 import json
 import argparse
 from requests.adapters import HTTPAdapter
-import datetime
+import datetime as dt
 from datetime import datetime
 
 from access_api_data import pull_reg_gov_data
@@ -195,8 +195,8 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     # if we used that naively as the most recent date, we might miss some comments
     # when we pull comments again. By backing up one hour, we trade off some
     # unnecessary API calls for ensuring we don't miss anything
-    date_datetime = response[0][0]
-    one_hour_prior = date_datetime - datetime.timedelta(hours=1)
+    date_dt = response[0][0]
+    one_hour_prior = date_dt - dt.timedelta(hours=1)
     most_recent_date = one_hour_prior.strftime("%Y-%m-%d %H:%M:%S")
 
     return most_recent_date
@@ -506,6 +506,7 @@ def insert_comment_into_db(comment_data: json) -> None:
     ) VALUES (
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     )
+    ON CONFLICT (id) DO NOTHING;
     """
 
     # Execute the SQL statement
@@ -558,6 +559,7 @@ def insert_comment_into_db(comment_data: json) -> None:
 
 
 def load_new_comments_for_existing_doc():
+    # TODO
     pass
 
 
@@ -584,12 +586,10 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
     for doc in doc_list:
         docket_id = doc["attributes"]["docketId"]
         if docket_id and doc["attributes"]["openForComment"]:
-            # if not verify_database_existence("regulations_documents", doc["id"]):
             commentable_docs.append(doc)
-            # # add this doc to the documents table in the database
-            # full_doc_info = query_register_API_and_merge_document_data(doc)
-            # insert_document_into_db(full_doc_info)
-            # print(f'added doc {doc["id"]} to db')
+            # can't add this doc to the db right now because docket needs to be added first
+            # the db needs the docket primary key first
+
     print(f"{len(commentable_docs)} documents open for comment")
     print(
         "getting dockets and other documents associated with the documents open for comment"
@@ -608,13 +608,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
             # add docket_data to docket table in the database
             insert_docket_into_db(docket_data)
             print(f"added docket {docket_id} to the db")
-
-        # get the other documents
-        # docket_docs = pull_reg_gov_data(
-        #     constants.REG_GOV_API_KEY,
-        #     "documents",
-        #     params={"filter[searchTerm]": docket_id},
-        # )
+    print("no more dockets to add to db")
 
     for doc in commentable_docs:
         document_id = doc["id"]
@@ -624,6 +618,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
             full_doc_info = query_register_API_and_merge_document_data(doc)
             insert_document_into_db(full_doc_info)
             print(f"added document {document_id} to the db")
+    print("no more documents to add to db")
 
     for doc in commentable_docs:
         document_id = doc["id"]
