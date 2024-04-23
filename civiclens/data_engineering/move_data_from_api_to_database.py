@@ -184,8 +184,8 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"""SELECT MAX("postedDate") \
-                        FROM regulations_publiccomments \
+            query = f"""SELECT MAX("posted_date") \
+                        FROM regulations_comment \
                         WHERE "document_id" = '{doc_id}';"""
             cursor.execute(query)
             response = cursor.fetchall()
@@ -223,17 +223,18 @@ def insert_docket_into_db(docket_data: json) -> None:
             with cursor:
                 cursor.execute(
                     """
-                    INSERT INTO regulations_dockets (
+                    INSERT INTO regulations_docket (
                         "id",
-                        "docketType",
-                        "lastModifiedDate",
-                        "agencyId",
+                        "docket_type",
+                        "last_modified_date",
+                        "agency_id",
                         "title",
-                        "objectId",
-                        "highlightedContent"
+                        "object_id",
+                        "highlighted_content"
                     ) VALUES (
                         %s, %s, %s, %s, %s, %s, %s
                     )
+                    ON CONFLICT (id) DO NOTHING;
                 """,
                     (
                         data_for_db["id"],
@@ -341,11 +342,31 @@ def insert_document_into_db(document_data: json) -> None:
 
     # print(f"{fields_to_insert=}")
     # annoying quirk: https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-column-of-relation-does-not-exist
-    query = """INSERT INTO regulations_documents ("id", "documentType", "lastModifiedDate", "frDocNum", "withdrawn", "agencyId", "commentEndDate",
-                                   "postedDate", "docket_id", "subtype", "commentStartDate", "openForComment",
-                                   "objectId", "fullTextXmlUrl", "agencyType", "CFR", "RIN", "title", "summary",
-                                   "dates", "furtherInformation", "supplementaryInformation") \
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+    query = """INSERT INTO regulations_document ("id",
+                            "document_type",
+                            "last_modified_date",
+                            "fr_doc_num",
+                            "withdrawn",
+                            "agency_id",
+                            "comment_end_date",
+                            "posted_date",
+                            "docket_id",
+                            "subtype",
+                            "comment_start_date",
+                            "open_for_comment",
+                            "object_id",
+                            "full_text_xml_url",
+                            "agency_type",
+                            "cfr",
+                            "rin",
+                            "title",
+                            "summary",
+                            "dates",
+                            "further_information",
+                            "supplementary_information") \
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO NOTHING;"""
     # print(f"{query=}")
     try:
 
@@ -467,17 +488,17 @@ def insert_comment_into_db(comment_data: json) -> None:
 
     # SQL INSERT statement
     query = """
-    INSERT INTO regulations_publiccomments (
+    INSERT INTO regulations_comment (
         "id",
-        "objectId",
-        "commentOn",
+        "object_id",
+        "comment_on",
         "document_id",
-        "duplicateComments",
-        "stateProvinceRegion",
+        "duplicate_comments",
+        "state_province_region",
         "subtype",
         "comment",
-        "firstName",
-        "lastName",
+        "first_name",
+        "last_name",
         "address1",
         "address2",
         "city",
@@ -485,24 +506,24 @@ def insert_comment_into_db(comment_data: json) -> None:
         "country",
         "email",
         "phone",
-        "govAgency",
-        "govAgencyType",
+        "gov_agency",
+        "gov_agency_type",
         "organization",
-        "originalDocumentId",
-        "modifyDate",
-        "pageCount",
-        "postedDate",
-        "receiveDate",
+        "original_document_id",
+        "modify_date",
+        "page_count",
+        "posted_date",
+        "receive_date",
         "title",
-        "trackingNbr",
+        "tracking_nbr",
         "withdrawn",
-        "reasonWithdrawn",
+        "reason_withdrawn",
         "zip",
-        "restrictReason",
-        "restrictReasonType",
-        "submitterRep",
-        "submitterRepAddress",
-        "submitterRepCityState"
+        "restrict_reason",
+        "restrict_reason_type",
+        "submitter_rep",
+        "submitter_rep_address",
+        "submitter_rep_city_state"
     ) VALUES (
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     )
@@ -564,8 +585,8 @@ def load_new_comments_for_existing_doc():
 
 
 ### Rough sketch of the final code process
-""" 
-need to check that we've gotten all documents -- could do this manually with 
+"""
+need to check that we've gotten all documents -- could do this manually with
 the documents being put into a database, or with a while loop
 """
 
