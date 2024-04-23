@@ -187,3 +187,60 @@ def pull_reg_gov_data(
                     return doc_data
 
     raise RuntimeError(f"Unrecoverable error; {r_json}")
+
+def get_comment_text(api_key, comment_id):
+    """
+    Get the text of a comment
+
+    Inputs:
+        api_key (str): key for the regulations.gov API
+        comment_id (str): the id for the comment
+
+    Returns: the json object for the comment text
+    """
+    api_url = "https://api.regulations.gov/v4/comments/"
+    endpoint = f"{api_url}{comment_id}?include=attachments&api_key={api_key}"
+    response = requests.get(endpoint)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Failed to retrieve data. Status code: {response.status_code}")
+
+
+def merge_comment_text_and_data(api_key, comment_data):
+    """
+    Combine comment json object with the comment text json object
+
+    Inputs:
+        api_key (str): key for the regulations.gov API
+        comment_data (json): the json object from regulations.gov
+
+    Returns: the combined json object for the comment and text
+    """
+
+    comment_text_data = get_comment_text(api_key, comment_data["id"])
+
+    # DECISION: only track the comment data; don't include the info on comment
+    # attachments which is found elsewhere in comment_text_data
+
+    all_comment_data = {**comment_data, **comment_text_data}
+    return all_comment_data
+
+# doc = pull_reg_gov_data(
+#             constants.REG_GOV_API_KEY,
+#             "documents",
+#             params={"filter[searchTerm]": 'VA-2024-VACO-0001-0091'}, # UPDATE DOCUMENT ID HERE
+#         )
+
+# doc_object_id = doc[0]['attributes']['objectId']
+
+# comment_data = pull_reg_gov_data(
+#             constants.REG_GOV_API_KEY,
+#             "comments",
+#             params={"filter[commentOnId]": doc_object_id},
+#          )
+
+# comment_json_text = []
+# for comment in comment_data:
+#     comment_json_text.append(merge_comment_text_and_data(constants.REG_GOV_API_KEY, comment))

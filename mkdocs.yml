@@ -1,0 +1,23 @@
+site_name: CivicLens DOCS
+repo_url: https://github.com/uchicago-capp-30320/CivicLens
+repo_name: uchicago-capp-30320/CivicLens
+
+theme:
+  name: material
+
+plugins:
+- search
+- autorefs
+
+markdown_extensions:
+  - tables
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+nav:
+  - "index.md"
+  - "models.md"
+  - "architecture.md"
+  - "endpoints/regulations.md"
+  - "reglib.md"
