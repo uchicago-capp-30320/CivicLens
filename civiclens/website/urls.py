@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin  # noqa: F401
-from django.urls import path  # noqa: F401
+from django.urls import path, include  # noqa: F401
 
 urlpatterns = [
     path("admin/", admin.site.urls),
