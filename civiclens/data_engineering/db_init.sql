@@ -76,5 +76,3 @@ CREATE TABLE PublicComments (
     submitterRepAddress VARCHAR(255),
     submitterRepCityState VARCHAR(100)
 );
-
-

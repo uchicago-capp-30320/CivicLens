@@ -12,7 +12,8 @@ pytest = "^8.1.1"
 pytest-mock = "^3.14.0"
 django = "^5.0.4"
 python-dotenv = "^1.0.1"
-psycopg2 = "^2.9.9"
+psycopg2-binary = "^2.9.9"
+pre-commit = "^3.7.0"
 
 
 [tool.poetry.group.dev.dependencies]
