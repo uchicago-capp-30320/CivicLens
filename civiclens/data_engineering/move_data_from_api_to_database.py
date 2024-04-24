@@ -612,15 +612,13 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
             # the db needs the docket primary key first
 
     print(f"{len(commentable_docs)} documents open for comment")
-    print(
-        "getting dockets and other documents associated with the documents open for comment"
-    )
+    print("getting dockets associated with the documents open for comment")
     # get the dockets for the commentable docs
     for doc in commentable_docs:
         docket_id = doc["attributes"]["docketId"]
         document_id = doc["id"]
         # if docket not in db, add it
-        if not verify_database_existence("regulations_dockets", docket_id):
+        if not verify_database_existence("regulations_docket", docket_id):
             docket_data = pull_reg_gov_data(
                 constants.REG_GOV_API_KEY,
                 "dockets",
@@ -634,7 +632,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
     for doc in commentable_docs:
         document_id = doc["id"]
         document_object_id = doc["attributes"]["objectId"]
-        if not verify_database_existence("regulations_documents", document_id):
+        if not verify_database_existence("regulations_document", document_id):
             # add this doc to the documents table in the database
             full_doc_info = query_register_API_and_merge_document_data(doc)
             insert_document_into_db(full_doc_info)
@@ -646,7 +644,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
         document_object_id = doc["attributes"]["objectId"]
         # get the comments, comment text, and add to db
         if not verify_database_existence(
-            "regulations_publiccomments", document_id, "document_id"
+            "regulations_comment", document_id, "document_id"
         ):
             print(f"no comments found in database for document {document_id}")
             comment_data = pull_reg_gov_data(
@@ -668,7 +666,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
             most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
 
             print(
-                f"comments found for document {document_id}, most recent  was {most_recent_comment_date}"
+                f"comments found for document {document_id}, most recent was {most_recent_comment_date}"
             )
 
             # CHECK THAT WE ARE FILTERING ON THE RIGHT FIELD FOR DATE
