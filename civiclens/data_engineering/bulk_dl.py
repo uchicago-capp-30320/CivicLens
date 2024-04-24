@@ -5,13 +5,25 @@ import pandas as pd
 
 class BulkDl:
     def __init__(self, api_key):
+        """
+        Initializes the BulkDl class.
+
+        Args:
+            api_key (str): API key for authenticating requests to the regulations.gov API.
+
+        Attributes:
+            api_key (str): Stored API key for requests.
+            base_url (str): Base URL for the API endpoint.
+            headers (dict): Headers to include in API requests, containing API key and content type.
+            agencies (list[str]): List of agency identifiers (aggregated from https://www.regulations.gov/agencies) 
+                                  to be used in API calls.
+        """
         self.api_key = api_key
         self.base_url = "https://api.regulations.gov/v4"
         self.headers = {
             'X-Api-Key': self.api_key,
             'Content-Type': 'application/json'
         }
-        self.api_call_count = 0
         self.agencies = [
             "AID", "ATBCB", "CFPB", "CNCS", "COLC", "CPPBSD", "CPSC", "CSB", "DHS",
             "DOC", "DOD", "DOE", "DOI", "DOJ", "DOL", "DOS", "DOT", "ED", "EEOC",
@@ -41,9 +53,20 @@ class BulkDl:
         ]
     
     def fetch_all_pages(self, endpoint, params, max_items_per_page=250):
-        '''
-        Helper function to fetch max pages(250 x 20) for a given endpoint
-        '''
+        """
+        Iterates through all the pages of API data for a given endpoint until there 
+        are no more pages to fetch (occurs at 20 pages, or 5000 items).
+
+        Args:
+            endpoint (str): The API endpoint to fetch data from.
+                            ['dockets', 'documents', 'comments']
+            params (dict): Dictionary of parameters to send in the API request.
+            max_items_per_page (int): Maximum number of items per page to request. 
+                                      Max (default) = 250.
+
+        Returns:
+            list: A list of items (dictionaries) fetched from all pages of the API endpoint.
+        """
         items = []
         page = 1
         while True:
@@ -77,12 +100,9 @@ class BulkDl:
 
 
     def get_all_dockets_by_agency(self):
-        '''
-        Helper function to retrieve all docket ids. loops through 47 agencies as described in
-        https://www.regulations.gov/agencies
-        
-        Note: This function represents the method to retrieve the entire list of docket ids. 
-        '''
+        """
+        Retrieves all docket IDs by looping through predefined agencies and stores them in a CSV file.
+        """
         all_docket_ids = set()
 
         for agency in self.agencies:
@@ -99,9 +119,13 @@ class BulkDl:
             df.to_csv('dockets.csv', index=False)
 
     def fetch_documents_by_date_ranges(self, start_date, end_date):
-        '''
-        Fetches documents posted within the given date ranges and saves them to a CSV file.
-        '''
+        """
+        Fetches documents posted within specified date ranges and saves them to a CSV file.
+
+        Args:
+            start_date (datetime.date): Start date for fetching documents.
+            end_date (datetime.date): End date for fetching documents.
+        """
         all_documents = []
         for start, end in self.generate_date_ranges(start_date, end_date):
             print(f"Fetching documents from {start} to {end}")
@@ -127,12 +151,17 @@ class BulkDl:
 
     @staticmethod # for now, we can put this in utils if that is preferred.
     def generate_date_ranges(start_date, end_date):
-        '''
-        Helper function to dynamically return weekly date-ranges. 
+        """
+        Generates weekly date ranges between two dates, inclusive.
+        Helped function for fetch_documents_by_date_ranges().
 
-        Used in fetch_documents_by_date_ranges() to generate week blocks 
-        to download documents
-        '''
+        Args:
+            start_date (datetime.date): The start date of the range.
+            end_date (datetime.date): The end date of the range.
+
+        Yields:
+            tuple: A tuple of (start_date, end_date) for each week within the specified range.
+        """
         current_date = start_date
         while current_date < end_date:
             week_end = current_date + datetime.timedelta(days=6)
