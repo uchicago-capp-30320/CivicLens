@@ -8,12 +8,33 @@ theme:
 plugins:
 - search
 - autorefs
+- mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [civclens]
+          options:
+            show_source: True
+            show_root_full_path: false
+            show_root_toc_entry: false
 
 markdown_extensions:
   - tables
   - def_list
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.highlight
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true 
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
 
 nav:
   - "index.md"

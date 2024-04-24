@@ -3,6 +3,7 @@ import requests
 from datetime import datetime
 from requests.adapters import HTTPAdapter
 import time
+from typing import Optional
 
 api_key = os.getenv("REG_GOV_API_KEY")
 if not api_key:
@@ -36,18 +37,19 @@ def _is_duplicated_on_server(response_json):
     )
 
 
-def api_date_format_params(data_type, start_date=None, end_date=None):
+
+def api_date_format_params(data_type: str, start_date: Optional[str]=None, end_date: Optional[str]=None) -> dict:
     """
     Formats dates to be passed to API call. Assumes we want whole days, and
     aren't filtering by time.
 
-    Inputs:
+    Args:
         data_type (str): 'dockets', 'documents', or 'comments' -- what kind of data we want back from the API
         start_date (str in YYYY-MM-DD format, optional): the inclusive start date of our data pull
         end_date (str in YYYY-MM-DD format, optional): the inclusive end date of our data pull
 
     Returns:
-        date_param (dict): dict containing the right formatted date calls
+        date_param: dictionary containing the right formatted date calls
     """
     date_param = {}
     if data_type == "dockets":
@@ -67,19 +69,19 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
 
 
 def pull_reg_gov_data(
-    api_key,
-    data_type,
-    start_date=None,
-    end_date=None,
-    params=None,
-    print_remaining_requests=False,
-    wait_for_rate_limits=False,
-    skip_duplicates=False,
-):
+    api_key: str,
+    data_type: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    params: Optional[dict] = None,
+    print_remaining_requests: Optional[bool] = False,
+    wait_for_rate_limits: Optional[bool] = False,
+    skip_duplicates: Optional[bool] = False,
+) -> dict:
     """
-    Returns the JSON associated with a request to the API; max length of 24000
+    Returns the JSON associated with a request to the API; max length of 24000.
 
-    draws heavily from here: https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py
+    Draws heavily from this [repository](https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py)
 
     Args:
         data_type (str): 'dockets', 'documents', or 'comments' -- what kind of data we want back from the API
@@ -96,7 +98,7 @@ def pull_reg_gov_data(
             should we skip that request? Defaults to False.
 
     Returns:
-        dict: JSON-ified request response
+        JSON-ified request response
     """
     # generate the right API request
     api_url = "https://api.regulations.gov/v4/"
@@ -188,15 +190,16 @@ def pull_reg_gov_data(
 
     raise RuntimeError(f"Unrecoverable error; {r_json}")
 
-def get_comment_text(api_key, comment_id):
+def get_comment_text(api_key: str, comment_id: str) -> dict:
     """
     Get the text of a comment
 
-    Inputs:
+    Args:
         api_key (str): key for the regulations.gov API
         comment_id (str): the id for the comment
 
-    Returns: the json object for the comment text
+    Returns: 
+        JSON object for the comment text
     """
     api_url = "https://api.regulations.gov/v4/comments/"
     endpoint = f"{api_url}{comment_id}?include=attachments&api_key={api_key}"
@@ -208,15 +211,16 @@ def get_comment_text(api_key, comment_id):
         print(f"Failed to retrieve data. Status code: {response.status_code}")
 
 
-def merge_comment_text_and_data(api_key, comment_data):
+def merge_comment_text_and_data(api_key: str, comment_data: dict) -> dict:
     """
     Combine comment json object with the comment text json object
 
-    Inputs:
+    Args:
         api_key (str): key for the regulations.gov API
         comment_data (json): the json object from regulations.gov
 
-    Returns: the combined json object for the comment and text
+    Returns:
+        Combined json object for the comment and text
     """
 
     comment_text_data = get_comment_text(api_key, comment_data["id"])
@@ -227,20 +231,4 @@ def merge_comment_text_and_data(api_key, comment_data):
     all_comment_data = {**comment_data, **comment_text_data}
     return all_comment_data
 
-# doc = pull_reg_gov_data(
-#             constants.REG_GOV_API_KEY,
-#             "documents",
-#             params={"filter[searchTerm]": 'VA-2024-VACO-0001-0091'}, # UPDATE DOCUMENT ID HERE
-#         )
 
-# doc_object_id = doc[0]['attributes']['objectId']
-
-# comment_data = pull_reg_gov_data(
-#             constants.REG_GOV_API_KEY,
-#             "comments",
-#             params={"filter[commentOnId]": doc_object_id},
-#          )
-
-# comment_json_text = []
-# for comment in comment_data:
-#     comment_json_text.append(merge_comment_text_and_data(constants.REG_GOV_API_KEY, comment))
