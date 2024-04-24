@@ -2,9 +2,7 @@ name: CivicLens
 
 on:
   push:
-    branches: [ "main", "develop", "frontend", "backend", "devops" ]
   pull_request:
-    branches: [ "main", "develop", "frontend", "backend"]
 
 permissions:
   contents: read
