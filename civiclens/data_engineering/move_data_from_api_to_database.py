@@ -273,6 +273,7 @@ def query_register_API_and_merge_document_data(doc: json) -> None:
             parsed_xml_content = parse_xml_content(xml_content)
             doc.update(parsed_xml_content)  # merge the json objects
         except:
+            # if there's an error, that means we can't use the xml_url to get the doc text, so we enter None for those fields
             error_message = f"Error accessing federal register xml data for frDocNum {fr_doc_num}, document id {document_id}"
             print(error_message)
             # raise Exception(error_message)
@@ -340,7 +341,6 @@ def insert_document_into_db(document_data: json) -> None:
         data_for_db["supplementaryInformation"],
     )
 
-    # print(f"{fields_to_insert=}")
     # annoying quirk: https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-column-of-relation-does-not-exist
     query = """INSERT INTO regulations_document ("id",
                             "document_type",
@@ -367,13 +367,8 @@ def insert_document_into_db(document_data: json) -> None:
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (id) DO NOTHING;"""
-    # print(f"{query=}")
     try:
-
         connection, cursor = connect_db_and_get_cursor()
-
-        # TODO: confirm this SQL code
-
         with connection:
             with cursor:
                 cursor.execute(
