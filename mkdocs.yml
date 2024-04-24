@@ -40,5 +40,7 @@ nav:
   - "index.md"
   - "models.md"
   - "architecture.md"
-  - "endpoints/regulations.md"
   - "reglib.md"
+  - Endpoints:
+    - "endpoints/regulations.md"
+ 
