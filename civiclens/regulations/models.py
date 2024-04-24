@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Dockets(models.Model):
     "Model representing a docket."
     id = models.CharField(max_length=255, primary_key=True)
@@ -9,6 +10,7 @@ class Dockets(models.Model):
     title = models.TextField()
     objectId = models.CharField(max_length=255, blank=True)
     highlightedContent = models.CharField(max_length=255, blank=True)
+
 
 class Documents(models.Model):
     "Model representing a document."
@@ -36,6 +38,7 @@ class Documents(models.Model):
     dates = models.CharField(max_length=255, blank=True)
     furtherInformation = models.TextField(blank=True)
     supplementaryInformation = models.TextField(blank=True)
+
 
 class PublicComments(models.Model):
     "Model representing a public comment."

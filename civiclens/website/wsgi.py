@@ -7,9 +7,10 @@ For more information on this file, see
 https://docs.djangoproject.com/en/5.0/howto/deployment/wsgi/
 """
 
-import os # noqa: F401
+import os  # noqa: F401
 
-from django.core.wsgi import get_wsgi_application # noqa
+from django.core.wsgi import get_wsgi_application  # noqa
+
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "website.settings")
 

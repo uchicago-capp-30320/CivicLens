@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
-import os # noqa: F401
-import sys # noqa: F401
+import os  # noqa: F401
+import sys  # noqa: F401
 
 
 def main():
