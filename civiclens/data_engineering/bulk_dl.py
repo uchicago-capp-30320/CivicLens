@@ -86,10 +86,9 @@ class BulkDl:
                 if not data['meta'].get('hasNextPage', False):
                     break
                 page += 1
-            elif response.status_code == 429:  # Rate limit exceeded, obtain reset time
-                retry_after = response.headers.get("Retry-After", None)
+            elif response.status_code == 429:  # Rate limit exceeded
+                retry_after = response.headers.get("Retry-After", None) # Obtain reset time
                 wait_time = int(retry_after) if retry_after and retry_after.isdigit() else 3600  # Default to 1 hour if no wait time provided
-                # current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 print(f"Rate limit exceeded. Waiting to {wait_time} seconds to retry.")
                 time.sleep(wait_time)
                 continue
@@ -143,11 +142,8 @@ class BulkDl:
 
         # Save to DataFrame and CSV
         df = pd.DataFrame(document_lst, columns=['Doc_ID', 'openForComment'])
-        print(f"Unique documents before deduplication: {len(df)}")
         df = df.drop_duplicates()
-        print(f"Unique documents after deduplication: {len(df)}")
-        df.to_csv('doc_ids_2014.csv', index=False)
-        print("Document IDs have been saved to 'doc_ids.csv'.")
+        df.to_csv('doc_ids_2024.csv', index=False)
 
     @staticmethod # for now, we can put this in utils if that is preferred.
     def generate_date_ranges(start_date, end_date):
