@@ -254,11 +254,22 @@ def insert_docket_into_db(docket_data: json) -> None:
                         attributes["highlightedContent"],
                     ),
                 )
-    except psycopg2.Error as e:
+    except Exception as e:
         error_message = (
             f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
         )
-        print(error_message)
+        # print(error_message)
+        return {
+            "error": True,
+            "message": e,
+            "description": error_message,
+        }
+
+    return {
+        "error": False,
+        "message": None,
+        "description": None,
+    }
 
 
 def add_dockets_to_db(doc_list: list[json], print_statements: bool = True) -> None:
@@ -276,9 +287,13 @@ def add_dockets_to_db(doc_list: list[json], print_statements: bool = True) -> No
                 params={"filter[searchTerm]": docket_id},
             )
             # add docket_data to docket table in the database
-            insert_docket_into_db(docket_data)
-            if print_statements:
-                print(f"added docket {docket_id} to the db")
+            insert_response = insert_docket_into_db(docket_data)
+            if insert_response["error"]:
+                print(insert_response["error_message"])
+                # would want to add logging here
+            else:
+                if print_statements:
+                    print(f"added docket {docket_id} to the db")
 
 
 def query_register_API_and_merge_document_data(doc: json) -> None:
@@ -403,10 +418,23 @@ def insert_document_into_db(document_data: json) -> None:
                     query,
                     fields_to_insert,
                 )
+
     except Exception as e:
-        print(
-            f"Error inserting document {document_data['id']} into documents table: {e}"
+        error_message = (
+            f"Error inserting document {document_data['id']} into dockets table: {e}"
         )
+        # print(error_message)
+        return {
+            "error": True,
+            "message": e,
+            "description": error_message,
+        }
+
+    return {
+        "error": False,
+        "message": None,
+        "description": None,
+    }
 
 
 def get_comment_text(api_key: str, comment_id: str) -> json:
@@ -438,9 +466,13 @@ def add_documents_to_db(doc_list: list[json], print_statements: bool = True) -> 
         ):
             # add this doc to the documents table in the database
             full_doc_info = query_register_API_and_merge_document_data(doc)
-            insert_document_into_db(full_doc_info)
-            if print_statements:
-                print(f"added document {document_id} to the db")
+            insert_response = insert_document_into_db(full_doc_info)
+            if insert_response["error"]:
+                print(insert_response["error_message"])
+                # would want to add logging here
+            else:
+                if print_statements:
+                    print(f"added document {document_id} to the db")
 
 
 def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
@@ -612,8 +644,22 @@ def insert_comment_into_db(comment_data: json) -> None:
             )
             connection.commit()
 
-    except psycopg2.Error as e:
-        print(f"Error inserting comment {comment_data['id']} into comments table: {e}")
+    except Exception as e:
+        error_message = (
+            f"Error inserting docket {comment_data['id']} into comment table: {e}"
+        )
+        # print(error_message)
+        return {
+            "error": True,
+            "message": e,
+            "description": error_message,
+        }
+
+    return {
+        "error": False,
+        "message": None,
+        "description": None,
+    }
 
 
 def add_comments_to_db(doc_list: list[json], print_statements: bool = True) -> None:
@@ -638,7 +684,12 @@ def add_comments_to_db(doc_list: list[json], print_statements: bool = True) -> N
                     all_comment_data = merge_comment_text_and_data(
                         constants.REG_GOV_API_KEY, comment
                     )
-                    insert_comment_into_db(all_comment_data)
+                    insert_response = insert_comment_into_db(all_comment_data)
+
+                    if insert_response["error"]:
+                        print(insert_response["error_message"])
+                        # would want to add logging here
+
                 if print_statements:
                     print(f"tried to add comments on document {document_id} to the db")
 
@@ -663,7 +714,10 @@ def add_comments_to_db(doc_list: list[json], print_statements: bool = True) -> N
                     all_comment_data = merge_comment_text_and_data(
                         constants.REG_GOV_API_KEY, comment
                     )
-                    insert_comment_into_db(all_comment_data)
+                    insert_response = insert_comment_into_db(all_comment_data)
+                    if insert_response["error"]:
+                        print(insert_response["error_message"])
+                        # would want to add logging here
 
 
 def load_new_comments_for_existing_doc():
@@ -672,6 +726,9 @@ def load_new_comments_for_existing_doc():
 
 
 def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
+
+    # TODO: ADD DOC STRINGS
+
     # get documents
     print("getting list of documents within date range")
     doc_list = pull_reg_gov_data(
