@@ -273,7 +273,14 @@ def insert_docket_into_db(docket_data: json) -> None:
 
 
 def add_dockets_to_db(doc_list: list[json], print_statements: bool = True) -> None:
-    # get the dockets for the commentable docs
+    """
+    Add the dockets connected to a list of documents into the database
+
+    Inputs:
+        doc_list (list of json objects): what is returned from an API call for documents
+        print_statements (boolean): whether to print info on progress
+
+    """
     for doc in doc_list:
         docket_id = doc["attributes"]["docketId"]
         commentable = doc["attributes"]["openForComment"]
@@ -458,6 +465,14 @@ def get_comment_text(api_key: str, comment_id: str) -> json:
 
 
 def add_documents_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+    """
+    Add a list of document json objects into the database
+
+    Inputs:
+        doc_list (list of json objects): what is returned from an API call for documents
+        print_statements (boolean): whether to print info on progress
+
+    """
     for doc in doc_list:
         document_id = doc["id"]
         commentable = doc["attributes"]["openForComment"]
@@ -663,6 +678,14 @@ def insert_comment_into_db(comment_data: json) -> None:
 
 
 def add_comments_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+    """
+    Add comments on a list of documents to the database
+
+    Inputs:
+        doc_list (list of json objects): what is returned from an API call for documents
+        print_statements (boolean): whether to print info on progress
+
+    """
     for doc in doc_list:
         document_id = doc["id"]
         document_object_id = doc["attributes"]["objectId"]
