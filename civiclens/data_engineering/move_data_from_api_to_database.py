@@ -212,6 +212,14 @@ def insert_docket_into_db(docket_data: json) -> None:
     """
 
     # need to check that docket_data is in the right format
+    if not isinstance(docket_data, list) or len(docket_data) < 1:
+        print("Invalid docket data format.")
+        return
+
+    data_for_db = docket_data[0]
+    if "attributes" not in data_for_db:
+        print("Invalid docket data format.")
+        return
 
     data_for_db = docket_data[0]
     attributes = data_for_db["attributes"]
@@ -251,6 +259,26 @@ def insert_docket_into_db(docket_data: json) -> None:
             f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
         )
         print(error_message)
+
+
+def add_dockets_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+    # get the dockets for the commentable docs
+    for doc in doc_list:
+        docket_id = doc["attributes"]["docketId"]
+        commentable = doc["attributes"]["openForComment"]
+        # if docket not in db, add it
+        if commentable and (
+            not verify_database_existence("regulations_docket", docket_id)
+        ):
+            docket_data = pull_reg_gov_data(
+                constants.REG_GOV_API_KEY,
+                "dockets",
+                params={"filter[searchTerm]": docket_id},
+            )
+            # add docket_data to docket table in the database
+            insert_docket_into_db(docket_data)
+            if print_statements:
+                print(f"added docket {docket_id} to the db")
 
 
 def query_register_API_and_merge_document_data(doc: json) -> None:
@@ -399,6 +427,20 @@ def get_comment_text(api_key: str, comment_id: str) -> json:
         return response.json()
     else:
         print(f"Failed to retrieve comment data. Status code: {response.status_code}")
+
+
+def add_documents_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+    for doc in doc_list:
+        document_id = doc["id"]
+        commentable = doc["attributes"]["openForComment"]
+        if commentable and (
+            not verify_database_existence("regulations_document", document_id)
+        ):
+            # add this doc to the documents table in the database
+            full_doc_info = query_register_API_and_merge_document_data(doc)
+            insert_document_into_db(full_doc_info)
+            if print_statements:
+                print(f"added document {document_id} to the db")
 
 
 def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
@@ -574,16 +616,59 @@ def insert_comment_into_db(comment_data: json) -> None:
         print(f"Error inserting comment {comment_data['id']} into comments table: {e}")
 
 
+def add_comments_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+    for doc in doc_list:
+        document_id = doc["id"]
+        document_object_id = doc["attributes"]["objectId"]
+        commentable = doc["attributes"]["openForComment"]
+        # get the comments, comment text, and add to db
+        if commentable:
+            if not verify_database_existence(
+                "regulations_comment", document_id, "document_id"
+            ):
+                if print_statements:
+                    print(f"no comments found in database for document {document_id}")
+                comment_data = pull_reg_gov_data(
+                    constants.REG_GOV_API_KEY,
+                    "comments",
+                    params={"filter[commentOnId]": document_object_id},
+                )
+                # add comment data to comments table in the database
+                for comment in comment_data:
+                    all_comment_data = merge_comment_text_and_data(
+                        constants.REG_GOV_API_KEY, comment
+                    )
+                    insert_comment_into_db(all_comment_data)
+                if print_statements:
+                    print(f"tried to add comments on document {document_id} to the db")
+
+            else:
+                # get date of most recent comment on this doc in the db
+                most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
+                if print_statements:
+                    print(
+                        f"comments found for document {document_id}, most recent was {most_recent_comment_date}"
+                    )
+
+                comment_data = pull_reg_gov_data(
+                    constants.REG_GOV_API_KEY,
+                    "comments",
+                    params={
+                        "filter[commentOnId]": document_object_id,
+                        "filter[lastModifiedDate][ge]": most_recent_comment_date,
+                    },
+                )
+
+                for comment in comment_data:
+                    all_comment_data = merge_comment_text_and_data(
+                        constants.REG_GOV_API_KEY, comment
+                    )
+                    insert_comment_into_db(all_comment_data)
+
+
 def load_new_comments_for_existing_doc():
     # TODO
     pass
-
-
-### Rough sketch of the final code process
-"""
-need to check that we've gotten all documents -- could do this manually with
-the documents being put into a database, or with a while loop
-"""
 
 
 def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
@@ -607,78 +692,18 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
             # the db needs the docket primary key first
 
     print(f"{len(commentable_docs)} documents open for comment")
-    print("getting dockets associated with the documents open for comment")
-    # get the dockets for the commentable docs
-    for doc in commentable_docs:
-        docket_id = doc["attributes"]["docketId"]
-        document_id = doc["id"]
-        # if docket not in db, add it
-        if not verify_database_existence("regulations_docket", docket_id):
-            docket_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY,
-                "dockets",
-                params={"filter[searchTerm]": docket_id},
-            )
-            # add docket_data to docket table in the database
-            insert_docket_into_db(docket_data)
-            print(f"added docket {docket_id} to the db")
-    print("no more dockets to add to db")
 
-    for doc in commentable_docs:
-        document_id = doc["id"]
-        document_object_id = doc["attributes"]["objectId"]
-        if not verify_database_existence("regulations_document", document_id):
-            # add this doc to the documents table in the database
-            full_doc_info = query_register_API_and_merge_document_data(doc)
-            insert_document_into_db(full_doc_info)
-            print(f"added document {document_id} to the db")
-    print("no more documents to add to db")
+    if args.pull_dockets:
+        print("getting dockets associated with the documents open for comment")
+        add_dockets_to_db(commentable_docs)
+        print("no more dockets to add to db")
 
-    for doc in commentable_docs:
-        document_id = doc["id"]
-        document_object_id = doc["attributes"]["objectId"]
-        # get the comments, comment text, and add to db
-        if not verify_database_existence(
-            "regulations_comment", document_id, "document_id"
-        ):
-            print(f"no comments found in database for document {document_id}")
-            comment_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY,
-                "comments",
-                params={"filter[commentOnId]": document_object_id},
-            )
-            # add comment data to comments table in the database
-            for comment in comment_data:
-                all_comment_data = merge_comment_text_and_data(
-                    constants.REG_GOV_API_KEY, comment
-                )
-                insert_comment_into_db(all_comment_data)
+    if args.pull_documents:
+        add_documents_to_db(commentable_docs)
+        print("no more documents to add to db")
 
-            print(f"tried to add comments on document {document_id} to the db")
-
-        else:
-            # get date of most recent comment on this doc in the db
-            most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
-
-            print(
-                f"comments found for document {document_id}, most recent was {most_recent_comment_date}"
-            )
-
-            # CHECK THAT WE ARE FILTERING ON THE RIGHT FIELD FOR DATE
-            comment_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY,
-                "comments",
-                params={
-                    "filter[commentOnId]": document_object_id,
-                    "filter[lastModifiedDate][ge]": most_recent_comment_date,
-                },
-            )
-
-            for comment in comment_data:
-                all_comment_data = merge_comment_text_and_data(
-                    constants.REG_GOV_API_KEY, comment
-                )
-                insert_comment_into_db(all_comment_data)
+    if args.pull_comments:
+        add_comments_to_db(commentable_docs)
 
 
 if __name__ == "__main__":
@@ -692,6 +717,24 @@ if __name__ == "__main__":
         "end_date",
         type=str,
         help="End date (str) for the date range (format: YYYY-MM-DD)",
+    )
+    parser.add_argument(
+        "-k",
+        "--pull_dockets",
+        action="store_true",
+        help="Pull dockets for date range and add to db if not there",
+    )
+    parser.add_argument(
+        "-d",
+        "--pull_documents",
+        action="store_true",
+        help="Pull documents for date range and add to db if not there",
+    )
+    parser.add_argument(
+        "-c",
+        "--pull_comments",
+        action="store_true",
+        help="Pull comments for date range and add to db if not there",
     )
 
     args = parser.parse_args()
