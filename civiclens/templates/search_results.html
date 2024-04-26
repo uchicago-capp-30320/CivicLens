@@ -10,12 +10,12 @@
     <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
       <div class="container">
         <div class="form-group">
-          <form action="/regulations/search/results/" method="POST">
+          <form action="/regulations/search/results/" method="GET">
             {% csrf_token %}
             {{ form.as_p }}
             <div class="input-group mb-4">
-              <input class="form-control" id="searchterm" name="searchterm" type="text" required
-              placeholder={{searchterm}}>
+              <input class="form-control" id="q" name="q" type="text" required
+              placeholder="{{Search.searchterm}}">
               <button class="btn btn-primary">Search</button>
             </div>
           </form>

@@ -77,3 +77,7 @@ class PublicComments(models.Model):
     submitterRep = models.CharField(max_length=100, blank=True)
     submitterRepAddress = models.CharField(max_length=255, blank=True)
     submitterRepCityState = models.CharField(max_length=100, blank=True)
+
+class Search(models.Model):
+    searchterm = models.CharField(max_length=100)
+    

@@ -14,11 +14,11 @@
         <h6>What opportunities are there to give your feedback right now? [need to phrase this better]</h6>
         
         <div class="form-group">
-          <form action="/regulations/search/results/" method="POST">
+          <form action="/regulations/search/results/" method="GET">
             {% csrf_token %}
             {{ form.as_p }}
             <div class="input-group mb-4">
-              <input class="form-control" id="searchterm" name="searchterm" type="text" required
+              <input class="form-control" id="q" name="q" type="text" required
               placeholder="Type in a topic you care about to find opportunities to comment...">
               <button class="btn btn-primary">Search</button>
             </div>
