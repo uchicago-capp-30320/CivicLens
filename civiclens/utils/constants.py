@@ -1,9 +1,7 @@
 import os
-
 from dotenv import load_dotenv
 
-
-load_dotenv()
+load_dotenv(override=True)  # intentionally override any existing set env vars
 
 DJANGO_SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 OLD_DJANGO_SECRET_KEY = os.environ.get("OLD_DJANGO_SECRET_KEY")
