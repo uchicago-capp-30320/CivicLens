@@ -1,15 +1,12 @@
-import os
 import requests
 import xml.etree.ElementTree as ET
 import psycopg2
 import json
 import argparse
-from requests.adapters import HTTPAdapter
 import datetime as dt
 from datetime import datetime
 
 from access_api_data import pull_reg_gov_data
-import access_api_data
 from civiclens.utils import constants
 
 
@@ -272,7 +269,7 @@ def query_register_API_and_merge_document_data(doc: json) -> None:
             xml_content = fetch_xml_content(xml_url)
             parsed_xml_content = parse_xml_content(xml_content)
             doc.update(parsed_xml_content)  # merge the json objects
-        except:
+        except Exception:
             # if there's an error, that means we can't use the xml_url to get the doc text, so we enter None for those fields
             error_message = f"Error accessing federal register xml data for frDocNum {fr_doc_num}, document id {document_id}"
             print(error_message)
