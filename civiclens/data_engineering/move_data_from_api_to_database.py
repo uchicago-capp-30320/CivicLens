@@ -450,27 +450,6 @@ def insert_document_into_db(document_data: json) -> dict:
     }
 
 
-def get_comment_text(api_key: str, comment_id: str) -> json:
-    """
-    Get the text of a comment
-
-    Inputs:
-        api_key (str): key for the regulations.gov API
-        comment_id (str): the id for the comment
-
-    Returns: the json object for the comment text
-    """
-    api_url = "https://api.regulations.gov/v4/comments/"
-    endpoint = f"{api_url}{comment_id}?include=attachments&api_key={api_key}"
-    response = requests.get(endpoint)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Failed to retrieve comment data. Status code: {response.status_code}")
-        return None
-
-
 def add_documents_to_db(doc_list: list[json], print_statements: bool = True) -> None:
     """
     Add a list of document json objects into the database
@@ -495,6 +474,27 @@ def add_documents_to_db(doc_list: list[json], print_statements: bool = True) -> 
             else:
                 if print_statements:
                     print(f"added document {document_id} to the db")
+
+
+def get_comment_text(api_key: str, comment_id: str) -> json:
+    """
+    Get the text of a comment
+
+    Inputs:
+        api_key (str): key for the regulations.gov API
+        comment_id (str): the id for the comment
+
+    Returns: the json object for the comment text
+    """
+    api_url = "https://api.regulations.gov/v4/comments/"
+    endpoint = f"{api_url}{comment_id}?include=attachments&api_key={api_key}"
+    response = requests.get(endpoint)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Failed to retrieve comment data. Status code: {response.status_code}")
+        return None
 
 
 def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
@@ -750,11 +750,6 @@ def add_comments_to_db(doc_list: list[json], print_statements: bool = True) -> N
                         # would want to add logging here
 
 
-def load_new_comments_for_existing_doc():
-    # TODO
-    pass
-
-
 def pull_all_api_data_for_date_range(
     start_date: str,
     end_date: str,
@@ -783,6 +778,7 @@ def pull_all_api_data_for_date_range(
     )
     print(f"got {len(doc_list)} documents")
     print("now extracting docs open for comments from that list")
+
     # pull the commentable docs from that list
     commentable_docs = []
     for doc in doc_list:
@@ -800,10 +796,12 @@ def pull_all_api_data_for_date_range(
         print("no more dockets to add to db")
 
     if pull_documents:
+        print("adding documents to the db")
         add_documents_to_db(commentable_docs)
         print("no more documents to add to db")
 
     if pull_comments:
+        print("adding comments to the db")
         add_comments_to_db(commentable_docs)
         print("no more comments to add to db")
 
