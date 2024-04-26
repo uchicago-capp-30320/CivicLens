@@ -96,6 +96,7 @@ def pull_reg_gov_data(
     # generate the right API request
     api_url = "https://api.regulations.gov/v4/"
     endpoint = f"{api_url}{data_type}"
+    params = params if params is not None else {}
 
     # Our API key has a rate limit of 1,000 requests/hour. If we hit that limit, we can
     # retry every WAIT_MINUTES minutes (more frequently than once an hour, in case our request limit
@@ -103,12 +104,7 @@ def pull_reg_gov_data(
     # interrupted. Otherwise we'd have to wait a while before getting interrupted. We could do this
     # with threads, but that gets more complicated than it needs to be.
     STATUS_CODE_OVER_RATE_LIMIT = 429
-    WAIT_MINUTES = 20  # time between attempts to get a response
-    POLL_SECONDS = (
-        10  # run time.sleep() for this long, so we can check if we've been interrupted
-    )
-
-    params = params if params is not None else {}
+    WAIT_SECONDS = 3600  # Default to 1 hour
 
     # if any dates are specified, format those and add to the params
     if start_date or end_date:
@@ -145,8 +141,14 @@ def pull_reg_gov_data(
             if r.status_code == STATUS_CODE_OVER_RATE_LIMIT and wait_for_rate_reset:
                 the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 retry_after = r.headers.get("Retry-After", None)
-                wait_time = int(retry_after) if retry_after and retry_after.isdigit() else 3600  # Default to 1 hour if no wait time provided
-                print(f"Rate limit exceeded at {the_time}. Waiting {wait_time} seconds to retry.")
+                wait_time = (
+                    int(retry_after)
+                    if retry_after and retry_after.isdigit()
+                    else WAIT_SECONDS
+                )
+                print(
+                    f"Rate limit exceeded at {the_time}. Waiting {wait_time} seconds to retry."
+                )
                 time.sleep(wait_time)
             elif _is_duplicated_on_server(r.json()) and skip_duplicates:
                 print("****Duplicate entries on server. Skipping.")
