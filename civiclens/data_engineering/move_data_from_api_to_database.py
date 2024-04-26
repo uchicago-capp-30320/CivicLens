@@ -199,7 +199,7 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     return most_recent_date
 
 
-def insert_docket_into_db(docket_data: json) -> None:
+def insert_docket_into_db(docket_data: json) -> dict:
     """
     Insert the info on a docket into the dockets table
 
@@ -209,6 +209,20 @@ def insert_docket_into_db(docket_data: json) -> None:
     """
 
     # need to check that docket_data is in the right format
+    if not isinstance(docket_data, list) or len(docket_data) < 1:
+        return {
+            "error": True,
+            "message": "wrong data format",
+            "description": "Invalid docket data format - not a list or an empty list",
+        }
+
+    data_for_db = docket_data[0]
+    if "attributes" not in data_for_db:
+        return {
+            "error": True,
+            "message": "wrong data format",
+            "description": "Invalid docket data format - no attributes json object",
+        }
 
     data_for_db = docket_data[0]
     attributes = data_for_db["attributes"]
@@ -243,14 +257,56 @@ def insert_docket_into_db(docket_data: json) -> None:
                         attributes["highlightedContent"],
                     ),
                 )
-    except psycopg2.Error as e:
+    except Exception as e:
         error_message = (
             f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
         )
-        print(error_message)
+        # print(error_message)
+        return {
+            "error": True,
+            "message": e,
+            "description": error_message,
+        }
+
+    return {
+        "error": False,
+        "message": None,
+        "description": None,
+    }
 
 
-def query_register_API_and_merge_document_data(doc: json) -> None:
+def add_dockets_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+    """
+    Add the dockets connected to a list of documents into the database
+
+    Inputs:
+        doc_list (list of json objects): what is returned from an API call for documents
+        print_statements (boolean): whether to print info on progress
+
+    """
+    for doc in doc_list:
+        docket_id = doc["attributes"]["docketId"]
+        commentable = doc["attributes"]["openForComment"]
+        # if docket not in db, add it
+        if commentable and (
+            not verify_database_existence("regulations_docket", docket_id)
+        ):
+            docket_data = pull_reg_gov_data(
+                constants.REG_GOV_API_KEY,
+                "dockets",
+                params={"filter[searchTerm]": docket_id},
+            )
+            # add docket_data to docket table in the database
+            insert_response = insert_docket_into_db(docket_data)
+            if insert_response["error"]:
+                print(insert_response["description"])
+                # would want to add logging here
+            else:
+                if print_statements:
+                    print(f"added docket {docket_id} to the db")
+
+
+def query_register_API_and_merge_document_data(doc: json) -> json:
     """
     Attempts to pull document text via federal register API and merge with reg gov API data
 
@@ -302,7 +358,7 @@ def query_register_API_and_merge_document_data(doc: json) -> None:
     return doc
 
 
-def insert_document_into_db(document_data: json) -> None:
+def insert_document_into_db(document_data: json) -> dict:
     """
     Insert the info on a document into the documents table
 
@@ -372,10 +428,49 @@ def insert_document_into_db(document_data: json) -> None:
                     query,
                     fields_to_insert,
                 )
+
     except Exception as e:
-        print(
-            f"Error inserting document {document_data['id']} into documents table: {e}"
+        error_message = (
+            f"Error inserting document {document_data['id']} into dockets table: {e}"
         )
+        # print(error_message)
+        return {
+            "error": True,
+            "message": e,
+            "description": error_message,
+        }
+
+    return {
+        "error": False,
+        "message": None,
+        "description": None,
+    }
+
+
+def add_documents_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+    """
+    Add a list of document json objects into the database
+
+    Inputs:
+        doc_list (list of json objects): what is returned from an API call for documents
+        print_statements (boolean): whether to print info on progress
+
+    """
+    for doc in doc_list:
+        document_id = doc["id"]
+        commentable = doc["attributes"]["openForComment"]
+        if commentable and (
+            not verify_database_existence("regulations_document", document_id)
+        ):
+            # add this doc to the documents table in the database
+            full_doc_info = query_register_API_and_merge_document_data(doc)
+            insert_response = insert_document_into_db(full_doc_info)
+            if insert_response["error"]:
+                print(insert_response["description"])
+                # would want to add logging here
+            else:
+                if print_statements:
+                    print(f"added document {document_id} to the db")
 
 
 def get_comment_text(api_key: str, comment_id: str) -> json:
@@ -396,6 +491,7 @@ def get_comment_text(api_key: str, comment_id: str) -> json:
         return response.json()
     else:
         print(f"Failed to retrieve comment data. Status code: {response.status_code}")
+        return None
 
 
 def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
@@ -418,7 +514,7 @@ def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
     return all_comment_data
 
 
-def insert_comment_into_db(comment_data: json) -> None:
+def insert_comment_into_db(comment_data: json) -> dict:
     """
     Insert the info on a comment into the PublicComments table
 
@@ -436,7 +532,7 @@ def insert_comment_into_db(comment_data: json) -> None:
     comment_id = data_for_db["id"]
     objectId = attributes.get("objectId", "")
     commentOn = comment_text_attributes.get("commentOn", "")
-    commentOnDocumentId = comment_text_attributes.get("commentOnDocumentId", "")
+    document_id = comment_text_attributes.get("commentOnDocumentId", "")
     duplicateComments = comment_text_attributes.get("duplicateComments", 0)
     stateProvinceRegion = comment_text_attributes.get("stateProvinceRegion", "")
     subtype = comment_text_attributes.get("subtype", "")
@@ -531,7 +627,7 @@ def insert_comment_into_db(comment_data: json) -> None:
                     comment_id,
                     objectId,
                     commentOn,
-                    commentOnDocumentId,
+                    document_id,
                     duplicateComments,
                     stateProvinceRegion,
                     subtype,
@@ -567,23 +663,108 @@ def insert_comment_into_db(comment_data: json) -> None:
             )
             connection.commit()
 
-    except psycopg2.Error as e:
-        print(f"Error inserting comment {comment_data['id']} into comments table: {e}")
+    except Exception as e:
+        error_message = (
+            f"Error inserting docket {comment_data['id']} into comment table: {e}"
+        )
+        # print(error_message)
+        return {
+            "error": True,
+            "message": e,
+            "description": error_message,
+        }
+
+    return {
+        "error": False,
+        "message": None,
+        "description": None,
+    }
 
 
-def load_new_comments_for_existing_doc():
-    # TODO
-    pass
+def add_comments_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+    """
+    Add comments on a list of documents to the database
+
+    Inputs:
+        doc_list (list of json objects): what is returned from an API call for documents
+        print_statements (boolean): whether to print info on progress
+
+    """
+    for doc in doc_list:
+        document_id = doc["id"]
+        document_object_id = doc["attributes"]["objectId"]
+        commentable = doc["attributes"]["openForComment"]
+        # get the comments, comment text, and add to db
+        if commentable:
+            if not verify_database_existence(
+                "regulations_comment", document_id, "document_id"
+            ):
+                if print_statements:
+                    print(f"no comments found in database for document {document_id}")
+                comment_data = pull_reg_gov_data(
+                    constants.REG_GOV_API_KEY,
+                    "comments",
+                    params={"filter[commentOnId]": document_object_id},
+                )
+                # add comment data to comments table in the database
+                for comment in comment_data:
+                    all_comment_data = merge_comment_text_and_data(
+                        constants.REG_GOV_API_KEY, comment
+                    )
+                    insert_response = insert_comment_into_db(all_comment_data)
+
+                    if insert_response["error"]:
+                        print(insert_response["description"])
+                        # would want to add logging here
+
+                if print_statements:
+                    print(f"tried to add comments on document {document_id} to the db")
+
+            else:
+                # get date of most recent comment on this doc in the db
+                most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
+                if print_statements:
+                    print(
+                        f"comments found for document {document_id}, most recent was {most_recent_comment_date}"
+                    )
+
+                comment_data = pull_reg_gov_data(
+                    constants.REG_GOV_API_KEY,
+                    "comments",
+                    params={
+                        "filter[commentOnId]": document_object_id,
+                        "filter[lastModifiedDate][ge]": most_recent_comment_date,
+                    },
+                )
+
+                for comment in comment_data:
+                    all_comment_data = merge_comment_text_and_data(
+                        constants.REG_GOV_API_KEY, comment
+                    )
+                    insert_response = insert_comment_into_db(all_comment_data)
+                    if insert_response["error"]:
+                        print(insert_response["description"])
+                        # would want to add logging here
 
 
-### Rough sketch of the final code process
-"""
-need to check that we've gotten all documents -- could do this manually with
-the documents being put into a database, or with a while loop
-"""
+def pull_all_api_data_for_date_range(
+    start_date: str,
+    end_date: str,
+    pull_dockets: bool,
+    pull_documents: bool,
+    pull_comments: bool,
+) -> None:
+    """
+    Pull different types of data from regulations.gov API based on date range
 
+    Inputs:
+        start_date (str): the date in YYYY-MM-DD format to pull data from (inclusive)
+        end_date (str): the date in YYYY-MM-DD format to stop the data pull (inclusive)
+        pull_dockets (boolean):
 
-def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
+    Returns: nothing; adds data to the db
+    """
+
     # get documents
     print("getting list of documents within date range")
     doc_list = pull_reg_gov_data(
@@ -594,6 +775,7 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
     )
     print(f"got {len(doc_list)} documents")
     print("now extracting docs open for comments from that list")
+
     # pull the commentable docs from that list
     commentable_docs = []
     for doc in doc_list:
@@ -604,78 +786,23 @@ def pull_all_api_data_for_date_range(start_date: str, end_date: str) -> None:
             # the db needs the docket primary key first
 
     print(f"{len(commentable_docs)} documents open for comment")
-    print("getting dockets associated with the documents open for comment")
-    # get the dockets for the commentable docs
-    for doc in commentable_docs:
-        docket_id = doc["attributes"]["docketId"]
-        document_id = doc["id"]
-        # if docket not in db, add it
-        if not verify_database_existence("regulations_docket", docket_id):
-            docket_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY,
-                "dockets",
-                params={"filter[searchTerm]": docket_id},
-            )
-            # add docket_data to docket table in the database
-            insert_docket_into_db(docket_data)
-            print(f"added docket {docket_id} to the db")
-    print("no more dockets to add to db")
 
-    for doc in commentable_docs:
-        document_id = doc["id"]
-        document_object_id = doc["attributes"]["objectId"]
-        if not verify_database_existence("regulations_document", document_id):
-            # add this doc to the documents table in the database
-            full_doc_info = query_register_API_and_merge_document_data(doc)
-            insert_document_into_db(full_doc_info)
-            print(f"added document {document_id} to the db")
-    print("no more documents to add to db")
+    if pull_dockets:
+        print("getting dockets associated with the documents open for comment")
+        add_dockets_to_db(commentable_docs)
+        print("no more dockets to add to db")
 
-    for doc in commentable_docs:
-        document_id = doc["id"]
-        document_object_id = doc["attributes"]["objectId"]
-        # get the comments, comment text, and add to db
-        if not verify_database_existence(
-            "regulations_comment", document_id, "document_id"
-        ):
-            print(f"no comments found in database for document {document_id}")
-            comment_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY,
-                "comments",
-                params={"filter[commentOnId]": document_object_id},
-            )
-            # add comment data to comments table in the database
-            for comment in comment_data:
-                all_comment_data = merge_comment_text_and_data(
-                    constants.REG_GOV_API_KEY, comment
-                )
-                insert_comment_into_db(all_comment_data)
+    if pull_documents:
+        print("adding documents to the db")
+        add_documents_to_db(commentable_docs)
+        print("no more documents to add to db")
 
-            print(f"tried to add comments on document {document_id} to the db")
+    if pull_comments:
+        print("adding comments to the db")
+        add_comments_to_db(commentable_docs)
+        print("no more comments to add to db")
 
-        else:
-            # get date of most recent comment on this doc in the db
-            most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
-
-            print(
-                f"comments found for document {document_id}, most recent was {most_recent_comment_date}"
-            )
-
-            # CHECK THAT WE ARE FILTERING ON THE RIGHT FIELD FOR DATE
-            comment_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY,
-                "comments",
-                params={
-                    "filter[commentOnId]": document_object_id,
-                    "filter[lastModifiedDate][ge]": most_recent_comment_date,
-                },
-            )
-
-            for comment in comment_data:
-                all_comment_data = merge_comment_text_and_data(
-                    constants.REG_GOV_API_KEY, comment
-                )
-                insert_comment_into_db(all_comment_data)
+    print("process finished")
 
 
 if __name__ == "__main__":
@@ -690,10 +817,30 @@ if __name__ == "__main__":
         type=str,
         help="End date (str) for the date range (format: YYYY-MM-DD)",
     )
+    parser.add_argument(
+        "-k",
+        "--pull_dockets",
+        action="store_true",
+        help="Pull dockets for date range and add to db if not there",
+    )
+    parser.add_argument(
+        "-d",
+        "--pull_documents",
+        action="store_true",
+        help="Pull documents for date range and add to db if not there",
+    )
+    parser.add_argument(
+        "-c",
+        "--pull_comments",
+        action="store_true",
+        help="Pull comments for date range and add to db if not there",
+    )
 
     args = parser.parse_args()
     pull_all_api_data_for_date_range(
         args.start_date,
         args.end_date,
+        args.pull_dockets,
+        args.pull_documents,
+        args.pull_comments,
     )
-    print("process finished")
