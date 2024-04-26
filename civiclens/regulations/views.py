@@ -19,7 +19,6 @@ def search_results(request):
         search = Search()
         search.searchterm = request.GET["q"]
         print(search.searchterm)
-        # search.searchterm = q
         
         context["Search"] = search
     
