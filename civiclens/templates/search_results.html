@@ -10,11 +10,15 @@
     <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
       <div class="container">
         <div class="form-group">
-          <div class="input-group mb-4">
-              <input class="form-control" placeholder="gun control" type="text">
+          <form action="/regulations/search/results/" method="GET">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="input-group mb-4">
+              <input class="form-control" id="q" name="q" type="text" required
+              placeholder="{{Search.searchterm}}">
               <button class="btn btn-primary">Search</button>
-          </div>
-      </div>
+            </div>
+          </form>
     </div>
   </div>
   </section>
@@ -25,21 +29,26 @@
         <div>
           <span class="h6 font-weight-bold col-3" style="background-color:#eb2323">Filter</span>
           </div>
+        <form action="/regulations/search/results/" method="POST">
           <div class="custom-switch col-3" style="background-color:#eb2323">
               <input type="checkbox" class="custom-control-input" id="customSwitch1">
               <label class="custom-control-label" for="customSwitch1">Toggle this switch element</label>
             </div>
             <p></p>
-      <div class="form-group col-3" style="background-color:#eb2323">
-        <label for="exampleFormControlSelect1">Agency</label>
-        <select class="custom-select" id="exampleFormControlSelect1">
-        <option>1</option>
-        <option>2</option>
-        <option>3</option>
-        <option>4</option>
-        <option>5</option>
-        </select>
-      </div>
+      
+        <div class="form-group col-3" style="background-color:#eb2323">
+          <label for="exampleFormControlSelect1">Agency</label>
+          <select class="custom-select" id="exampleFormControlSelect1">
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+          <option>4</option>
+          <option>5</option>
+          </select>
+        </div>
+      </form>
+      
+
 
       <div>
         <span class="h6 font-weight-bold col-6" style="background-color:#eb2323">Displaying XX results.</span>

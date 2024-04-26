@@ -74,3 +74,6 @@ class Comment(models.Model):
     submitter_rep = models.CharField(max_length=100, blank=True, null=True)
     submitter_rep_address = models.CharField(max_length=255, blank=True, null=True)
     submitter_rep_city_state = models.CharField(max_length=100, blank=True, null=True)
+
+class Search(models.Model):
+    searchterm = models.CharField(max_length=100)
