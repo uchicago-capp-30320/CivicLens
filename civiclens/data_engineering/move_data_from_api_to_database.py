@@ -5,6 +5,7 @@ import json
 import argparse
 import datetime as dt
 from datetime import datetime
+from abc import ABC
 
 from access_api_data import pull_reg_gov_data
 from civiclens.utils import constants
@@ -143,6 +144,102 @@ def connect_db_and_get_cursor() -> (
     )
     cursor = connection.cursor()
     return connection, cursor
+
+
+"""
+abstract class (dockets, documents, comments)
+
+given a document or comment id 
+
+methods:
+    - verify database existence
+    - pull API data
+    - insert API data into db
+    - main
+
+"""
+
+
+class APItoDB(ABC):
+
+    self.api_key = constants.REG_GOV_API_KEY
+
+    @abstractmethod
+    def _verify_database_existence(
+        table: str, api_field_val: str, db_field: str = "id"
+    ) -> bool:
+        """
+        Use regulations.gov API to confirm a row exists in a db table
+
+        Inputs:
+            table (str): one of the tables in the CivicLens db
+            api_field_val (str): the value we're looking for in the table
+            db_field (str): the field in the table where we're looking for the value
+
+        Returns: boolean indicating the value was found
+        """
+        connection, cursor = connect_db_and_get_cursor()
+        with connection:
+            with cursor:
+                query = f"SELECT * \
+                        FROM {table} \
+                        WHERE {db_field} = %s;"
+                cursor.execute(query, (api_field_val,))
+                response = cursor.fetchall()
+
+        return response != []
+
+    @abstractmethod
+    def _pull_API_data(json_object: json, type_of_data: str, data_id: str):
+        API_data = pull_reg_gov_data(
+            self.api_key, type_of_data, params={"filter[searchTerm]": data_id}
+        )
+        return API_data
+
+    # maybe a verify data format checking method here?
+
+    @abstractmethod
+    def _insert_data_into_db(
+        API_data: json,
+        table: str,
+        table_cols: tuple[str],
+        data_formats: tuple[str],
+        json_fields: tuple[json],
+    ):
+        try:
+            connection, cursor = connect_db_and_get_cursor()
+            with connection:
+                with cursor:
+                    cursor.execute(
+                        """
+                        INSERT INTO {table} (
+                            {table_cols}
+                        ) VALUES (
+                            {data_formats}
+                        )
+                        ON CONFLICT (id) DO NOTHING;
+                        """,
+                        json_fields,
+                    )
+        except Exception as e:
+            error_message = f"Error inserting {API_data['id']} into {table}: {e}"
+            # print(error_message)
+            return {
+                "error": True,
+                "message": e,
+                "description": error_message,
+            }
+
+        return {
+            "error": False,
+            "message": None,
+            "description": None,
+        }
+
+    def run():
+        if not self._verify_database_existence():
+            self._pull_API_data()
+            self._insert_data_into_db()
 
 
 def verify_database_existence(
