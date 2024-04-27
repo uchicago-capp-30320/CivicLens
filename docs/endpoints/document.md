@@ -1,14 +1,8 @@
 **/document/<str:document_id>** 
 
-Displays plain English title, posted document title, plain english summary of proposed rule, representative comments, and metadata (posting agency, dates of comment period, number of comments) Will also display visualization of sentiment analysis of comments broken down by topic.
+Displays plain English title, posted document title, plain english summary of proposed rule, representative comments, and metadata (posting agency, dates of comment period, number of comments). Will also display visualization of sentiment analysis of comments broken down by topic.
 
-Parameters: 
-
-- sort: by_date, by_num_comments (order number of posted comments)
-- filter: 
-    * by_agency, 
-    * if_comment (wether a document has comment posted to it)
-    * doc_type (All, Notice, Proposed Rule, etc)
+Parameters: None
 
 Example: /document/ATF-2024-0001-0001
 
@@ -17,7 +11,7 @@ Response: HTML page displaying fixed text (title, summary). Infinite scroll disp
 
 **/document/<str:document_id>/comment**
 
-Endpoint to allow users to post comments on a given document
+Endpoint to allow users to post comments on a given document.
 
 Parameters: None
 

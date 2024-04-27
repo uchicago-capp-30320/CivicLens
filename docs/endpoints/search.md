@@ -1,6 +1,6 @@
 **/search**
 
-Initial search page. Provides search bar and showcases trending or recently document topics for users to click on.
+Initial search page. Provides search bar and showcases trending topics or recently uploaded documents for users to click on.
 
 Parameters:
 
@@ -8,9 +8,7 @@ Parameters:
 
 Example: /search/?topics=gun_control+abortion+covid-19+healthcare
 
-Response: HTML page with search bar and trending topics. Infinitive scroll container for displaying resulting documents 
-
-TODO: Add screenshot of webpage. 
+Response: HTML page with search bar and trending topics.
 
 **/search_result** 
 
@@ -20,13 +18,13 @@ Parameters:
 
 - sort: by_date, by_num_comments (order number of posted comments)
 - filter: 
-    * by_agency, 
-    * if_comment (wether a document has comment posted to it)
+    * by_agency (eg. FDA, HUD)
+    * if_comment (whether a document has comment posted to it)
     * doc_type (All, Notice, Proposed Rule, etc)
 
 Example: /search_result/?sort=by_date&by_agency=FDA&if_comment=true&doc_type=all
 
-Response: HTML page with search bar and search results (list of documents). Infinitive scroll container for displaying resulting documents 
+Response: HTML page with search bar and search results (list of documents). Infinitive scroll container for displaying resulting documents.
 
 
 

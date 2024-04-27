@@ -40,8 +40,6 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
 
- 
-
 nav:
   - "index.md"
   - "models.md"

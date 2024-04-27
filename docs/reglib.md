@@ -1,15 +1,15 @@
 reglib DOCS
 ==============
 
-Quick start guide for CivicLens' internal library for accessing data via the Regulations.gov API. This library contains methods for collecting comments, dockets, and documents from Regulations.gov. 
+Quick start guide for CivicLens' internal library for accessing data via the regulations.gov API. This library contains methods for collecting comments, dockets, and documents from regulations.gov. 
 
 ## Getting Started
 
-To collect data from Regulations.gov, you'll first need an API key which can request [here](https://open.gsa.gov/api/regulationsgov/). Once you have your key, you can add it as an Environment Variable by following the steps described under [Contributing](index.md#contributing), or you can replace `api_key` with your unique key.
+To collect data from regulations.gov, you'll first need an API key which you can request [here](https://open.gsa.gov/api/regulationsgov/). Once you have your key, you can add it as an Environment Variable by following the steps described under [Contributing](index.md#contributing), or you can replace `api_key` with your unique key.
 
 ## Example 
 
-Let's walk through how to collect data for the proposed rule "FR-6362-P-01 Reducing Barriers to HUD-Assisted Housing." You can read the actual rule and view comments at this [link](https://www.regulations.gov/document/HUD-2024-0031-0001). To collect data on this rule, we'll need to search by the Document ID, which we can pass in the `params` argument like this:
+Let's walk through how to collect data for the proposed rule "FR-6362-P-01 Reducing Barriers to HUD-Assisted Housing." You can read the actual rule and view comments at this [link](https://www.regulations.gov/document/HUD-2024-0031-0001). To collect data on this rule, we'll need to search by the Document ID, which we can pass into the `params` argument like this:
 
 ```python
 import access_api_data as reglib
@@ -35,7 +35,7 @@ comment_data = reglib.pull_reg_gov_data(
 )
 ```
 
-Finally, we get the text for each comment by iterating over the comment metadata and making an additional request for the text.
+Finally, we can get the text for each comment by iterating over the comment metadata and making an additional request for the text.
 
 ```python
 comment_json_text = []

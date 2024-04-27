@@ -1,14 +1,14 @@
 ### Model/Resource Documentation
 
-The following describes the tables/models compromising our relational database. Each model features a short description noting its purpose and key fields. A table listing field names, datatypes, and a short description of each field. 
+The following describes the tables/models comprising our relational database. Each model features a short description noting its purpose and key fields. A table listing field names, datatypes, and a short description of each field is also included.
 
-*Developer's Note:* At this point, our tables largely reflect the JSON fields outputed by responses from the regulations.gov API. As we continue development, we intend to create at least one additional table to better align our data with our site. This table will store the outputs from our NLP models such as a plain English version of document titles, representative comments, topics, and sentiment measures that will be displayed to the user. We may also add `Users` and `Roles` tables if add in the ability to create accounts on the site. These features have currently been left out of our MVP. 
+*Developer's Note:* At this point, our tables largely reflect the JSON fields outputed by responses from the regulations.gov API. As we continue development, we intend to create at least one additional table to better align our data with our site. This table will store the outputs from our NLP models, such as a plain English versions of document titles, representative comments, topics, and sentiment measures that will be displayed to the user. We may also add `Users` and `Roles` tables if we add in the ability to create accounts on the site. These features have currently been left out of our MVP. 
 
 **Dockets**
 
-`Dockets` represent collections of documents relevant to a proposed rule or notice. A given docket can contain documents available for commenting that represent the proposed rule change, along with supplementary documents, such as a cost-benefit analysis, that support the proposed rule. 
+`Dockets` represents collections of documents relevant to a proposed rule or notice. A given docket can contain documents available for commenting that represent the proposed rule change along with supplementary documents, such as a cost-benefit analysis, that support the proposed rule. 
 
-Since the dockets themselves are unavailable to comment on (only the documents contained within can recieve comments), we chose to collect only enough information to link docments to a docket (id) and other basic information (date, posting agency).
+Since the dockets themselves are unavailable to comment on (only the documents contained within can recieve comments), we chose to collect only enough information to link docments to a docket (via the `id` field ) and other basic information (date, posting agency).
 
 
 | Name              | Type                 | Description               |
@@ -21,7 +21,7 @@ Since the dockets themselves are unavailable to comment on (only the documents c
 
 **PublicComments**
 
-`PublicComments` represents an individual comment posted to a document. Each comment features its own UUID (`id`) and is linked to its corresponding document by the `document` id (also links this table to the `Documents` table). Each comment is represented by the text of the comment, along with any available information collected by Regulations.gov on the comment. This data describes both the comment, such as wether the comment was withdrawn by the user, if the commented was posted to a restricted document (only open to certain agencies or interest groups), or the number of comments that feature the same text. 
+`PublicComments` represents an individual comment posted to a document. Each comment features its own UUID (`id`) and is linked to its corresponding document by the `document` id (also links this table to the `Documents` table). Each comment is represented by the text of the comment, along with any available information collected by Regulations.gov on the comment. This data describes both the comment, such as whether the comment was withdrawn by the user, if the commented was posted to a restricted document (only open to certain agencies or interest groups), or the number of comments that feature the same text. 
 
 This table also stores data on individuals who posted a comment, including their name, location, and organization. 
 
@@ -58,14 +58,11 @@ This table also stores data on individuals who posted a comment, including their
 | zip | charField | Zip code of the commenter |
 | restrictReasonType | CharField | If document has been restricted for comment to certain users |
 | restrictReason | CharField | Summary of reason for comment restriction |
-| submitterRep | CharField | ??? |
-| submitterRepAddress | CharField | ??? | 
-| submitterRepCityState | CharField | ??? | 
 
 
 **Documents**
 
-`Documents` stores metadata on documents that can have comments posted to. To minimize our data intake, CivicLens only collects documents labeled as open-for-comments by the Federal Government. This does not mean that every document we collect features posted comments, but that some subset of the public is able to comment on each document. Each document also stores a URL to the Federal Registrar's XML version of the full document text (`fullTextXmlUrl`). This is used to extract the full text of the proposed rule which is not available through Regulations.gov. `summary` contains the plain English summary of the rule written by the Federal government which will be available on our site under the `/documents/` endpoint.
+`Documents` stores metadata on documents that can have comments posted to. To minimize our data intake, CivicLens only collects documents labeled as open-for-comment by the federal government. This does not mean that every document we collect features posted comments, but that some subset of the public is able to comment on each document. Each document also stores a URL to the Federal Register's XML version of the full document text (`fullTextXmlUrl`). This is used to extract the full text of the proposed rule which is not available through regulations.gov. `summary` contains the plain English summary of the rule written by the Federal government which will be available on our site under the `/documents` endpoint.
 
 | Name              | Type                 | Description               |
 | ----------------- | -------------------- | ------------------------- |
