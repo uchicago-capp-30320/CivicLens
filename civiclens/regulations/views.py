@@ -30,7 +30,6 @@ def search_results(request):
 def document(request, doc_id):
     try:
         doc = Document.objects.get(id=doc_id)
-        # print(doc)
     except Document.DoesNotExist:
         doc = None
     try:
