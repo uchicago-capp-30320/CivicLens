@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect  # noqa: F401
 from .models import Comment, Document, Search # noqa: F401
-from django.http import Http404
 
 
 def home(request):
