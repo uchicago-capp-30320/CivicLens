@@ -2,9 +2,7 @@ name: CivicLens
 
 on:
   push:
-    branches: [ "main", "develop", "frontend", "backend", "devops" ]
   pull_request:
-    branches: [ "main", "develop", "frontend", "backend"]
 
 permissions:
   contents: read
@@ -15,7 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - uses: actions/setup-python@v5
       with:
         python-version: '3.10.12'
@@ -38,7 +36,7 @@ jobs:
         key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
         restore-keys: |
           ${{ runner.os }}-poetry-
-          
+
     - run: poetry install
 
     - name: lint with ruff
@@ -53,4 +51,3 @@ jobs:
     # run: eslint . --ext .js,.jsx,.ts,.tsx
     # - name: Test JS with Jest
     #  run: yarn test
-

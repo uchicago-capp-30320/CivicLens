@@ -15,13 +15,13 @@ If you'd like to learn more about federal commenting in the meantime, we’re co
 - [Library of Congress](https://guides.loc.gov/trace-federal-regulations/docket-information): How to trace regulations through the rulemaking process.
 
 
-## Development  
+## Development
 
-CivicLens is currently under active development. 
+CivicLens is currently under active development.
 
-CivicLens requires `poetry` (see [here](https://python-poetry.org/) for more information) to run. To install the necessary dependencies, run `poetry run` from the project directory. You can the run the project locally by prefixing python commands with `poetry run` or by using `poetry shell` to open activate the virtual environment. 
+CivicLens requires `poetry` (see [here](https://python-poetry.org/) for more information) to run. To install the necessary dependencies, run `poetry run` from the project directory. You can the run the project locally by prefixing python commands with `poetry run` or by using `poetry shell` to open activate the virtual environment.
 
-To run the test suite, run `poetry run pytest`. 
+To run the test suite, run `poetry run pytest`.
 
 
 ## Set Up Environment Variable for API Key
@@ -48,5 +48,4 @@ Run the following command to set the environment variable in the current session
 $ set REG_GOV_API_KEY=your_token_here
 ```
 
-For testing or temporary purposes, you can also set ```REG_GOV_API_KEY="DEMO_KEY"```. This is a demo functionality built into regulations.gov for cursory API access. 
-
+For testing or temporary purposes, you can also set ```REG_GOV_API_KEY="DEMO_KEY"```. This is a demo functionality built into regulations.gov for cursory API access.

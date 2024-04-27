@@ -1,5 +1,6 @@
 from civiclens.data_engineering import access_api_data
 
+
 api_key = "DEMO_KEY"
 
 
@@ -13,7 +14,9 @@ def test_is_duplicated_on_server():
 def test_is_duplicated_on_server_real_data():
     # NRCS-2009-0004-0003 is known duplicated comment ID
     assert access_api_data.pull_reg_gov_data(
-        api_key, "comments", params={"filter[searchTerm]": "NRCS-2009-0004-0003"}
+        api_key,
+        "comments",
+        params={"filter[searchTerm]": "NRCS-2009-0004-0003"},
     )
 
 
@@ -40,5 +43,7 @@ def test_pull_reg_gov_data():
     # https://www.regulations.gov/document/CRC-2024-0073-0001
 
     access_api_data.pull_reg_gov_data(
-        api_key, "documents", params={"filter[searchTerm]": "CRC-2024-0073-0001"}
+        api_key,
+        "documents",
+        params={"filter[searchTerm]": "CRC-2024-0073-0001"},
     )

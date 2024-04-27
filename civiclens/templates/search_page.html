@@ -1,0 +1,65 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+    Search
+{% endblock title %}
+
+{% block content %}
+
+
+    <!-- search bar -->
+    <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
+      <div class="container shape-container">
+        
+        <h6>What opportunities are there to give your feedback right now? [need to phrase this better]</h6>
+        
+        <div class="form-group">
+          <form action="/regulations/search/results/" method="GET">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="input-group mb-4">
+              <input class="form-control" id="q" name="q" type="text" required
+              placeholder="Type in a topic you care about to find opportunities to comment...">
+              <button class="btn btn-primary">Search</button>
+            </div>
+          </form>
+
+
+          
+      </div>
+      </div>
+  </section>
+
+
+    <!-- trending -->
+    <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
+      <div class="container">
+        
+        <h6>Common Search Terms</h6>
+
+        <button class="badge">
+          <a href="/regulations/search/results?q=gun%20%control">gun control</a>
+        </button>
+
+        <button class="badge">
+          <a href="/regulations/search/results?q=gun%20%control">reproductive health</a>
+        </button>
+
+        <button class="badge">
+          <a href="/regulations/search/results?q=gun%20%control">COVID-19</a>
+        </button>
+
+        <button class="badge">
+          <a href="/regulations/search/results?q=gun%20%control">universal healthcare</a>
+        </button>
+
+        <button class="badge">
+          <a href="/regulations/search/results?q=gun%20%control">climate change</a>
+        </button>
+
+      </div>
+      </div>
+  </section>
+
+
+{% endblock content %}
