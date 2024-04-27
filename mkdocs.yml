@@ -19,15 +19,16 @@ plugins:
             show_root_toc_entry: false
 
 markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - tables
-  - def_list
-  - pymdownx.tasklist:
-      custom_checkbox: true
   - pymdownx.highlight
   - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true 
-  - pymdownx.superfences
   - toc:
       permalink: true
   - pymdownx.critic
@@ -35,6 +36,11 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.mark
   - pymdownx.tilde
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+ 
 
 nav:
   - "index.md"
@@ -43,4 +49,6 @@ nav:
   - "reglib.md"
   - Endpoints:
     - "endpoints/regulations.md"
+    - "endpoints/search.md"
+    - "endpoints/document.md"
  

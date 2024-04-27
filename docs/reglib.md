@@ -7,7 +7,7 @@ Quick start guide for CivicLens' internal library for accessing data via the Reg
 
 To collect data from Regulations.gov, you'll first need an API key which can request [here](https://open.gsa.gov/api/regulationsgov/). Once you have your key, you can add it as an Environment Variable by following the steps described under [Contributing](index.md#contributing), or you can replace `api_key` with your unique key.
 
-## Demo 
+## Example 
 
 Let's walk through how to collect data for the proposed rule "FR-6362-P-01 Reducing Barriers to HUD-Assisted Housing." You can read the actual rule and view comments at this [link](https://www.regulations.gov/document/HUD-2024-0031-0001). To collect data on this rule, we'll need to search by the Document ID, which we can pass in the `params` argument like this:
 
