@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-
+from typing import Optional
 import requests
 from requests.adapters import HTTPAdapter
 
@@ -62,19 +62,18 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
 
 
 def pull_reg_gov_data(
-    api_key: str,
-    data_type: str,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-    params: Optional[dict] = None,
-    print_remaining_requests: Optional[bool] = False,
-    wait_for_rate_limits: Optional[bool] = False,
-    skip_duplicates: Optional[bool] = False,
-) -> dict:
+    api_key,
+    data_type,
+    start_date=None,
+    end_date=None,
+    params=None,
+    print_remaining_requests=False,
+    skip_duplicates=False,
+):
     """
-    Returns the JSON associated with a request to the API; max length of 24000.
+    Returns the JSON associated with a request to the API; max length of 24000
 
-    Draws heavily from this [repository](https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py)
+    draws heavily from here: https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py
 
     Args:
         data_type (str): 'dockets', 'documents', or 'comments' -- what kind of data we want back from the API
@@ -85,13 +84,11 @@ def pull_reg_gov_data(
             so that we always get the maximum page size of 250 elements per page.
         print_remaining_requests (bool, optional): Whether to print out the number of remaining
             requests this hour, based on the response headers. Defaults to False.
-        wait_for_rate_reset (bool, optional): Determines whether to wait to re-try if we run out of
-            requests in a given hour. Defaults to False.
         skip_duplicates (bool, optional): If a request returns multiple items when only 1 was expected,
             should we skip that request? Defaults to False.
 
     Returns:
-        JSON-ified request response
+        dict: JSON-ified request response
     """
     # generate the right API request
     api_url = "https://api.regulations.gov/v4/"
@@ -177,6 +174,7 @@ def pull_reg_gov_data(
                 return doc_data
 
     raise RuntimeError(f"Unrecoverable error; {r_json}")
+
 
 def get_comment_text(api_key: str, comment_id: str) -> dict:
     """
