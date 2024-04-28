@@ -1,6 +1,5 @@
 import time
 from datetime import datetime
-
 import requests
 from requests.adapters import HTTPAdapter
 
@@ -68,13 +67,12 @@ def pull_reg_gov_data(
     end_date=None,
     params=None,
     print_remaining_requests=False,
-    wait_for_rate_reset=True,
     skip_duplicates=False,
 ):
     """
     Returns the JSON associated with a request to the API; max length of 24000
 
-    draws heavily from here: https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py
+    Draws heavily from this [repository](https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py)
 
     Args:
         data_type (str): 'dockets', 'documents', or 'comments' -- what kind of data we want back from the API
@@ -85,8 +83,6 @@ def pull_reg_gov_data(
             so that we always get the maximum page size of 250 elements per page.
         print_remaining_requests (bool, optional): Whether to print out the number of remaining
             requests this hour, based on the response headers. Defaults to False.
-        wait_for_rate_reset (bool, optional): Determines whether to wait to re-try if we run out of
-            requests in a given hour. Defaults to False.
         skip_duplicates (bool, optional): If a request returns multiple items when only 1 was expected,
             should we skip that request? Defaults to False.
 
