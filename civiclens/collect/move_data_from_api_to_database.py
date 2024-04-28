@@ -366,11 +366,10 @@ def insert_document_into_db(document_data: json) -> dict:
 
     Returns: nothing unless an error; adds the info into the table
     """
-    data_for_db = document_data
-    attributes = data_for_db["attributes"]
+    attributes = document_data["attributes"]
 
     fields_to_insert = (
-        data_for_db["id"],
+        document_data["id"],
         attributes["documentType"],
         attributes["lastModifiedDate"],
         attributes["frDocNum"],
@@ -383,15 +382,15 @@ def insert_document_into_db(document_data: json) -> dict:
         attributes["commentStartDate"],
         attributes["openForComment"],
         attributes["objectId"],
-        data_for_db["links"]["self"],
-        data_for_db["agencyType"],
-        data_for_db["CFR"],
-        data_for_db["RIN"],
+        document_data["links"]["self"],
+        document_data["agencyType"],
+        document_data["CFR"],
+        document_data["RIN"],
         attributes["title"],
-        data_for_db["summary"],
-        data_for_db["dates"],
-        data_for_db["furtherInformation"],
-        data_for_db["supplementaryInformation"],
+        document_data["summary"],
+        document_data["dates"],
+        document_data["furtherInformation"],
+        document_data["supplementaryInformation"],
     )
 
     # annoying quirk: https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-column-of-relation-does-not-exist
@@ -524,12 +523,11 @@ def insert_comment_into_db(comment_data: json) -> dict:
     """
     connection, cursor = connect_db_and_get_cursor()
 
-    data_for_db = comment_data
-    attributes = data_for_db["attributes"]
-    comment_text_attributes = data_for_db["data"]["attributes"]
+    attributes = comment_data["attributes"]
+    comment_text_attributes = comment_data["data"]["attributes"]
 
     # Map JSON attributes to corresponding table columns
-    comment_id = data_for_db["id"]
+    comment_id = comment_data["id"]
     objectId = attributes.get("objectId", "")
     commentOn = comment_text_attributes.get("commentOn", "")
     document_id = comment_text_attributes.get("commentOnDocumentId", "")
@@ -665,7 +663,7 @@ def insert_comment_into_db(comment_data: json) -> dict:
 
     except Exception as e:
         error_message = (
-            f"Error inserting docket {comment_data['id']} into comment table: {e}"
+            f"Error inserting comment {comment_data['id']} into comment table: {e}"
         )
         # print(error_message)
         return {
