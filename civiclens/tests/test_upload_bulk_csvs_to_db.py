@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch
 from civiclens.collect import upload_bulk_csvs_to_db
-from civiclens.utils.constants import REG_GOV_API_KEY
 
 
 def test_get_document_objectId_fakeid():
