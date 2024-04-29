@@ -37,7 +37,7 @@ def get_document_objectId(doc_id: str) -> str:
         REG_GOV_API_KEY, "documents", params={"filter[searchTerm]": doc_id}
     )
 
-    return doc_data["attributes"]["objectId"]
+    return doc_data[0]["attributes"]["objectId"]
 
 
 def format_date(datetime_str: str) -> str:
