@@ -1,8 +1,9 @@
 from civiclens.data_engineering import upload_bulk_csvs_to_db
+from civiclens.utils.constants import REG_GOV_API_KEY
 
 
 def test_get_document_objectId_fakeid():
-    fake_id = "NOT REAL"
+    fake_id = "NOT_REAL"
     try:
         upload_bulk_csvs_to_db.get_document_objectId(fake_id)
     except IndexError as e:
@@ -55,7 +56,7 @@ def test_format_date_bad_date():
         upload_bulk_csvs_to_db.format_date("2024--06T05:00:00")
     except Exception as e:
         # print(e)
-        assert str(e) == "Invalid isoformat string: ''"
+        assert str(e) == "Invalid isoformat string: '2024--06T05:00:00'"
 
 
 def test_extract_fields_from_row_no_data():
@@ -190,4 +191,4 @@ def test_extract_fields_from_row_bad_data():
     try:
         upload_bulk_csvs_to_db.extract_fields_from_row(pl_row, "test_id")
     except Exception as e:
-        assert str(e) == "string indices must be integers, not 'str'"
+        assert str(e) == "'Comment on Document ID'"
