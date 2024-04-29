@@ -6,6 +6,12 @@ from access_api_data import pull_reg_gov_data
 from move_data_from_api_to_database import insert_comment_into_db
 from civiclens.utils.constants import REG_GOV_API_KEY
 
+"""
+This code is for one-time and ad hoc bulk uploads of comments.
+Csv files are obtained for known documents here: https://www.regulations.gov/bulkdownload
+Adding comments to the db is faster with this method than via API 
+"""
+
 
 def load_data(file_name: str) -> pl.DataFrame([]):
     """
@@ -17,13 +23,19 @@ def load_data(file_name: str) -> pl.DataFrame([]):
     return df
 
 
-def get_document_objectId(doc_id):
-    """ """
+def get_document_objectId(doc_id: str) -> str:
+    """
+    Fetches the document objectId from the regulations.gov API
+
+    Input: doc_id (str): the id of a document (the id you search with on regulations.gov)
+
+    Returns: objectId (str): the objectId, which we use to link database tables
+    """
     doc_data = pull_reg_gov_data(
         REG_GOV_API_KEY, "documents", params={"filter[searchTerm]": doc_id}
     )
 
-    return doc_data["attibutes"]["objectId"]
+    return doc_data["attributes"]["objectId"]
 
 
 def format_date(datetime_str: str) -> str:
@@ -40,6 +52,7 @@ def format_date(datetime_str: str) -> str:
         return formatted_datetime_str
     except Exception as e:
         print(f"Error parsing datetime string '{datetime_str}': {e}")
+        raise (e)
 
 
 def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict:
