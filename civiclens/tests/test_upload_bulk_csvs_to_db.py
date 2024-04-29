@@ -99,7 +99,6 @@ def test_extract_fields_from_row_no_data():
     try:
         upload_bulk_csvs_to_db.extract_fields_from_row("", "test_id")
     except Exception as e:
-        print(f"{e=}")
         assert str(e) == "string indices must be integers, not 'str'"
 
 
