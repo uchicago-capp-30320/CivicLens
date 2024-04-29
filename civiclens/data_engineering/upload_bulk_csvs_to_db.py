@@ -138,12 +138,14 @@ def load_bulk_comments_csv_to_db(file_name: str) -> None:
     # We assume this id is the same for all rows, which is a reasonable
     # assumption given the csv is based on a single document
     doc_objectId = df[0]["Comment on Document ID"].item()
-
+    print_counter = 0
     for row in df.rows(named=True):
         comment_data = extract_fields_from_row(row, doc_objectId)
         response = insert_comment_into_db(comment_data)
         if response["error"]:
             print(response["description"])
+        if print_counter % 1000 == 0:
+            print(f"uploaded {print_counter} comments")
 
 
 if __name__ == "__main__":
