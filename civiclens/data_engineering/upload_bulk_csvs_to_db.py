@@ -1,5 +1,4 @@
 import polars as pl
-import json
 from datetime import datetime
 import argparse
 
@@ -120,9 +119,11 @@ def load_bulk_comments_csv_to_db(file_name: str) -> None:
     """
     df = load_data(file_name)
 
-    # get the document objectId, which is not included in the csv fields
-    # we assume this id is the same for all rows ()
+    # get the document objectId, which is not included in the csv fields.
+    # We assume this id is the same for all rows, which is a reasonable
+    # assumption given the csv is based on a single document
     doc_objectId = df[0]["Comment on Document ID"].item()
+
     for row in df.rows(named=True):
         comment_data = extract_fields_from_row(row, doc_objectId)
         response = insert_comment_into_db(comment_data)
