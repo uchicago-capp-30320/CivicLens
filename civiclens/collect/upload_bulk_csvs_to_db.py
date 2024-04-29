@@ -84,7 +84,9 @@ def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict
     attributes["objectId"] = doc_objectId
     comment_text_attributes["commentOn"] = None
     comment_text_attributes["commentOnDocumentId"] = df_row["Comment on Document ID"]
-    comment_text_attributes["duplicateComments"] = df_row["Duplicate Comments"]
+    comment_text_attributes["duplicateComments"] = (
+        df_row["Duplicate Comments"] if df_row["Duplicate Comments"] else 0
+    )
     comment_text_attributes["stateProvinceRegion"] = df_row["State/Province"]
     comment_text_attributes["subtype"] = df_row["Document Subtype"]
     comment_text_attributes["comment"] = df_row["Comment"]
@@ -144,8 +146,9 @@ def load_bulk_comments_csv_to_db(file_name: str) -> None:
         response = insert_comment_into_db(comment_data)
         if response["error"]:
             print(response["description"])
-        if print_counter % 1000 == 0:
-            print(f"uploaded {print_counter} comments")
+        if print_counter % 500 == 0:
+            print(f"processed {print_counter} comments")
+        print_counter += 1
 
 
 if __name__ == "__main__":
