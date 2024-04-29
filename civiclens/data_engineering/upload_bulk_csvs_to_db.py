@@ -39,10 +39,8 @@ def format_date(datetime_str: str) -> str:
         formatted_datetime_str = parsed_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         return formatted_datetime_str
-    except ValueError as e:
-        # Handle parsing error
+    except Exception as e:
         print(f"Error parsing datetime string '{datetime_str}': {e}")
-        return None
 
 
 def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict:
@@ -94,9 +92,7 @@ def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict
         df_row["Page Count"] if df_row["Page Count"] else 0
     )
     comment_text_attributes["postedDate"] = format_date(df_row["Posted Date"])
-    # comment_text_attributes["postedDate"] = str((df_row["Posted Date"]))
     comment_text_attributes["receiveDate"] = format_date(df_row["Received Date"])
-    # comment_text_attributes["receiveDate"] = str(df_row["Received Date"])
     attributes["title"] = df_row["Title"]
     comment_text_attributes["trackingNbr"] = df_row["Tracking Number"]
     comment_text_attributes["withdrawn"] = df_row["Is Withdrawn?"]
@@ -124,6 +120,8 @@ def load_bulk_comments_csv_to_db(file_name: str) -> None:
     """
     df = load_data(file_name)
 
+    # get the document objectId, which is not included in the csv fields
+    # we assume this id is the same for all rows ()
     doc_objectId = df[0]["Comment on Document ID"].item()
     for row in df.rows(named=True):
         comment_data = extract_fields_from_row(row, doc_objectId)
