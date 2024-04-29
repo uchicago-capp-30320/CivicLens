@@ -6,7 +6,7 @@ import argparse
 import datetime as dt
 from datetime import datetime
 
-from access_api_data import pull_reg_gov_data
+from civiclens.data_engineering.access_api_data import pull_reg_gov_data
 from civiclens.utils import constants
 
 
