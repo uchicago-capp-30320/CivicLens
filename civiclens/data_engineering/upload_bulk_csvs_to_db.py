@@ -147,7 +147,8 @@ def load_bulk_comments_csv_to_db(file_name: str) -> None:
         if response["error"]:
             print(response["description"])
         if print_counter % 500 == 0:
-            print(f"processed {print_counter} comments")
+            the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"processed {print_counter} comments at {the_time}")
         print_counter += 1
 
 
