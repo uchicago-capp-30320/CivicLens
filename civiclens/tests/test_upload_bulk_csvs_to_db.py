@@ -51,6 +51,24 @@ def test_get_document_objectId_multiple_ids():
         )
 
 
+def test_get_document_objectId_multiple_ids():
+
+    mock_response = []
+    with patch(
+        "civiclens.data_engineering.access_api_data.pull_reg_gov_data"
+    ) as mock_api_call:
+        mock_api_call.return_value = mock_response
+
+        # mocked API call
+        with pytest.raises(IndexError) as e:
+            upload_bulk_csvs_to_db.get_document_objectId(
+                ("FDA-2017-V-5183-0001", "GSA-GSA-2019-0002-0028")
+            )
+
+        assert str(e.value) == "list index out of range"
+        # we get this error because the API response returns an empty list
+
+
 def test_get_document_objectId_working_id():
     # Define the input ID and expected output
     input_id = "FDA-2017-V-5183-0001"
@@ -58,10 +76,9 @@ def test_get_document_objectId_working_id():
 
     mock_api_call_response = "0900006482ab30a2"
     with patch(
-        "civiclens.collect.upload_bulk_csvs_to_db.get_document_objectId"
+        "civiclens.data_engineering.upload_bulk_csvs_to_db.get_document_objectId"
     ) as mock_api_call:
         mock_api_call.return_value = mock_api_call_response
-
         # Call the function being tested
         result = upload_bulk_csvs_to_db.get_document_objectId(input_id)
 
