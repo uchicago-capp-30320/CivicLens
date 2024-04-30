@@ -1,69 +1,22 @@
-import os
-
 import networkx as nx
 import polars as pl
-import psycopg2
-from dotenv import load_dotenv
 from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
 
+from ..utils.database_access import pull_data
 
-def pull_data(
-    database: str,
-    database_user: str,
-    database_password: str,
-    database_host: str,
-    database_port: str,
-) -> pl.DataFrame:
-    """gets the largest group of doc comments currently in database for sample
 
-    Args:
-        database (str): db name
-        database_user (str): db user
-        database_password (str): db password
-        database_host (str): db host
-        database_port (str): db port
-
-    Returns:
-        pl.DataFrame: polars df of comment data
-    """ """"""
-    try:
-        connection = psycopg2.connect(
-            database=database,
-            user=database_user,
-            password=database_password,
-            host=database_host,
-            port=database_port,
-        )
-
-        cursor = connection.cursor()
-        query = """
-            SELECT id, comment
+def get_doc_comments(schema: list[str]) -> pl.DataFrame:
+    query = """
+        SELECT id, document_id, comment
+        FROM regulations_comment
+        WHERE document_id IN (
+            SELECT DISTINCT document_id
             FROM regulations_comment
-            WHERE document_id = (
-                SELECT document_id
-                FROM regulations_comment
-                GROUP BY document_id
-                ORDER BY COUNT(*) DESC
-                LIMIT 1
-            );
-                """
-        cursor.execute(query)
-        results = cursor.fetchall()
-
-    except (Exception, psycopg2.Error) as error:
-        print("Error while connecting to PostgreSQL", error)
-
-    finally:
-        # Close the connection and cursor to free resources
-        if connection:
-            cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed")
-
-    df = pl.DataFrame(results, schema=["id", "comment"])
-
-    return df
+            LIMIT 5
+        );
+        """
+    return pull_data(query, schema)
 
 
 def comment_similarity(df: pl.DataFrame) -> pl.DataFrame:
@@ -85,9 +38,13 @@ def comment_similarity(df: pl.DataFrame) -> pl.DataFrame:
     )
     df_paraphrases = pl.DataFrame(
         paraphrases, schema=["similarity", "idx1", "idx2"]
-    ).filter(pl.col("similarity") >= 0.85)
+    ).filter(pl.col("similarity") <= 0.99)
 
-    return df_paraphrases
+    df_form_letter = pl.DataFrame(
+        paraphrases, schema=["similarity", "idx1", "idx2"]
+    ).filter(pl.col("similarity") > 0.99)
+
+    return df_paraphrases, df_form_letter
 
 
 def build_graph(df: pl.DataFrame) -> nx.Graph:
@@ -209,27 +166,27 @@ def representative_comments(
 
 
 if __name__ == "__main__":
-    # Load environment variables from .env file
-    load_dotenv()
-
-    # Accessing the environment variables
-    database = os.getenv("DATABASE")
-    database_user = os.getenv("DATABASE_USER")
-    database_password = os.getenv("DATABASE_PASSWORD")
-    database_host = os.getenv("DATABASE_HOST")
-    database_port = os.getenv("DATABASE_PORT")
-
-    df = pull_data(
-        database, database_user, database_password, database_host, database_port
-    )
+    df = get_doc_comments()
 
     # get semantic similarities of comments
-    df_paraphrases = comment_similarity(df)
+    df_paraphrases, df_form_letter = comment_similarity(df)
+
     # build graph to represent significant similarity relationships
-    G = build_graph(df_paraphrases)
+    G_paraphrase = build_graph(df_paraphrases)
+    G_form = build_graph(df_form_letter)
+
     # cluster top relationships to add another filter for relationship quality
-    clusters = get_clusters(G=G)
-    # includes text, cluster, comment id for jack
-    df = assign_clusters(df=df, clusters=clusters)
+    clusters_paraphrase = get_clusters(G=G_paraphrase)
+    clusters_form = get_clusters(G=G_form)
+
+    # includes text, cluster, comment id
+    df_clusters = assign_clusters(df=df, clusters=clusters_paraphrase)
+    # df_form = assign_clusters(df=df, clusters=clusters_form)
+
     # print out current format of output
-    print(representative_comments(G, clusters, df))
+    print("Paraphrases:")
+    print(representative_comments(G_paraphrase, clusters_paraphrase, df))
+    print("Form Letters:")
+    print(representative_comments(G_form, clusters_form, df))
+    print("-----------")
+    print(df_clusters.head())
