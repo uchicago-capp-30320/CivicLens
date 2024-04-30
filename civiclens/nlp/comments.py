@@ -7,6 +7,15 @@ from ..utils.database_access import pull_data
 
 
 def get_doc_comments(schema: list[str]) -> pl.DataFrame:
+    """Pulls all comments for a set of documents and preprocesses that into a
+    polars dataframe
+
+    Args:
+        schema (list[str]): columns in the dataframe
+
+    Returns:
+        pl.DataFrame: formated polars df
+    """ """"""
     query = """
         SELECT id, document_id, comment
         FROM regulations_comment
@@ -16,15 +25,30 @@ def get_doc_comments(schema: list[str]) -> pl.DataFrame:
             LIMIT 5
         );
         """
-    return pull_data(query, schema)
+    # filter out attached files
+    df = pull_data(query, schema)
+    pattern = (
+        r"(?i)^see attached file(s)?\.?$"
+        r"|(?i)^please see attached?\.?$"
+        r"|(?i)^see attached?\.?"
+        r"|(?i)^see attached file\(s\)\.?$"
+    )
+
+    filtered_df = df.filter(~pl.col("comment").str.contains(pattern))
+
+    # create null column for clusters
+    # (this should exist in sql eventually)
+    rows = filtered_df.shape[0]
+    filtered_df = filtered_df.with_columns(
+        pl.Series("cluster", [None] * rows).cast(pl.Utf8)
+    )
+    return filtered_df
 
 
 def comment_similarity(df: pl.DataFrame) -> pl.DataFrame:
     """Create df with comment mappings and their semantic similarity scores
-    according to the SBERT paraphrase mining mthid using the all-mpnet-base-v2
-    model from hugging face. A minimum similarity of .85 is used for inclusion
-    following the methodology of this CDO report:
-    https://www.cdo.gov/news/public-comment-analysis-pilot/
+    according to the SBERT paraphrase mining method using the all-mpnet-base-v2
+    model from hugging face.
 
     Args:
         df (pl.DataFrame): comment data
@@ -36,13 +60,22 @@ def comment_similarity(df: pl.DataFrame) -> pl.DataFrame:
     paraphrases = util.paraphrase_mining(
         model, df["comment"].to_list(), show_progress_bar=True
     )
-    df_paraphrases = pl.DataFrame(
-        paraphrases, schema=["similarity", "idx1", "idx2"]
-    ).filter(pl.col("similarity") <= 0.99)
+    df_full = pl.DataFrame(
+        {
+            "similarity": pl.Series(
+                "similarity", [x[0] for x in paraphrases], dtype=pl.Float64
+            ),
+            "idx1": pl.Series(
+                "idx1", [x[1] for x in paraphrases], dtype=pl.Int64
+            ),
+            "idx2": pl.Series(
+                "idx2", [x[2] for x in paraphrases], dtype=pl.Int64
+            ),
+        }
+    )
 
-    df_form_letter = pl.DataFrame(
-        paraphrases, schema=["similarity", "idx1", "idx2"]
-    ).filter(pl.col("similarity") > 0.99)
+    df_paraphrases = df_full.filter(pl.col("similarity") <= 0.99)
+    df_form_letter = df_full.filter(pl.col("similarity") > 0.99)
 
     return df_paraphrases, df_form_letter
 
@@ -90,10 +123,7 @@ def assign_clusters(df: pl.DataFrame, clusters: list[set[int]]) -> pl.DataFrame:
     Returns:
         pl.DataFrame: updated df
     """
-    # create null column for clusters (this should exist in sql eventually)
     rows = df.shape[0]
-    df = df.with_columns(pl.Series("cluster", [None] * rows).cast(pl.Utf8))
-
     # go through clusters and add that info to df
     for i, cluster_data in enumerate(clusters):
         df = df.with_columns(
@@ -133,7 +163,7 @@ def find_central_node(G: nx.Graph, clusters: list[set[int]]) -> dict:
 
 
 def representative_comments(
-    G: nx.Graph, clusters: list[set[int]], df: pl.DataFrame
+    G: nx.Graph, clusters: list[set[int]], df: pl.DataFrame, form_letter: bool
 ) -> pl.DataFrame:
     """Creates a dataframe with the text of the representative comments along
     with the number of comments that are semantically represented by that text
@@ -150,43 +180,62 @@ def representative_comments(
     central_nodes = find_central_node(G, clusters)
     representative_dict = {
         "comments_represented": [],
-        "comment_id": [],
+        "comment_index": [],
+        "document_id": [],
         "comment_text": [],
     }
     for i, community in enumerate(clusters):
         community_size = len(community)
         central_node = list(central_nodes.keys())[i]
         representative_dict.get("comments_represented").append(community_size)
-        representative_dict.get("comment_id").append(central_node)
-        representative_dict.get("comment_text").append(df[central_node, 1])
+        representative_dict.get("comment_index").append(central_node)
+        representative_dict.get("document_id").append(df[central_node, 1])
+        representative_dict.get("comment_text").append(df[central_node, 2])
 
     output_df = pl.DataFrame(representative_dict)
 
-    return output_df
+    if form_letter:
+        return output_df.unique(subset=["comment_text"])
+    else:
+        return output_df
 
 
 if __name__ == "__main__":
-    df = get_doc_comments()
+    # get comments and ids for iterating through batches of document comments
+    df = get_doc_comments(schema=["id", "document_id", "comment"])
+    doc_ids = df["document_id"].unique()
 
-    # get semantic similarities of comments
-    df_paraphrases, df_form_letter = comment_similarity(df)
+    # go through each document and print representative comments and assign
+    # clusters to the all comments in each document
+    for doc in doc_ids:
+        df_doc = df.filter(pl.col("document_id") == doc)
+        df_paraphrases, df_form_letter = comment_similarity(df_doc)
 
-    # build graph to represent significant similarity relationships
-    G_paraphrase = build_graph(df_paraphrases)
-    G_form = build_graph(df_form_letter)
+        try:
+            G_paraphrase = build_graph(df_paraphrases)
+            clusters_paraphrase = get_clusters(G=G_paraphrase)
+            df_doc = assign_clusters(df=df_doc, clusters=clusters_paraphrase)
+            print(
+                representative_comments(
+                    G_paraphrase, clusters_paraphrase, df_doc, form_letter=False
+                )
+            )
+            print(df_doc)
+        except ZeroDivisionError:
+            print("Paraphrase Clustering Not Possible: Empty DataFrame")
 
-    # cluster top relationships to add another filter for relationship quality
-    clusters_paraphrase = get_clusters(G=G_paraphrase)
-    clusters_form = get_clusters(G=G_form)
-
-    # includes text, cluster, comment id
-    df_clusters = assign_clusters(df=df, clusters=clusters_paraphrase)
-    # df_form = assign_clusters(df=df, clusters=clusters_form)
-
-    # print out current format of output
-    print("Paraphrases:")
-    print(representative_comments(G_paraphrase, clusters_paraphrase, df))
-    print("Form Letters:")
-    print(representative_comments(G_form, clusters_form, df))
-    print("-----------")
-    print(df_clusters.head())
+        try:
+            G_form_letter = build_graph(df_form_letter)
+            clusters_form_letter = get_clusters(G=G_form_letter)
+            df_doc = assign_clusters(df=df_doc, clusters=clusters_form_letter)
+            print(
+                representative_comments(
+                    G_form_letter,
+                    clusters_form_letter,
+                    df_doc,
+                    form_letter=True,
+                )
+            )
+            print(df_doc)
+        except ZeroDivisionError:
+            print("Form Letter Clustering Not Possible: Empty DataFrame")
