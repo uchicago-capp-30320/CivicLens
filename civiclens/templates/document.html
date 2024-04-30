@@ -7,7 +7,29 @@
 {% block content %}
   <div id="home-container">
     <p class="body">
-      document page
+      <body>
+        {% if doc %}
+          <h1>Document Details</h1>
+            <h6>Title: {{ doc.title }}</p>
+              {% if doc.comment_end_date %}
+                <p>Comment Period Ends: {{ doc.comment_end_date }}</p>
+              {% endif %}
+              {% if doc.summary %} 
+                <p>Description: {{ doc.summary }}</p>
+              {% endif %}
+          <h2>Comments:</h2>
+            {% if comments %}
+                <ul>
+                    {% for comment in comments %}
+                        <li>{{ comment.title }}</li> 
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No comments found.</p>
+            {% endif %}
+        {% else %}
+        <p>The document was not found at this time.</p> 
+        {% endif %}
     </p>
   </div>
 {% endblock content %}
