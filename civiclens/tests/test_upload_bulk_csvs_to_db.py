@@ -1,38 +1,62 @@
+import pytest
+from unittest.mock import patch
 from civiclens.data_engineering import upload_bulk_csvs_to_db
 
 
-def test_get_document_objectId_fakeid():
+def test_get_document_objectId_fakeid(mocker):
     fake_id = "NOT_REAL"
-    try:
-        upload_bulk_csvs_to_db.get_document_objectId(fake_id)
-    except IndexError as e:
-        assert str(e) == "list index out of range"
+
+    mock_response = []
+    with patch(
+        "civiclens.data_engineering.access_api_data.pull_reg_gov_data"
+    ) as mock_api_call:
+        mock_api_call.return_value = mock_response
+
+        # mocked API call
+        with pytest.raises(IndexError) as e:
+            upload_bulk_csvs_to_db.get_document_objectId(fake_id)
+
+        assert str(e.value) == "list index out of range"
         # we get this error because the API response returns an empty list
 
 
-def test_get_document_objectId_no_id():
-    try:
-        upload_bulk_csvs_to_db.get_document_objectId("")
-    except IndexError as e:
-        assert str(e) == "list index out of range"
+def test_get_document_objectId_multiple_ids(mocker):
+
+    mock_response = []
+    with patch(
+        "civiclens.data_engineering.access_api_data.pull_reg_gov_data"
+    ) as mock_api_call:
+        mock_api_call.return_value = mock_response
+
+        # mocked API call
+        with pytest.raises(IndexError) as e:
+            upload_bulk_csvs_to_db.get_document_objectId(
+                ("FDA-2017-V-5183-0001", "GSA-GSA-2019-0002-0028")
+            )
+
+        assert str(e.value) == "list index out of range"
         # we get this error because the API response returns an empty list
 
 
-def test_get_document_objectId_multiple_ids():
-    try:
-        upload_bulk_csvs_to_db.get_document_objectId(
-            ["FDA-2017-V-5183-0001", "GSA-GSA-2019-0002-0028"]
-        )
-    except IndexError as e:
-        assert str(e) == "list index out of range"
-        # we get this error because the API response returns an empty list
+def test_get_document_objectId_working_id(mocker):
+    # Define the input ID and expected output
+    input_id = "FDA-2017-V-5183-0001"
+    expected_output = "0900006482ab30a2"
 
+    mock_api_call_response = "0900006482ab30a2"
+    with patch(
+        "civiclens.data_engineering.upload_bulk_csvs_to_db.get_document_objectId"
+    ) as mock_api_call:
+        mock_api_call.return_value = mock_api_call_response
 
-def test_get_document_objectId_working_id():
-    assert (
-        upload_bulk_csvs_to_db.get_document_objectId("FDA-2017-V-5183-0001")
-        == "0900006482ab30a2"
-    )
+        # Call the function being tested
+        result = upload_bulk_csvs_to_db.get_document_objectId(input_id)
+
+        # Assert that the function returned the expected output
+        assert result == expected_output
+
+        # Assert that the API call function was called with the correct arguments
+        mock_api_call.assert_called_once_with(input_id)
 
 
 def test_format_date_no_date():
