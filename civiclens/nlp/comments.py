@@ -211,6 +211,10 @@ if __name__ == "__main__":
         df_doc = df.filter(pl.col("document_id") == doc)
         df_paraphrases, df_form_letter = comment_similarity(df_doc)
 
+        # we want to show form letters versus paraphrases count
+        print(df_paraphrases.shape)
+        print(df_doc.shape)
+
         try:
             G_paraphrase = build_graph(df_paraphrases)
             clusters_paraphrase = get_clusters(G=G_paraphrase)
