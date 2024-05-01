@@ -1,16 +1,16 @@
 {% extends "layouts/base.html" %}
 
 {% block title %}
-    Results
+    Documents
 {% endblock title %}
 
 {% block content %}
 
     <!-- search bar -->
-    <section class="slice py-7" style="background-color:#eb2323; padding:0" id="core-block">
+    <section class="slice py-7" style="background-color:#FDFFF7; padding:0" id="core-block">
       <div class="container-sm py-0">
         <div class="form-group">
-          <form action="/regulations/search/results/" method="GET">
+          <form action="/regulations/search/Documents/" method="GET">
             {{ form.as_p }}
             <div class="input-group mb-4">
               <input class="form-control" id="q" name="q" type="text" value="{{Search.search_term}}">
@@ -24,13 +24,13 @@
     <!-- sort/filter section -->
     <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
       <div class="container">
-        <form action="/regulations/search/results/" method="GET">
+        <form action="/regulations/search/Documents/" method="GET">
           {{ form.as_p }}
           <!-- include existing search term in filter -->
           <input id="q" name="q" type="hidden" value="{{Search.search_term}}">
 
           <!-- include existing search term in filter -->
-          <div class="input-group mb-3">
+          <div class="input-group mb-3 order-md-1">
             <div class="col-md-3" >
               
               <!-- sort section -->
@@ -64,12 +64,19 @@
                <p></p>
               <span class="h6 font-weight-bold">Filter by:</span>
               <h6 class="font-italic font-weight-normal">Number of comments</h6>
-              <div class="custom-switch" style="background-color:#eb2323">
-                  <input type="checkbox" class="custom-control-input" id="filter_atleastonecomment">
-                  <label class="custom-control-label" for="customSwitch1">Show documents with at least one comment</label>
-                </div>
+              <div class="custom-switch">
+                <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault">
+                <label class="custom-control-label" for="flexSwitchCheckDefault">Contains any comments</label>
+              </div>
+
+              <div class="custom-switch">
+                <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2">
+                <label class="custom-control-label" for="flexSwitchCheckDefault2">Contains 100+ comments</label>
+              </div>
+
+              <p></p>
       
-              <div class="form-group" style="background-color:#eb2323">
+              <div class="form-group">
                 <label class="font-italic">Agency</label>
                 <select multiple class="form-control" id="include_agencies">
                   <!-- for loop through all agencies in the database -- USE JINJA -->
@@ -110,10 +117,33 @@
                 </div>
 
               <p></p>
-              <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7";>Refine Results</button>
+              <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7";>Refine results</button>
           </div>
       </form>
     </div>
+
+    <!-- container for the actual Documents -->
+    <div class="col-md-8 order-md-2" style="background-color:red;">
+      <span class="h6 font-weight-normal font-italic">Displaying XX results for "{{Search.search_term}}".</span>
+      <p></p>
+      <div class="card">
+        <div class="card-body">
+          <p class="text-left font-weight-bolder">Document.ai_title</p>
+          <!-- <p class="text-right" style="float:right;">Document.type</p> -->
+          <!-- <hr style="clear:both;"/> -->
+          <p class="card-subtitle mb-2 text-muted">Original Title: Document.original_title</p>
+          <p class="card-text">Document.original_summary [only the first n words] ...</p>
+          <button href="#" class="badge">Topic.title</button>
+        </div>
+        <div class="card-footer text-muted p-2 text-right" >
+          comment by Document.due_date.
+        </div>
+      </div>
+
+
+
+    </div>
+
   </div>
   </div>
   </section>
@@ -123,7 +153,7 @@
       
 <!-- 
       <div>
-        <span class="h6 font-weight-bold col-6" style="background-color:#eb2323">Displaying XX results.</span>
+        <span class="h6 font-weight-bold col-6" style="background-color:#eb2323">Displaying XX Documents.</span>
         </div> -->
 
 
