@@ -1,4 +1,4 @@
-from django import models
+from django.db import models
 
 class Search(models.Model):
     search_term = models.CharField(max_length=100)
