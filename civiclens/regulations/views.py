@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect  # noqa: F401
-from .models import Comment, Document, Search # noqa: F401
+from .models import Comment, Document # noqa: F401
+from .forms import Search
 
 
 def home(request):
