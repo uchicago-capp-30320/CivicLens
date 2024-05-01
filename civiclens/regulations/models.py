@@ -76,5 +76,5 @@ class Comment(models.Model):
     submitter_rep_city_state = models.CharField(max_length=100, blank=True, null=True)
 
 class Search(models.Model):
-    searchterm = models.CharField(max_length=100)
-    sortby = models.CharField(max_length=100)
+    search_term = models.CharField(max_length=100)
+    sort_by = models.CharField(max_length=100)

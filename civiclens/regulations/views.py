@@ -17,15 +17,12 @@ def search_results(request):
     # get response and save query term to output context
     if request.method == "GET":
         search = Search()
-        search.searchterm = request.GET["q"]
-
-
-        # search.sortby = request.GET["sort_radio_2"]
-        print(search.searchterm)
+        search.search_term = request.GET["q"]
+        # search.sort_by = request.GET["sort_by"]
         
         context["Search"] = search
     
-        print(context)
+        print(search)
 
         return render(request, "search_results.html", context=context)
     else:
