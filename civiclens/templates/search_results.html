@@ -123,14 +123,12 @@
     </div>
 
     <!-- container for the actual Documents -->
-    <div class="col-md-8 order-md-2" style="background-color:red;">
+    <div class="col-md-8 order-md-2">
       <span class="h6 font-weight-normal font-italic">Displaying XX results for "{{Search.search_term}}".</span>
       <p></p>
       <div class="card p-2">
         <div class="card-body">
           <p class="text-left font-weight-bolder">Document.ai_title</p>
-          <!-- <p class="text-right" style="float:right;">Document.type</p> -->
-          <!-- <hr style="clear:both;"/> -->
           <p class="card-subtitle mb-2 text-muted">Original Title: Document.original_title</p>
           <p class="card-text">Document.original_summary [only the first n words] ...</p>
           <button href="#" class="badge">Topic.title</button>
@@ -139,23 +137,10 @@
           comment by Document.due_date.
         </div>
       </div>
-
-
-
     </div>
-
   </div>
   </div>
   </section>
-
-
-
-      
-<!-- 
-      <div>
-        <span class="h6 font-weight-bold col-6" style="background-color:#eb2323">Displaying XX Documents.</span>
-        </div> -->
-
 
 
 {% endblock content %}
