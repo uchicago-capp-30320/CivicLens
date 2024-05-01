@@ -77,3 +77,4 @@ class Comment(models.Model):
 
 class Search(models.Model):
     searchterm = models.CharField(max_length=100)
+    sortby = models.CharField(max_length=100)

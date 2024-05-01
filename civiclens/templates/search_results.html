@@ -11,10 +11,9 @@
       <div class="container">
         <div class="form-group">
           <form action="/regulations/search/results/" method="GET">
-            {% csrf_token %}
             {{ form.as_p }}
             <div class="input-group mb-4">
-              <input class="form-control" id="q" name="q" type="text" required
+              <input class="form-control" id="q" name="q" type="text"
               placeholder="{{Search.searchterm}}">
               <button class="btn btn-primary">Search</button>
             </div>
@@ -23,44 +22,83 @@
   </div>
   </section>
 
-    <!-- filter/results section -->
+    <!-- sort/filter section -->
     <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
       <div class="container">
-        <div>
-          <span class="h6 font-weight-bold col-3" style="background-color:#eb2323">Filter</span>
-          </div>
-        <form action="/regulations/search/results/" method="POST">
-          <div class="custom-switch col-3" style="background-color:#eb2323">
-              <input type="checkbox" class="custom-control-input" id="customSwitch1">
-              <label class="custom-control-label" for="customSwitch1">Toggle this switch element</label>
+        <form action="/regulations/search/results/" method="GET">
+          <!-- include existing search term in filter -->
+          <input id="q" name="q" type="hidden" value="{{Search.searchterm}}">
+
+          <!-- include existing search term in filter -->
+          <div class="input-group mb-3">
+            <div class="col-md-3" style="background-color:#eb2323">
+              <span class="h6 font-weight-bold col-md-3" style="background-color:#eb2323">Sort by:</span>
+
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevent">
+                <label class="form-check-label" for="most_relevant">
+                  Most relevant
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="sort_by" id="most_recent" value="most_recent" >
+                <label class="form-check-label" for="most_recent">
+                  Most recent
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="sort_by" id="most_comments" value="most_comments">
+                <label class="form-check-label" for="most_comments">
+                  Most comments
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="sort_by" id="least_comments" value="least_comments" >
+                <label class="form-check-label" for="least_comments">
+                  Least comments
+                </label>
+
+            
+                <button class="btn btn-sm" style="background-color:#eb2323" >Refine Results</button>
             </div>
-            <p></p>
-      
-        <div class="form-group col-3" style="background-color:#eb2323">
-          <label for="exampleFormControlSelect1">Agency</label>
-          <select class="custom-select" id="exampleFormControlSelect1">
-          <option>1</option>
-          <option>2</option>
-          <option>3</option>
-          <option>4</option>
-          <option>5</option>
-          </select>
-        </div>
+
+
+          
+<!-- 
+            <div>
+              <span class="h6 font-weight-bold col-md-3" style="background-color:#eb2323">Filter by:</span>
+              </div>
+          
+            <div class="custom-switch col-md-3" style="background-color:#eb2323">
+                <input type="checkbox" class="custom-control-input" id="filter_atleastonecomment">
+                <label class="custom-control-label" for="customSwitch1">Show documents with at least one comment</label>
+              </div>
+              <p></p>    
+  
+          <div class="form-group col-md-3" style="background-color:#eb2323">
+            <label for="exampleFormControlSelect1">Agency</label>
+            <select class="custom-select" id="exampleFormControlSelect1">
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            </select>
+          </div> -->
+
+          </div>
       </form>
-      
-
-
-      <div>
-        <span class="h6 font-weight-bold col-6" style="background-color:#eb2323">Displaying XX results.</span>
-        </div>
-
-
     </div>
   </div>
   </div>
-
-  
   </section>
+
+
+
+      
+<!-- 
+      <div>
+        <span class="h6 font-weight-bold col-6" style="background-color:#eb2323">Displaying XX results.</span>
+        </div> -->
 
 
 

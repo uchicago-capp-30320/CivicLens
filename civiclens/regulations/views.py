@@ -9,7 +9,7 @@ def home(request):
 def search_page(request):        
     return render(request, "search_page.html")
 
-
+# @api.get("/regulations/search/results/")
 def search_results(request):
     
     context = {}
@@ -18,13 +18,18 @@ def search_results(request):
     if request.method == "GET":
         search = Search()
         search.searchterm = request.GET["q"]
+
+
+        # search.sortby = request.GET["sort_radio_2"]
         print(search.searchterm)
         
         context["Search"] = search
     
-    print(context)
+        print(context)
 
-    return render(request, "search_results.html", context=context)
+        return render(request, "search_results.html", context=context)
+    else:
+        return render(request, "search_page.html", context=context)
 
 
 def document(request, doc_id):
