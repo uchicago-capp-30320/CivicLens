@@ -3,14 +3,14 @@ from unittest.mock import patch
 from civiclens.data_engineering import upload_bulk_csvs_to_db
 
 
-def test_get_document_objectId_fakeid(mocker):
+def test_get_document_objectId_fakeid():
     fake_id = "NOT_REAL"
 
     mock_response = []
     with patch(
-        "civiclens.data_engineering.access_api_data.pull_reg_gov_data"
-    ) as mock_api_call:
-        mock_api_call.return_value = mock_response
+        "civiclens.data_engineering.upload_bulk_csvs_to_db.pull_reg_gov_data"
+    ) as mock_pull_reg_gov_data:
+        mock_pull_reg_gov_data.return_value = mock_response
 
         # mocked API call
         with pytest.raises(IndexError) as e:
@@ -19,26 +19,39 @@ def test_get_document_objectId_fakeid(mocker):
         assert str(e.value) == "list index out of range"
         # we get this error because the API response returns an empty list
 
+        # confirm run as expected
+        mock_pull_reg_gov_data.assert_called_with(
+            upload_bulk_csvs_to_db.REG_GOV_API_KEY,
+            "documents",
+            params={"filter[searchTerm]": fake_id},
+        )
 
-def test_get_document_objectId_multiple_ids(mocker):
+
+def test_get_document_objectId_multiple_ids():
+    multiple_ids = ("FDA-2017-V-5183-0001", "GSA-GSA-2019-0002-0028")
 
     mock_response = []
     with patch(
-        "civiclens.data_engineering.access_api_data.pull_reg_gov_data"
-    ) as mock_api_call:
-        mock_api_call.return_value = mock_response
+        "civiclens.data_engineering.upload_bulk_csvs_to_db.pull_reg_gov_data"
+    ) as mock_pull_reg_gov_data:
+        mock_pull_reg_gov_data.return_value = mock_response
 
         # mocked API call
         with pytest.raises(IndexError) as e:
-            upload_bulk_csvs_to_db.get_document_objectId(
-                ("FDA-2017-V-5183-0001", "GSA-GSA-2019-0002-0028")
-            )
+            upload_bulk_csvs_to_db.get_document_objectId(multiple_ids)
 
         assert str(e.value) == "list index out of range"
         # we get this error because the API response returns an empty list
 
+        # confirm run as expected
+        mock_pull_reg_gov_data.assert_called_with(
+            upload_bulk_csvs_to_db.REG_GOV_API_KEY,
+            "documents",
+            params={"filter[searchTerm]": multiple_ids},
+        )
 
-def test_get_document_objectId_working_id(mocker):
+
+def test_get_document_objectId_working_id():
     # Define the input ID and expected output
     input_id = "FDA-2017-V-5183-0001"
     expected_output = "0900006482ab30a2"
