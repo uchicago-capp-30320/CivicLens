@@ -17,6 +17,8 @@ pre-commit = "^3.7.0"
 polars = "^0.20.22"
 sentence-transformers = "^2.7.0"
 networkx = "^3.3"
+nltk = "^3.8.1"
+bertopic = "^0.16.1"
 
 
 [tool.poetry.group.dev.dependencies]
