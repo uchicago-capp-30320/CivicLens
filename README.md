@@ -31,6 +31,8 @@ To set up pre-commit hooks that lint and test before pushing to the repo, execut
 ## Set Up Environment Variable for API Key
 To obtain a regulations.gov API key, request one on [the API page](https://open.gsa.gov/api/regulationsgov/#getting-started)
 
-For security reasons, we want to use an Environment Variable to store the API key. This repository is set up to access an ignored .env file in the CivicLens folder. To use functions which access the API, you should set ```REG_GOV_API_KEY=``` to the API key you requested
+For security reasons, we want to use an Environment Variable to store the API key. This repository is set up to access an ignored .env file in the CivicLens folder. To use functions which access the API, within the .env file you should set ```REG_GOV_API_KEY=``` to the API key you requested. 
 
 For testing or temporary purposes, you can also set ```REG_GOV_API_KEY="DEMO_KEY"```. This is a demo functionality built into regulations.gov for very limited API access.
+
+We also use the .env file to store relevant sensitive information pertaining to our database and web framework.
