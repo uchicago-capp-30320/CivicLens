@@ -6,7 +6,7 @@ import argparse
 import datetime as dt
 from datetime import datetime
 
-from access_api_data import pull_reg_gov_data
+from .access_api_data import pull_reg_gov_data
 from civiclens.utils import constants
 
 
@@ -275,7 +275,7 @@ def insert_docket_into_db(docket_data: json) -> dict:
     }
 
 
-def add_dockets_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
     """
     Add the dockets connected to a list of documents into the database
 
@@ -447,7 +447,7 @@ def insert_document_into_db(document_data: json) -> dict:
     }
 
 
-def add_documents_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+def add_documents_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
     """
     Add a list of document json objects into the database
 
@@ -681,7 +681,7 @@ def insert_comment_into_db(comment_data: json) -> dict:
     }
 
 
-def add_comments_to_db(doc_list: list[json], print_statements: bool = True) -> None:
+def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
     """
     Add comments on a list of documents to the database
 
