@@ -35,4 +35,4 @@ For security reasons, we want to use an Environment Variable to store the API ke
 
 For testing or temporary purposes, you can also set ```REG_GOV_API_KEY="DEMO_KEY"```. This is a demo functionality built into regulations.gov for very limited API access.
 
-We also use the .env file to store relevant sensitive information pertaining to our database and web framework.
+We also use the .env file to store relevant sensitive information pertaining to our database and web framework. We extract all of this information in the ```utils/constants.py``` file.
