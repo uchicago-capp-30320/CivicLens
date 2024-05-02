@@ -3,6 +3,7 @@ from datetime import datetime
 import requests
 from requests.adapters import HTTPAdapter
 
+
 """
 This code pulls heavily from the following existing repositories:
 
@@ -26,7 +27,9 @@ def _is_duplicated_on_server(response_json):
     return (
         ("errors" in response_json.keys())
         and (response_json["errors"][0]["status"] == "500")
-        and (response_json["errors"][0]["detail"][:21] == "Incorrect result size")
+        and (
+            response_json["errors"][0]["detail"][:21] == "Incorrect result size"
+        )
     )
 
 
@@ -50,7 +53,9 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
                 {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
             )
         if end_date:
-            date_param.update({"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"})
+            date_param.update(
+                {"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"}
+            )
     else:
         if start_date:
             date_param.update({"filter[postedDate][ge]": start_date})
@@ -67,6 +72,7 @@ def pull_reg_gov_data(
     end_date=None,
     params=None,
     print_remaining_requests=False,
+    wait_for_rate_reset=True,
     skip_duplicates=False,
 ):
     """
@@ -83,6 +89,8 @@ def pull_reg_gov_data(
             so that we always get the maximum page size of 250 elements per page.
         print_remaining_requests (bool, optional): Whether to print out the number of remaining
             requests this hour, based on the response headers. Defaults to False.
+        wait_for_rate_reset (bool, optional): Determines whether to wait to re-try if we run out of
+            requests in a given hour. Defaults to False.
         skip_duplicates (bool, optional): If a request returns multiple items when only 1 was expected,
             should we skip that request? Defaults to False.
 
@@ -134,7 +142,10 @@ def pull_reg_gov_data(
 
             return [True, r.json()]
         else:
-            if r.status_code == STATUS_CODE_OVER_RATE_LIMIT and wait_for_rate_reset:
+            if (
+                r.status_code == STATUS_CODE_OVER_RATE_LIMIT
+                and wait_for_rate_reset
+            ):
                 the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 retry_after = r.headers.get("Retry-After", None)
                 wait_time = (
