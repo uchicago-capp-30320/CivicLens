@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect  # noqa: F401
-from .models import Search # noqa: F401
+from .models import Comment, Document, Search # noqa: F401
 
 
 def home(request):
@@ -27,8 +27,16 @@ def search_results(request):
     return render(request, "search_results.html", context=context)
 
 
-def document(request):
-    return render(request, "document.html")
+def document(request, doc_id):
+    try:
+        doc = Document.objects.get(id=doc_id)
+    except Document.DoesNotExist:
+        doc = None
+    try:
+        comments = Comment.objects.filter(document=doc_id)
+    except Comment.DoesNotExist:
+        comments = None
+    return render(request, "document.html", {"doc": doc, "comments": comments})
 
 
 def comment(request):
