@@ -69,6 +69,8 @@ def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict
     Returns: comment_data (json): formatted json with fields extracted from the row,
         ready to be inserted into the comments db table
     """
+    if not df_row:
+        return
 
     comment_data = {
         "data": {"attributes": {}},

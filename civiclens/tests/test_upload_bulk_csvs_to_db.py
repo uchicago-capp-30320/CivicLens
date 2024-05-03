@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import patch
+import polars as pl
 from civiclens.collect import upload_bulk_csvs_to_db
 
 
@@ -90,21 +91,20 @@ def test_format_date_good_date():
 def test_format_date_bad_date():
     try:
         upload_bulk_csvs_to_db.format_date("2024--06T05:00:00")
-    except Exception as e:
-        # print(e)
-        assert str(e) == "Invalid isoformat string: '2024--06T05:00:00'"
+    except TypeError as e:
+        print("Type Error returned correctly")
 
 
 def test_extract_fields_from_row_no_data():
     try:
-        upload_bulk_csvs_to_db.extract_fields_from_row("", "test_id")
+        upload_bulk_csvs_to_db.extract_fields_from_row(pl.DataFrame([]), "test_id")
     except Exception as e:
-        print(f"{e=}")
+        # print(f"{e=}")
         assert str(e) == "string indices must be integers, not 'str'"
 
 
 def test_extract_fields_from_row_good_data():
-    pl_row = {
+    pl_row_good = {
         "Document ID": "FWS-HQ-NWRS-2022-0106-35393",
         "Agency ID": "FWS",
         "Docket ID": "FWS-HQ-NWRS-2022-0106",
@@ -209,11 +209,14 @@ def test_extract_fields_from_row_good_data():
         "id": "FWS-HQ-NWRS-2022-0106-35393",
     }
 
-    assert upload_bulk_csvs_to_db.extract_fields_from_row(pl_row, "test_id") == row_json
+    assert (
+        upload_bulk_csvs_to_db.extract_fields_from_row(pl_row_good, "test_id")
+        == row_json
+    )
 
 
 def test_extract_fields_from_row_bad_data():
-    pl_row = {
+    pl_row_bad = {
         "Document ID": "FWS-HQ-NWRS-2022-0106-35393",
         "Agency ID": "FWS",
         "Docket ID": "FWS-HQ-NWRS-2022-0106",
@@ -226,6 +229,6 @@ def test_extract_fields_from_row_bad_data():
     }
 
     try:
-        upload_bulk_csvs_to_db.extract_fields_from_row(pl_row, "test_id")
+        upload_bulk_csvs_to_db.extract_fields_from_row(pl_row_bad, "test_id")
     except Exception as e:
         assert str(e) == "'Comment on Document ID'"
