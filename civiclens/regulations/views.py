@@ -42,11 +42,11 @@ def search_results(request):
             print(Search.sort_by)
             print("Sort By:", sort_by)
             # if sort_by == "most_recent":
-            #     documents = documents.order_by("-posted_date")  # Assuming 'created_at' is a field in your Document model
+            #     documents = documents.order_by("-posted_date")
             # elif sort_by == "most_comments":
-            #     documents = documents.annotate(comment_count=Count('comments')).order_by("-comment_count")
+            #     
             # elif sort_by == "least_comments":
-            #     documents = documents.annotate(comment_count=Count('comments')).order_by("comment_count")
+            #     
             # else:  # Default sort by rank if 'most_relevant' or any other unspecified value
             #     documents = documents.order_by("-rank")
             
