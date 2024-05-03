@@ -40,6 +40,9 @@ def get_document_objectId(doc_id: str) -> str:
     return doc_data[0]["attributes"]["objectId"]
 
 
+from datetime import datetime
+
+
 def format_date(datetime_str: str) -> str:
     """
     Format a datetime string to the desired ISO 8601 format with UTC ('Z' timezone)
@@ -48,21 +51,21 @@ def format_date(datetime_str: str) -> str:
         return ""
 
     try:
-        print(f"{datetime_str=}")
         # Parse the input datetime string (assuming it's in ISO 8601 format)
-        # parsed_datetime = datetime.fromisoformat(datetime_str)
-        parsed_datetime = datetime_str.replace("Z", ":00Z")
-        print(f"{parsed_datetime=}")
-        parsed_datetime_dt = datetime.fromisoformat(parsed_datetime)
-        print(f"{parsed_datetime_dt=}")
+        # Use datetime.strptime with the correct format
+        parsed_datetime_dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%MZ")
+
         # Convert the parsed datetime object to the desired format string
         formatted_datetime_str = parsed_datetime_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-        print(f"{formatted_datetime_str=}")
         return formatted_datetime_str
     except Exception as e:
         print(f"Error parsing datetime string '{datetime_str}': {e}")
-        print(f"{type(e)=}")
         raise e
+
+
+# Test the function
+formatted_date = format_date("2024-03-06T05:00Z")
+print(formatted_date)
 
 
 def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict:
