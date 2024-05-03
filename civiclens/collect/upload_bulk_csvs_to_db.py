@@ -1,5 +1,5 @@
-import polars as pl
 from datetime import datetime
+import polars as pl
 import argparse
 
 from civiclens.collect.access_api_data import pull_reg_gov_data
@@ -38,9 +38,6 @@ def get_document_objectId(doc_id: str) -> str:
     )
 
     return doc_data[0]["attributes"]["objectId"]
-
-
-from datetime import datetime
 
 
 def format_date(datetime_str: str) -> str:
