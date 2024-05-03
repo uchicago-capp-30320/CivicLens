@@ -77,3 +77,6 @@ class Comment(models.Model):
 
 class Search(models.Model):
     searchterm = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.searchterm

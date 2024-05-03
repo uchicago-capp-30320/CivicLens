@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os  # noqa: F401
 from pathlib import Path  # noqa: F401
-
 from dotenv import load_dotenv  # noqa: F401
 
 
@@ -52,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres"
 ]
 
 MIDDLEWARE = [
