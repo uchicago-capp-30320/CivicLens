@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+
 import requests
 from requests.adapters import HTTPAdapter
 
@@ -38,7 +39,7 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
     Formats dates to be passed to API call. Assumes we want whole days, and
     aren't filtering by time.
 
-    Inputs:
+    Args:
         data_type (str): 'dockets', 'documents', or 'comments' -- what kind of data we want back from the API
         start_date (str in YYYY-MM-DD format, optional): the inclusive start date of our data pull
         end_date (str in YYYY-MM-DD format, optional): the inclusive end date of our data pull
@@ -181,47 +182,3 @@ def pull_reg_gov_data(
                 return doc_data
 
     raise RuntimeError(f"Unrecoverable error; {r_json}")
-
-
-def get_comment_text(api_key: str, comment_id: str) -> dict:
-    """
-    Get the text of a comment
-
-    Args:
-        api_key (str): key for the regulations.gov API
-        comment_id (str): the id for the comment
-
-    Returns: 
-        JSON object for the comment text
-    """
-    api_url = "https://api.regulations.gov/v4/comments/"
-    endpoint = f"{api_url}{comment_id}?include=attachments&api_key={api_key}"
-    response = requests.get(endpoint)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Failed to retrieve data. Status code: {response.status_code}")
-
-
-def merge_comment_text_and_data(api_key: str, comment_data: dict) -> dict:
-    """
-    Combine comment json object with the comment text json object
-
-    Args:
-        api_key (str): key for the regulations.gov API
-        comment_data (json): the json object from regulations.gov
-
-    Returns:
-        Combined json object for the comment and text
-    """
-
-    comment_text_data = get_comment_text(api_key, comment_data["id"])
-
-    # DECISION: only track the comment data; don't include the info on comment
-    # attachments which is found elsewhere in comment_text_data
-
-    all_comment_data = {**comment_data, **comment_text_data}
-    return all_comment_data
-
-

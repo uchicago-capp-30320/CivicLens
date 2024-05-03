@@ -28,7 +28,7 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.details
   - pymdownx.tabbed:
-      alternate_style: true 
+      alternate_style: true
   - toc:
       permalink: true
   - pymdownx.critic
@@ -44,9 +44,8 @@ nav:
   - "index.md"
   - "models.md"
   - "architecture.md"
-  - "reglib.md"
+  - "collect.md"
   - Endpoints:
     - "endpoints/regulations.md"
     - "endpoints/search.md"
     - "endpoints/document.md"
- 
