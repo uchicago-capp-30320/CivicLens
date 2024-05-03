@@ -19,6 +19,7 @@ sentence-transformers = "^2.7.0"
 networkx = "^3.3"
 nltk = "^3.8.1"
 bertopic = "^0.16.1"
+spacy = "^3.7.4"
 
 
 [tool.poetry.group.dev.dependencies]
