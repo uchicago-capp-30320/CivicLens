@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect  # noqa: F401
 from .models import Comment, Document, Search # noqa: F401
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank, TrigramSimilarity, SearchHeadline # noqa: F401
-from datetime import datetime
-from django.core.cache import cache
+from datetime import datetime # noqa: F401
+from django.core.cache import cache # noqa: F401
 
 # https://docs.djangoproject.com/en/5.0/ref/contrib/postgres/search/
 # https://medium.com/@nandagopal05/django-full-text-search-with-postgresql-f063aaf34e35
