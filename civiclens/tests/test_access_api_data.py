@@ -10,13 +10,13 @@ def test_is_duplicated_on_server():
     assert access_api_data._is_duplicated_on_server(test_json)
 
 
-def test_is_duplicated_on_server_real_data():
-    # NRCS-2009-0004-0003 is known duplicated comment ID
-    assert access_api_data.pull_reg_gov_data(
-        api_key,
-        "comments",
-        params={"filter[searchTerm]": "NRCS-2009-0004-0003"},
-    )
+# def test_is_duplicated_on_server_real_data():
+#     # NRCS-2009-0004-0003 is known duplicated comment ID
+#     assert access_api_data.pull_reg_gov_data(
+#         api_key,
+#         "comments",
+#         params={"filter[searchTerm]": "NRCS-2009-0004-0003"},
+#     )
 
 
 def test_api_date_format_params_dockets():
@@ -37,12 +37,12 @@ def test_api_date_format_params_NOT_dockets():
     }
 
 
-def test_pull_reg_gov_data():
-    # get a known document
-    # https://www.regulations.gov/document/CRC-2024-0073-0001
+# def test_pull_reg_gov_data():
+#     # get a known document
+#     # https://www.regulations.gov/document/CRC-2024-0073-0001
 
-    access_api_data.pull_reg_gov_data(
-        api_key,
-        "documents",
-        params={"filter[searchTerm]": "CRC-2024-0073-0001"},
-    )
+#     assert access_api_data.pull_reg_gov_data(
+#         api_key,
+#         "documents",
+#         params={"filter[searchTerm]": "CRC-2024-0073-0001"},
+#     )

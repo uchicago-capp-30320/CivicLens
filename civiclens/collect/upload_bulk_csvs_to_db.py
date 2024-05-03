@@ -2,8 +2,8 @@ import polars as pl
 from datetime import datetime
 import argparse
 
-from civiclens.data_engineering.access_api_data import pull_reg_gov_data
-from civiclens.data_engineering.move_data_from_api_to_database import (
+from civiclens.collect.access_api_data import pull_reg_gov_data
+from civiclens.collect.move_data_from_api_to_database import (
     insert_comment_into_db,
 )
 from civiclens.utils.constants import REG_GOV_API_KEY

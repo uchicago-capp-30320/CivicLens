@@ -32,7 +32,7 @@ def test_get_document_objectId_multiple_ids():
 
     mock_response = []
     with patch(
-        "civiclens.data_engineering.upload_bulk_csvs_to_db.pull_reg_gov_data"
+        "civiclens.collect.upload_bulk_csvs_to_db.pull_reg_gov_data"
     ) as mock_pull_reg_gov_data:
         mock_pull_reg_gov_data.return_value = mock_response
 
@@ -58,7 +58,7 @@ def test_get_document_objectId_working_id():
 
     mock_api_call_response = "0900006482ab30a2"
     with patch(
-        "civiclens.data_engineering.upload_bulk_csvs_to_db.get_document_objectId"
+        "civiclens.collect.upload_bulk_csvs_to_db.get_document_objectId"
     ) as mock_api_call:
         mock_api_call.return_value = mock_api_call_response
         # Call the function being tested
