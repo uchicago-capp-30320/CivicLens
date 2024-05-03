@@ -74,3 +74,8 @@ class Comment(models.Model):
     submitter_rep = models.CharField(max_length=100, blank=True, null=True)
     submitter_rep_address = models.CharField(max_length=255, blank=True, null=True)
     submitter_rep_city_state = models.CharField(max_length=100, blank=True, null=True)
+
+class AgencyReference(models.Model):
+    "Model representing a reference to an agency."
+    id = models.CharField(max_length=10, primary_key=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
