@@ -4,32 +4,130 @@
     Document
 {% endblock title %}
 
+
 {% block content %}
-  <div id="home-container">
-    <p class="body">
-      <body>
-        {% if doc %}
-          <h1>Document Details</h1>
-            <h6>Title: {{ doc.title }}</p>
-              {% if doc.comment_end_date %}
-                <p>Comment Period Ends: {{ doc.comment_end_date }}</p>
-              {% endif %}
-              {% if doc.summary %} 
-                <p>Description: {{ doc.summary }}</p>
-              {% endif %}
-          <h2>Comments:</h2>
-            {% if comments %}
-                <ul>
-                    {% for comment in comments %}
-                        <li>{{ comment.title }}</li> 
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No comments found.</p>
-            {% endif %}
-        {% else %}
-        <p>The document was not found at this time.</p> 
-        {% endif %}
-    </p>
+
+    <!-- whole page -->
+    <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
+      
+      <!-- title section -->
+      <div class="container p-4 py-0" style="background-color: rgba(180, 47, 55, 0.15); border: 15px solid #FDFFF7;">
+        <h5>doc.ai_title</h5>
+        <h6 class="font-italic font-weight-normal">Original title: {{doc.title}}</h6>
+      </div>
+      
+      <!-- two sectioned part of the page -->
+      <div class="container">
+        <div class="input-group mb-3 order-md-1">
+          <div class="col-md-3 p-2" >
+            
+            <!-- commenting details section -->
+            <span class="h6 font-weight-bold" >Commenting Details</span>
+            <p></p>
+
+            <div class="card" style="background-color: lightgrey;">
+              <div class="card-body py-3 px-3">
+                <p class="card-text">
+                  <a class="font-weight-bold">Comment by</a>
+                  <a class="font-weight-normal">doc.comment_deadline</a>
+                </p>
+              </div>
+            </div>
+
+            <div class="card" style="background-color: lightgrey;">
+              <div class="card-body py-3 px-3">
+                <p class="card-text">
+                  <a class="font-weight-bold">Posted on</a>
+                  <a class="font-weight-normal">doc.comment_posted_date</a>
+                </p>
+              </div>
+            </div>
+
+            <div class="card" style="background-color: lightgrey;">
+              <div class="card-body py-3 px-3">
+                <p class="card-text">
+                  <a class="font-weight-bold">Agnecy</a> 
+                  <a class="font-weight-normal">doc.agency</a>
+                </p>
+              </div>
+            </div>
+
+            <div class="card" style="background-color: lightgrey;">
+              <div class="card-body py-3 px-3">
+                <p class="card-text">
+                  <a class="font-weight-bold">Comments received</a>
+                  <a class="font-weight-normal">doc.total_comments</a>
+                </p>
+              </div>
+            </div>
+
+            <div class="card" style="background-color: lightgrey;">
+              <div class="card-body py-3 px-3">
+                <p class="card-text">
+                  <a class="font-weight-bold">Unique comments received</a>
+                  <a class="font-weight-normal">doc.total_unique_comments</a>
+                </p>
+              </div>
+            </div>
+
+            <p class="text-right">last updated: doc.last_updated</p>
+          
+            <!-- in the weeds section -->
+            <p></p>
+            <p></p>
+            <span class="h6 font-weight-bold">In the weeds</span>
+            
+            <p></p>
+            <div class="card" style="background-color: lightgrey;">
+              <div class="card-body py-3 px-3">
+                <p class="card-text">
+                  <a class="font-weight-bold">Document ID</a>
+                  <a class="font-weight-normal">{{doc.id}}</a>
+                </p>
+              </div>
+            </div>
+
+            <div class="card" style="background-color: lightgrey;">
+              <div class="card-body py-3 px-3">
+                <p class="card-text">
+                  <a class="font-weight-bold">Federal Register ID</a>
+                  <a class="font-weight-normal">doc.federal_register_id</a>
+                </p>
+              </div>
+            </div>
+
+            <div class="card" style="background-color: lightgrey;">
+              <div class="card-body py-3 px-3">
+                <p class="card-text">
+                  <a class="font-weight-bold">Docket ID</a>
+                  <a class="font-weight-normal">doc.docket_id</a>
+                </p>
+              </div>
+            </div>
+
+            <p></p>
+            <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7";>
+              <a href="https://www.regulations.gov/document/{{doc.id}}" class="font-weight-normal text-white">
+                Explore supplementary materials on regulations.gov
+              </a>
+            </button>
+    </div>
+
+    <!-- container for the actual Documents -->
+    <div class="col-md-8">
+      <span class="h6">Summary</span>
+      <p></p>
+      <div class="card p-2">
+        <div class="card-body">
+          <p class="card-text">doc.original_summary...</p>
+        </div>
+      </div>
+    </div>
   </div>
+  </div>
+  </section>
+
+
 {% endblock content %}
+
+

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect  # noqa: F401
-from .models import Comment, Document, Search # noqa: F401
+from .models import Comment, Document # noqa: F401
+from .forms import Search
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank, TrigramSimilarity, SearchHeadline # noqa: F401
 from datetime import datetime # noqa: F401
 from django.core.cache import cache # noqa: F401
@@ -17,7 +18,7 @@ def home(request):
 def search_page(request):        
     return render(request, "search_page.html")
 
-
+# @api.get("/regulations/search/results/")
 def search_results(request):
     
     context = {}
@@ -25,8 +26,8 @@ def search_results(request):
     # get response and save query term to output context
     if request.method == "GET":
         search = Search()
-        search.searchterm = request.GET["q"]
-        print(search.searchterm)
+        search.search_term = request.GET["q"]
+        # search.sort_by = request.GET["sort_by"]
         
         context["Search"] = search
     

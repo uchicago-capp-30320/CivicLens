@@ -49,3 +49,8 @@ $ set REG_GOV_API_KEY=your_token_here
 ```
 
 For testing or temporary purposes, you can also set ```REG_GOV_API_KEY="DEMO_KEY"```. This is a demo functionality built into regulations.gov for cursory API access.
+
+## Set Up Pre-Commit Hooks
+To set up pre-commit hooks that lint and test before pushing to the repo, execute the following commands in your command line locally:
+`pip install pre-commit` to install the pre-commit library.
+`pre-commit install` to create the hooks in your .git/hooks/pre-commit directory.
