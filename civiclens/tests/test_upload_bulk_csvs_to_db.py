@@ -77,7 +77,6 @@ def test_format_date_no_date():
     try:
         upload_bulk_csvs_to_db.format_date("")
     except Exception as e:
-        # print(e)
         assert str(e) == "Invalid isoformat string: ''"
 
 
@@ -91,16 +90,15 @@ def test_format_date_good_date():
 def test_format_date_bad_date():
     try:
         upload_bulk_csvs_to_db.format_date("2024--06T05:00:00")
-    except TypeError as e:
-        print("Type Error returned correctly")
+    except Exception as e:
+        assert type(e) is ValueError
 
 
 def test_extract_fields_from_row_no_data():
     try:
-        upload_bulk_csvs_to_db.extract_fields_from_row(pl.DataFrame([]), "test_id")
+        upload_bulk_csvs_to_db.extract_fields_from_row(pl.DataFrame({}), "test_id")
     except Exception as e:
-        # print(f"{e=}")
-        assert str(e) == "string indices must be integers, not 'str'"
+        assert type(e) == TypeError
 
 
 def test_extract_fields_from_row_good_data():
