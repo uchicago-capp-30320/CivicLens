@@ -56,7 +56,7 @@
               <div class="card-body py-3 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Comments received</a>
-                  <a class="font-weight-normal">doc.total_comments</a>
+                  <a class="font-weight-normal">doc.n_comments</a>
                 </p>
               </div>
             </div>
@@ -65,7 +65,7 @@
               <div class="card-body py-3 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Unique comments received</a>
-                  <a class="font-weight-normal">doc.total_unique_comments</a>
+                  <a class="font-weight-normal">doc.n_unique_comments</a>
                 </p>
               </div>
             </div>
@@ -113,7 +113,7 @@
             </button>
     </div>
 
-    <!-- container for the actual Documents -->
+    <!-- container for the document summary, NLP results -->
     <div class="col-md-8">
       <span class="h6">Summary</span>
       <p></p>
@@ -122,7 +122,42 @@
           <p class="card-text">doc.original_summary...</p>
         </div>
       </div>
+      <span class="h6">doc.n_topics topics emerged from doc.n_comments.</span>
+      <p></p>
+      <span class="p">[methods here...]</span>
+      <span class="p">[methods here...]</span>
+      <span class="p">[methods here...]</span>
+
+      <div class="container p-10" style="background-color: red;">
+        <p  style="text-align:center;">graph container</p>
+        </div>
+
+      <hr>
+      <p></p>
+      <span class="h6">doc.n_rep_comments representing doc.n_comments total comments.</span>
+      <p>The following comments capture the core themes of the comments received. 
+        [potentially include some clarity on the methods used here].</p>
+
+      <!-- cards for each representative comment -->
+      <div class="card p-0">
+        <div class="card-body">
+          <p class="card-text">comment.text...</p>
+        </div>
+        <div class="card-footer p-2">
+          <p class="text-muted text-right mb-0">[need to find some way to put these on the same line]</p>
+          <p class="card-text body font-weight-bold text-dark mb-0">Topic: comment.topic</p>
+          <p class="card-text body  text-dark">comment.n_like_this comments like this</p>
+          <p class="text-muted text-right mb-0">comment.TYPE_OF_COMMENTER</p>
+          <p class="text-muted text-right mb-0">comment.commenter_name</p>
+          <p class="text-muted text-right">commented on comment.date_received.</p>
+          
+        </div>
+      </div>
+
+
     </div>
+
+
   </div>
   </div>
   </section>
