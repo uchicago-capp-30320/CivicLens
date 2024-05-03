@@ -21,6 +21,7 @@ def clean_comments(text: str) -> str:
 
     return text
 
+
 def truncate(text: str, num_words: int) -> str:
     """
     Truncates commments:
@@ -32,8 +33,10 @@ def truncate(text: str, num_words: int) -> str:
     Returns:
         Truncated commented
     """
-    words = text.split(' ')
+    words = text.split(" ")
+
     return " ".join(words[:num_words])
+
 
 def build_embeds(words: list[str]) -> dict[str, torch.tensor]:
     """
@@ -96,7 +99,9 @@ def maximal_marginal_relevance(
 
 
 def extract_formletters(
-    docs: list[str], embeddings: torch.tensor, sim_threhold: float = 0.99,
+    docs: list[str],
+    embeddings: torch.tensor,
+    sim_threhold: float = 0.99,
 ) -> dict[str, int]:
     """
     Extracts from letters from collection of comments.
@@ -108,25 +113,25 @@ def extract_formletters(
 
     Returns:
         Dictionary containing text of identified form letters, and number
-        of form comments. 
+        of form comments.
     """
-    df = pl.DataFrame({"comment" : docs})
+    df = pl.DataFrame({"comment": docs})
     df = df.with_row_index()
 
     form_comments = {}
 
     for _ in range(len(docs) // 100):
         row = df.sample(n=1)
-        idx = row['index']
+        idx = row["index"]
         sim_tensor = cos_sim(embeddings[idx], embeddings)
 
         _, indices = torch.where(sim_tensor > sim_threhold)
-        sample = df.filter(~df['index'].is_in(indices.tolist()))
+        sample = df.filter(~df["index"].is_in(indices.tolist()))
 
         if (len(df) - len(sample)) / len(df) > 0.25:
-            form_comments[row['comment'].item()] = len(df) - len(sample) 
-        
-        df = sample 
+            form_comments[row["comment"].item()] = len(df) - len(sample)
+
+        df = sample
 
         if df.is_empty():
             break
@@ -135,12 +140,13 @@ def extract_formletters(
 
 
 class TopicModel:
-    """'
+    """
     Class for producing topics
     """
 
-    def __init__(self, model):
+    def __init__(self, model, docs):
         self.model = model
+        self.docs = docs
 
     def _build_sentences(self):
         pass
