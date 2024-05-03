@@ -44,17 +44,24 @@ def format_date(datetime_str: str) -> str:
     """
     Format a datetime string to the desired ISO 8601 format with UTC ('Z' timezone)
     """
+    if not datetime_str:
+        return ""
+
     try:
         print(f"{datetime_str=}")
         # Parse the input datetime string (assuming it's in ISO 8601 format)
-        parsed_datetime = datetime.fromisoformat(datetime_str)
+        # parsed_datetime = datetime.fromisoformat(datetime_str)
+        parsed_datetime = datetime_str.replace("Z", ":00Z")
         print(f"{parsed_datetime=}")
+        parsed_datetime_dt = datetime.fromisoformat(parsed_datetime)
+        print(f"{parsed_datetime_dt=}")
         # Convert the parsed datetime object to the desired format string
-        formatted_datetime_str = parsed_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+        formatted_datetime_str = parsed_datetime_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         print(f"{formatted_datetime_str=}")
         return formatted_datetime_str
     except Exception as e:
         print(f"Error parsing datetime string '{datetime_str}': {e}")
+        print(f"{type(e)=}")
         raise e
 
 
