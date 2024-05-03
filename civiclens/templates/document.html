@@ -1,7 +1,7 @@
 {% extends "layouts/base.html" %}
 
 {% block title %}
-    Document
+    {{doc.title}}
 {% endblock title %}
 
 
@@ -12,8 +12,8 @@
       
       <!-- title section -->
       <div class="container p-4 py-0" style="background-color: rgba(180, 47, 55, 0.15); border: 15px solid #FDFFF7;">
-        <h5>FAA considers sale of airport land at John Glenn Columbus International Airport doc.ai_title</h5>
-        <h6 class="font-italic font-weight-normal">Original title: Airport Property: John Glenn Columbus International Airport, Columbus, OH doc.title</h6>
+        <h5>doc.ai_title</h5>
+        <h6 class="font-italic font-weight-normal">Original title: {{doc.title}}</h6>
       </div>
       
       <!-- two sectioned part of the page -->
