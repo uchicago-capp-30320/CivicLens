@@ -45,16 +45,17 @@ def format_date(datetime_str: str) -> str:
     Format a datetime string to the desired ISO 8601 format with UTC ('Z' timezone)
     """
     try:
+        print(f"{datetime_str=}")
         # Parse the input datetime string (assuming it's in ISO 8601 format)
         parsed_datetime = datetime.fromisoformat(datetime_str)
-
+        print(f"{parsed_datetime=}")
         # Convert the parsed datetime object to the desired format string
         formatted_datetime_str = parsed_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
-
+        print(f"{formatted_datetime_str=}")
         return formatted_datetime_str
     except Exception as e:
         print(f"Error parsing datetime string '{datetime_str}': {e}")
-        raise (e)
+        raise e
 
 
 def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict:
