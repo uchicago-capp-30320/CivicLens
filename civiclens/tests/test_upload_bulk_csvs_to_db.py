@@ -82,8 +82,9 @@ def test_format_date_no_date():
 
 def test_format_date_good_date():
     assert (
-        upload_bulk_csvs_to_db.format_date("2024-03-06T05:00:00")
+        upload_bulk_csvs_to_db.format_date("2024-03-06T05:00Z")
         == "2024-03-06T05:00:00Z"
+        # TODO: is this test correct?
     )
 
 
@@ -98,7 +99,7 @@ def test_extract_fields_from_row_no_data():
     try:
         upload_bulk_csvs_to_db.extract_fields_from_row(pl.DataFrame({}), "test_id")
     except Exception as e:
-        assert type(e) == TypeError
+        assert type(e) is TypeError
 
 
 def test_extract_fields_from_row_good_data():
