@@ -23,34 +23,16 @@ CivicLens requires `poetry` (see [here](https://python-poetry.org/) for more inf
 
 To run the test suite, run `poetry run pytest`.
 
-
-## Set Up Environment Variable for API Key
-To obtain a regulations.gov API key, request one on [the API page](https://open.gsa.gov/api/regulationsgov/#getting-started)
-
-For security reasons, we would want to use an Environment Variable to store the API key.
-
-To set up the API key as an environment variable:
-
-for MacOS and Linux (bash):
-```bash
-$ export REG_GOV_API_KEY="your_token_here"
-$ source ~/.bashrc
-```
-
-for MacOS and Linux (zsh):
-```zsh
-$ echo 'export REG_GOV_API_KEY="your_token_here"' >> ~/.zshenv
-```
-
-for Windows:
-Run the following command to set the environment variable in the current session:
-```bash
-$ set REG_GOV_API_KEY=your_token_here
-```
-
-For testing or temporary purposes, you can also set ```REG_GOV_API_KEY="DEMO_KEY"```. This is a demo functionality built into regulations.gov for cursory API access.
-
 ## Set Up Pre-Commit Hooks
 To set up pre-commit hooks that lint and test before pushing to the repo, execute the following commands in your command line locally:
 `pip install pre-commit` to install the pre-commit library.
 `pre-commit install` to create the hooks in your .git/hooks/pre-commit directory.
+
+## Set Up Environment Variable for API Key
+To obtain a regulations.gov API key, request one on [the API page](https://open.gsa.gov/api/regulationsgov/#getting-started)
+
+For security reasons, we want to use an Environment Variable to store the API key. This repository is set up to access an ignored .env file in the CivicLens folder. To use functions which access the API, within the .env file you should set ```REG_GOV_API_KEY=``` to the API key you requested. 
+
+For testing or temporary purposes, you can also set ```REG_GOV_API_KEY="DEMO_KEY"```. This is a demo functionality built into regulations.gov for very limited API access.
+
+We also use the .env file to store relevant sensitive information pertaining to our database and web framework. We extract all of this information in the ```utils/constants.py``` file.

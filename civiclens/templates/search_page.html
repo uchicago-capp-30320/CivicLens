@@ -15,7 +15,6 @@
         
         <div class="form-group">
           <form action="/regulations/search/results/" method="GET">
-            {% csrf_token %}
             {{ form.as_p }}
             <div class="input-group mb-4">
               <input class="form-control" id="q" name="q" type="text" required
@@ -23,8 +22,6 @@
               <button class="btn btn-primary">Search</button>
             </div>
           </form>
-
-
           
       </div>
       </div>
@@ -37,24 +34,26 @@
         
         <h6>Common Search Terms</h6>
 
+        <!-- potential refactor to not hard code these links and us a get request instead -->
+
         <button class="badge">
-          <a href="/regulations/search/results?q=gun%20%control">gun control</a>
+          <a href="/regulations/search/results?q=gun+control">gun control</a>
         </button>
 
         <button class="badge">
-          <a href="/regulations/search/results?q=gun%20%control">reproductive health</a>
+          <a href="/regulations/search/results?q=reproductive+health">reproductive health</a>
         </button>
 
         <button class="badge">
-          <a href="/regulations/search/results?q=gun%20%control">COVID-19</a>
+          <a href="/regulations/search/results?q=COVID-19">COVID-19</a>
         </button>
 
         <button class="badge">
-          <a href="/regulations/search/results?q=gun%20%control">universal healthcare</a>
+          <a href="/regulations/search/results?q=universal+healthcare">universal healthcare</a>
         </button>
 
         <button class="badge">
-          <a href="/regulations/search/results?q=gun%20%control">climate change</a>
+          <a href="/regulations/search/results?q=climate+change">climate change</a>
         </button>
 
       </div>
