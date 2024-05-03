@@ -8,12 +8,12 @@
 {% block content %}
 
     <!-- whole page -->
-    <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
+    <section class="slice py-3" style="background-color:#FDFFF7" id="core-block">
       
       <!-- title section -->
       <div class="container p-4 py-0" style="background-color: rgba(180, 47, 55, 0.15); border: 15px solid #FDFFF7;">
-        <h5>doc.ai_title</h5>
-        <h6 class="font-italic font-weight-normal">Original title: {{doc.title}}</h6>
+        <h5>FAA considers sale of airport land at John Glenn Columbus International Airport doc.ai_title</h5>
+        <h6 class="font-italic font-weight-normal">Original title: Airport Property: John Glenn Columbus International Airport, Columbus, OH doc.title</h6>
       </div>
       
       <!-- two sectioned part of the page -->
@@ -25,8 +25,8 @@
             <span class="h6 font-weight-bold" >Commenting Details</span>
             <p></p>
 
-            <div class="card" style="background-color: lightgrey;">
-              <div class="card-body py-3 px-3">
+            <div class="card-sm" style="background-color: lightgrey;">
+              <div class="card-body py-2 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Comment by</a>
                   <a class="font-weight-normal">doc.comment_deadline</a>
@@ -34,8 +34,8 @@
               </div>
             </div>
 
-            <div class="card" style="background-color: lightgrey;">
-              <div class="card-body py-3 px-3">
+            <div class="card-sm" style="background-color: lightgrey;">
+              <div class="card-body py-2 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Posted on</a>
                   <a class="font-weight-normal">doc.comment_posted_date</a>
@@ -43,8 +43,8 @@
               </div>
             </div>
 
-            <div class="card" style="background-color: lightgrey;">
-              <div class="card-body py-3 px-3">
+            <div class="card-sm" style="background-color: lightgrey;">
+              <div class="card-body py-2 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Agnecy</a> 
                   <a class="font-weight-normal">doc.agency</a>
@@ -52,8 +52,8 @@
               </div>
             </div>
 
-            <div class="card" style="background-color: lightgrey;">
-              <div class="card-body py-3 px-3">
+            <div class="card-sm" style="background-color: lightgrey;">
+              <div class="card-body py-2 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Comments received</a>
                   <a class="font-weight-normal">doc.n_comments</a>
@@ -61,8 +61,8 @@
               </div>
             </div>
 
-            <div class="card" style="background-color: lightgrey;">
-              <div class="card-body py-3 px-3">
+            <div class="card-sm" style="background-color: lightgrey;">
+              <div class="card-body py-2 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Unique comments received</a>
                   <a class="font-weight-normal">doc.n_unique_comments</a>
@@ -70,16 +70,17 @@
               </div>
             </div>
 
-            <p class="text-right">last updated: doc.last_updated</p>
+            <p class="text-right text-muted small">
+              <a class="font-italic">comments last updated:</a> doc.comments_last_updated
+            </p>
+
           
             <!-- in the weeds section -->
-            <p></p>
-            <p></p>
             <span class="h6 font-weight-bold">In the weeds</span>
             
             <p></p>
-            <div class="card" style="background-color: lightgrey;">
-              <div class="card-body py-3 px-3">
+            <div class="card-sm" style="background-color: lightgrey;">
+              <div class="card-body py-2 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Document ID</a>
                   <a class="font-weight-normal">{{doc.id}}</a>
@@ -87,8 +88,8 @@
               </div>
             </div>
 
-            <div class="card" style="background-color: lightgrey;">
-              <div class="card-body py-3 px-3">
+            <div class="card-sm" style="background-color: lightgrey;">
+              <div class="card-body py-2 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Federal Register ID</a>
                   <a class="font-weight-normal">doc.federal_register_id</a>
@@ -96,8 +97,8 @@
               </div>
             </div>
 
-            <div class="card" style="background-color: lightgrey;">
-              <div class="card-body py-3 px-3">
+            <div class="card-sm" style="background-color: lightgrey;">
+              <div class="card-body py-2 px-3">
                 <p class="card-text">
                   <a class="font-weight-bold">Docket ID</a>
                   <a class="font-weight-normal">doc.docket_id</a>
@@ -106,8 +107,9 @@
             </div>
 
             <p></p>
+            <p class="small">Want to get even more in the weeds?</p>
             <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7";>
-              <a href="https://www.regulations.gov/document/{{doc.id}}" class="font-weight-normal text-white">
+              <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
                 Explore supplementary materials on regulations.gov
               </a>
             </button>
@@ -117,7 +119,7 @@
     <div class="col-md-8">
       <span class="h6">Summary</span>
       <p></p>
-      <div class="card p-2">
+      <div class="card p-3">
         <div class="card-body">
           <p class="card-text">doc.original_summary...</p>
         </div>
@@ -131,6 +133,9 @@
       <div class="container p-10" style="background-color: red;">
         <p  style="text-align:center;">graph container</p>
         </div>
+      <p class="text-right text-muted small">
+        <a class="font-italic">topics last updated:</a> doc.topics_last_updated
+      </p>
 
       <hr>
       <p></p>
@@ -141,7 +146,7 @@
       <!-- cards for each representative comment -->
       <div class="card p-0">
         <div class="card-body">
-          <p class="card-text">comment.text...</p>
+          <p class="card-text p-2">comment.text...</p>
         </div>
         <div class="card-footer p-2">
           <p class="text-muted text-right mb-0">[need to find some way to put these on the same line]</p>
@@ -154,8 +159,25 @@
         </div>
       </div>
 
+      <div style="text-align: center;">
+        <button class="btn btn-sm" style="background-color:#21315C; color:#FDFFF7";>
+          <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
+            Add your own comment!
+          </a>
+        </button>
+    
+        <button class="btn btn-sm btn-outline-primary" style="background-color:white; color:#21315C;">
+          <a href="https://www.regulations.gov/document/{{doc.id}}/comment" target="_blank" class="font-weight-normal">
+            Browse all existing comments
+          </a>
+        </button>
+      </div>
+
 
     </div>
+
+
+
 
 
   </div>

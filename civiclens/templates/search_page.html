@@ -11,14 +11,17 @@
     <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
       <div class="container shape-container">
         
-        <h6>What opportunities are there to give your feedback right now? [need to phrase this better]</h6>
+        <h4>Give your feedback.</h4>
+
+        <p>Search for opportunities to comment on...</p>
+        <p></p>
         
         <div class="form-group">
           <form action="/regulations/search/results/" method="GET">
             {{ form.as_p }}
             <div class="input-group mb-4">
               <input class="form-control" id="q" name="q" type="text" required
-              placeholder="Type in a topic you care about to find opportunities to comment...">
+              placeholder="Search for topics like 'gun control' or 'reproductive health'...">
               <button class="btn btn-primary">Search</button>
             </div>
           </form>
@@ -32,7 +35,7 @@
     <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
       <div class="container">
         
-        <h6>Common Search Terms</h6>
+        <p class="font-italic">Common Search Terms</p>
 
         <!-- potential refactor to not hard code these links and us a get request instead -->
 
