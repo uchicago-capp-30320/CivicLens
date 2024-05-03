@@ -3,6 +3,7 @@ from datetime import datetime
 import requests
 from requests.adapters import HTTPAdapter
 
+
 """
 This code pulls heavily from the following existing repositories:
 
@@ -26,7 +27,9 @@ def _is_duplicated_on_server(response_json):
     return (
         ("errors" in response_json.keys())
         and (response_json["errors"][0]["status"] == "500")
-        and (response_json["errors"][0]["detail"][:21] == "Incorrect result size")
+        and (
+            response_json["errors"][0]["detail"][:21] == "Incorrect result size"
+        )
     )
 
 
@@ -50,7 +53,9 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
                 {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
             )
         if end_date:
-            date_param.update({"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"})
+            date_param.update(
+                {"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"}
+            )
     else:
         if start_date:
             date_param.update({"filter[postedDate][ge]": start_date})
@@ -72,7 +77,7 @@ def pull_reg_gov_data(
     """
     Returns the JSON associated with a request to the API; max length of 24000
 
-    draws heavily from here: https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py
+    Draws heavily from this [repository](https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py)
 
     Args:
         data_type (str): 'dockets', 'documents', or 'comments' -- what kind of data we want back from the API
@@ -134,7 +139,10 @@ def pull_reg_gov_data(
 
             return [True, r.json()]
         else:
-            if r.status_code == STATUS_CODE_OVER_RATE_LIMIT and wait_for_rate_reset:
+            if (
+                r.status_code == STATUS_CODE_OVER_RATE_LIMIT
+                and wait_for_rate_reset
+            ):
                 the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 retry_after = r.headers.get("Retry-After", None)
                 wait_time = (
