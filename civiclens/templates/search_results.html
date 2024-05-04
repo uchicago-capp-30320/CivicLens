@@ -1,0 +1,147 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+    Documents
+{% endblock title %}
+
+{% block content %}
+
+  <!-- search bar -->
+  <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
+    <div class="container-sm py-0">
+      <div class="form-group">
+        <form action="/regulations/search/results/" method="GET">
+          {{ form.as_p }}
+          <div class="input-group mb-4">
+            <input class="form-control" id="q" name="q" type="text" value="{{Search.search_term}}">
+            <button class="btn btn-primary">Search</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- sort/filter section -->
+  <section class="slice py-0" style="background-color:#FDFFF7" id="core-block">
+    <div class="container">
+      <form action="/regulations/search/results/" method="GET">
+        {{ form.as_p }}
+        <!-- include existing search term in filter -->
+        <input id="q" name="q" type="hidden" value="{{Search.search_term}}">
+
+        <!-- include existing search term in filter -->
+        <div class="input-group mb-3 order-md-1">
+          <div class="col-md-3" >
+            
+            <!-- sort section -->
+            <span class="h6 font-weight-bold" >Sort by:</span>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevent">
+              <label class="form-check-label" for="most_relevant">
+                Most relevant
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sort_by" id="most_recent" value="most_recent" >
+              <label class="form-check-label" for="most_recent">
+                Most recent
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sort_by" id="most_comments" value="most_comments">
+              <label class="form-check-label" for="most_comments">
+                Most comments
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sort_by" id="least_comments" value="least_comments" >
+              <label class="form-check-label" for="least_comments">
+                Least comments
+              </label>
+            </div>
+          
+            <!-- filter section -->
+            <p></p>
+            <p></p>
+            <span class="h6 font-weight-bold">Filter by:</span>
+            <h6 class="font-italic font-weight-normal">Number of comments</h6>
+            <div class="custom-switch">
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault">
+              <label class="custom-control-label" for="flexSwitchCheckDefault">Contains any comments</label>
+            </div>
+
+            <div class="custom-switch">
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2">
+              <label class="custom-control-label" for="flexSwitchCheckDefault2">Contains 100+ comments</label>
+            </div>
+            <p></p>
+    
+            <div class="form-group">
+              <label class="font-italic">Agency</label>
+              <select multiple class="form-control" id="include_agencies">
+                <!-- for loop through all agencies in the database -- USE JINJA -->
+                <option>Agency 1</option>
+                <option>Longer Agency Name 2</option>
+                <option>Agency 3</option>
+                <option>Agency 4</option>
+                <option>Agency 5</option>
+              </select>
+            </div>
+
+              <!-- filter by types of documents, default to all -->
+            <div class="form-group" >
+              <label for="exampleFormControlSelect2" class="font-italic">Category</label>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="rule" name="rule" checked>
+                <label class="form-check-label" for="rule">
+                  Rule
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="proposed_rule" name="proposed_rule" checked>
+                <label class="form-check-label" for="proposed_rule">
+                  Proposed Rule
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="notice" name="notice" checked>
+                <label class="form-check-label" for="notice">
+                  Notice
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="other" name="other" checked>
+                <label class="form-check-label" for="other">
+                  Other
+                </label>
+              </div>
+            <p></p>
+            <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7";>Refine results</button>
+          </div>
+      </form>
+    </div>
+
+    <!-- container for the actual Documents -->
+    <div class="col-md-8 order-md-2">
+      <span class="h6 font-weight-normal font-italic">Displaying XX results for "{{Search.search_term}}".</span>
+      <p></p>
+      <div class="card p-3">
+        <div class="card-body">
+          <p class="text-left font-weight-bolder mb-0">
+            <!-- hard coded doc id but can change when needed -->
+            <a href="/regulations/docs/FWS-HQ-NWRS-2022-0106-35375">Document.ai_title</a>
+          </p>
+          <p class="font-italic bodytext-muted">Original Title: Document.original_title</p>
+          <p class="card-text">Document.original_summary [only the first n words] ...</p>
+          <button href="#" class="badge mb-2">Topic.title</button>
+        </div>
+        <div class="card-footer text-muted p-0 text-right" >
+          comment by Document.due_date.
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  </section>
+
+
+{% endblock content %}
