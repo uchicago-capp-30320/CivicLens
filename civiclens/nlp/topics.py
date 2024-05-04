@@ -4,70 +4,12 @@ import numpy as np
 import polars as pl
 import torch
 from bertopic import BERTopic
+from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
 
 from ..utils.ml_utils import clean_comments
-
-
-def build_embeds(words: list[str]) -> dict[str, torch.tensor]:
-    """
-    Creates dictionary mapping list of strings to vector embedding.
-
-    Inputs:
-        words: list of words to embed
-
-    Returns:
-        Mapping of strings to text embedding
-    """
-    embed_model = SentenceTransformer("all-MiniLM-L6-v2")
-    query_matrix = embed_model.encode(words, convert_to_tensor=True)
-
-    embeds = {}
-    for idx, word in enumerate(words):
-        embeds[word] = query_matrix[idx]
-
-    return embeds
-
-
-def maximal_marginal_relevance(
-    words: list[str], query: str | list[str], lam: float = 0.5
-) -> list[tuple[str, float]]:
-    """
-    Implementation of Marginal Maximal Relevance (MMR).
-
-    Inputs:
-        words: list of strings, or corpus, to extract relevant terms form
-        query: list of strings or single string, query to compare corpus to
-        lam: lambda value, ranging from 0 to 1, higher values create more
-            diverse ranking
-
-    Returns:
-        List of tuples containg terms and MMR score, ordered from most relevant
-        to least
-    """
-    s = []
-    embeds = build_embeds(words)
-    embed_model = SentenceTransformer("all-MiniLM-L6-v2")
-    query_matrix = embed_model.encode(query, convert_to_tensor=True)
-
-    for i in words:
-        max_sim_ij = 0
-
-        for j, _ in s:
-            sim_ij = torch.sum(cos_sim(embeds[i], embeds[j])).item()
-            if sim_ij > max_sim_ij:
-                max_sim_ij = sim_ij
-
-        mmr = (
-            lam * torch.sum(cos_sim(embeds[i], query_matrix)).item()
-            - (1 - lam) * max_sim_ij
-        )
-
-        s.append((i, mmr))
-
-    return sorted(s, key=lambda x: x[1], reverse=True)
 
 
 def extract_formletters(
@@ -109,6 +51,22 @@ def extract_formletters(
             break
 
     return form_comments
+
+
+def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
+    """
+    Sorts input terms by maximal marginal relevance
+    """
+    embeding_model = SentenceTransformer("all-MiniLM-L6-v2")
+    term_matrix = embeding_model.encode(terms)
+    query = embeding_model.encode(query_string, convert_to_numpy=True)
+
+    indices = maximal_marginal_relevance(
+        query, term_matrix, lambda_mult=lam, k=len(terms)
+    )
+    sorted_terms = np.array(terms)[indices]
+
+    return sorted_terms.tolist()
 
 
 class TopicModel:
@@ -157,9 +115,7 @@ class TopicModel:
                 # print(model_topics)
                 phrases.update({phrase for (phrase, _) in model_topics})
 
-            self.topics[i] = maximal_marginal_relevance(
-                list(phrases), query[i], lam=0.5
-            )
+            self.topics[i] = mmr_sort(list(phrases), query[i], lam=0.75)
 
         return self._aggregate_comments(sentences, input, numeric_topics, probs)
 
@@ -218,8 +174,8 @@ class TopicModel:
             )
 
         search_vector = []
-        for topic in self.topics.values():
-            search_vector += [term for (term, _) in topic]
+        for term_list in self.topics.values():
+            search_vector += term_list
 
         return search_vector
 
@@ -233,6 +189,6 @@ class TopicModel:
         comment_topics = {}
         for comment, topic_num in labeled_comments.items():
             terms = self.topics[topic_num]
-            comment_topics[comment] = [term for (term, _) in terms[:n]]
+            comment_topics[comment] = terms[:n]
 
         return comment_topics
