@@ -59,10 +59,16 @@ class TopicModel:
         sentences = self._process_sentences(docs)
         input = list(sentences.keys())
 
-        numeric_topics, probs = self.model.fit_transform(input)
+        try:
+            numeric_topics, probs = self.model.fit_transform(input)
+        except (ValueError, TypeError):
+            # log error somewhere, what to return
+            return {}
+
         num_topics = max(numeric_topics)
 
         if num_topics < 0:
+            # should this be an error
             raise ValueError("Unable to generate topics")
 
         query = self._generate_mmr_query(numeric_topics)
@@ -128,7 +134,7 @@ class TopicModel:
 
         return assigned_topics
 
-    def generate_search_vector(self):
+    def generate_search_vector(self) -> list[str]:
         """
         Creates array of topics to use in Django serach model.
         """
@@ -137,11 +143,11 @@ class TopicModel:
                 "Must run topic model before generating search vector"
             )
 
-        search_vector = []
+        search_vector = set()
         for term_list in self.topics.values():
-            search_vector += term_list
+            search_vector.update(term_list)
 
-        return search_vector
+        return list(search_vector)
 
     def find_n_representative_topics(
         self, labeled_comments: dict[int | str, int], n: int
