@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import requests
 from requests.adapters import HTTPAdapter
 
@@ -63,6 +63,29 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
             date_param.update({"filter[postedDate][le]": end_date})
 
     return date_param
+
+def format_datetime_for_api(dt_str):
+    """
+    Converts a UTC datetime string from the API to a formatted string representing Eastern Time.
+
+    This helped function was constructed to process the `lastModifiedDate` timestamp obtained from 
+    the API's response into Eastern Time, that is required when making API requests.
+    Ref: https://open.gsa.gov/api/regulationsgov/#searching-for-comments-1
+
+    Inputs:
+        dt_str (str): The UTC datetime string in ISO 8601 format (e.g., "2020-08-10T15:58:52Z").
+
+    Returns:
+        str: The formatted datetime string in Eastern Time, formatted as "YYYY-MM-DD HH:MM:SS".
+
+    Example:
+        >>> format_datetime_for_api("2020-08-10T15:58:52Z")
+        '2020-08-10 11:58:52'
+    """
+    utc_dt = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    eastern_dt = utc_dt + timedelta(hours=-4)
+
+    return eastern_dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def pull_reg_gov_data(
