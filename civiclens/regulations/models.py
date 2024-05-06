@@ -78,14 +78,16 @@ class Comment(models.Model):
     submitter_rep_address = models.CharField(max_length=255, blank=True, null=True)
     submitter_rep_city_state = models.CharField(max_length=100, blank=True, null=True)
 
+
 class AgencyReference(models.Model):
     "Model representing a reference to an agency."
     id = models.CharField(max_length=10, primary_key=True)
     name = models.CharField(max_length=255, blank=True, null=True)
-   
+
+
 class NLPoutput(models.Model):
     "Model representing NLP output at the document level."
-    document_id = models.ForeignKey(Document, on_delete=models.CASCADE)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
     rep_comments = models.TextField(null=True)
     doc_plain_english_title = models.CharField(max_length=255, blank=True, null=True)
     num_total_comments = models.IntegerField(default=0)
@@ -93,4 +95,5 @@ class NLPoutput(models.Model):
     num_representative_comment = models.IntegerField(default=0)
     topics = models.TextField(null=True)
     num_topics = models.IntegerField(default=0)
-    nlp_last_updated = models.DateTimeField(null=True)
+    last_updated = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
