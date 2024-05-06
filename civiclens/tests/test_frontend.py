@@ -1,10 +1,8 @@
-from django.test import Client, TestCase
-from django.conf import settings
+from django.test import Client
+# from django.conf import settings
 from regulations.forms import Search
 
-
 client = Client()
-
 
 def test_homepage_exists():
     response = client.get(path="/")
