@@ -9,6 +9,10 @@ from sentence_transformers import SentenceTransformer
 from ..utils.ml_utils import clean_comments
 
 
+def llm_filter(terms: list[str]) -> list[str]:
+    pass
+
+
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
     """
     Sorts input terms by maximal marginal relevance
