@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer, util
 from ..utils.database_access import pull_data
 
 
-def get_doc_comments(schema: list[str]) -> pl.DataFrame:
+def get_doc_comments(id: str) -> pl.DataFrame:
     """Pulls all comments for a set of documents and preprocesses that into a
     polars dataframe
 
@@ -15,18 +15,15 @@ def get_doc_comments(schema: list[str]) -> pl.DataFrame:
 
     Returns:
         pl.DataFrame: formated polars df
-    """ """"""
-    query = """
+    """
+    query = f"""
         SELECT id, document_id, comment
         FROM regulations_comment
-        WHERE document_id IN (
-            SELECT DISTINCT document_id
-            FROM regulations_comment
-            LIMIT 5
+        WHERE document_id = '{id}'
         );
         """
     # filter out attached files
-    df = pull_data(query, schema)
+    df = pull_data(query, ["id", "document_id", "comment"])
     pattern = (
         r"(?i)^see attached file(s)?\.?$"
         r"|(?i)^please see attached?\.?$"
@@ -200,46 +197,53 @@ def representative_comments(
         return output_df
 
 
-if __name__ == "__main__":
-    # get comments and ids for iterating through batches of document comments
-    df = get_doc_comments(schema=["id", "document_id", "comment"])
-    doc_ids = df["document_id"].unique()
+def rep_comment_analysis(id: str) -> tuple[pl.DataFrame]:
+    """Runs all representative comment code for a document
 
-    # go through each document and print representative comments and assign
-    # clusters to the all comments in each document
-    for doc in doc_ids:
-        df_doc = df.filter(pl.col("document_id") == doc)
-        df_paraphrases, df_form_letter = comment_similarity(df_doc)
+    Args:
+        id (str): document id for comment analysis
 
-        # we want to show form letters versus paraphrases count
-        print(df_paraphrases.shape)
-        print(df_doc.shape)
+    Returns:
+        tuple[pl.DataFrame]: a tuple with the modified comment dataframe,
+        a dataframe with representative comments for individual submissions,
+        and a dataframe with representative comments for form letters
+    """
+    df = get_doc_comments(id=id)
+    df_paraphrases, df_form_letter = comment_similarity(df)
 
-        try:
-            G_paraphrase = build_graph(df_paraphrases)
-            clusters_paraphrase = get_clusters(G=G_paraphrase)
-            df_doc = assign_clusters(df=df_doc, clusters=clusters_paraphrase)
-            print(
-                representative_comments(
-                    G_paraphrase, clusters_paraphrase, df_doc, form_letter=False
-                )
-            )
-            print(df_doc)
-        except ZeroDivisionError:
-            print("Paraphrase Clustering Not Possible: Empty DataFrame")
+    # we want to show form letters versus paraphrases count
+    print(df_paraphrases.shape)
+    print(df.shape)
 
-        try:
-            G_form_letter = build_graph(df_form_letter)
-            clusters_form_letter = get_clusters(G=G_form_letter)
-            df_doc = assign_clusters(df=df_doc, clusters=clusters_form_letter)
-            print(
-                representative_comments(
-                    G_form_letter,
-                    clusters_form_letter,
-                    df_doc,
-                    form_letter=True,
-                )
-            )
-            print(df_doc)
-        except ZeroDivisionError:
-            print("Form Letter Clustering Not Possible: Empty DataFrame")
+    output_data = [False, False, False]
+
+    try:
+        G_paraphrase = build_graph(df_paraphrases)
+        clusters_paraphrase = get_clusters(G=G_paraphrase)
+        df = assign_clusters(df=df, clusters=clusters_paraphrase)
+        df_rep_paraphrase = representative_comments(
+            G_paraphrase, clusters_paraphrase, df, form_letter=False
+        )
+        output_data[1] = df_rep_paraphrase
+
+    except ZeroDivisionError:
+        print("Paraphrase Clustering Not Possible: Empty DataFrame")
+
+    try:
+        G_form_letter = build_graph(df_form_letter)
+        clusters_form_letter = get_clusters(G=G_form_letter)
+        df = assign_clusters(df=df, clusters=clusters_form_letter)
+        df_rep_form = representative_comments(
+            G_form_letter,
+            clusters_form_letter,
+            df,
+            form_letter=True,
+        )
+        output_data[2] = df_rep_form
+
+    except ZeroDivisionError:
+        print("Form Letter Clustering Not Possible: Empty DataFrame")
+
+    output_data[0] = df
+
+    return tuple(output_data)

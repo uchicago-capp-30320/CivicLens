@@ -6,14 +6,13 @@ from langchain_core.prompts import PromptTemplate
 from ..utils.database_access import pull_data
 
 
-def get_doc_summaries() -> pl.DataFrame:
-    query = """
-        SELECT id, last_modified_date, title, summary
-        FROM regulations_document
-        ORDER BY last_modified_date DESC
-        LIMIT 100;
-        """
-    schema = ["id", "last_modified_date", "title", "summary"]
+def get_doc_summary(id: str) -> pl.DataFrame:
+    query = f"""
+            SELECT id, summary
+            FROM regulations_document
+            WHERE id = '{id}'
+            """
+    schema = ["id", "summary"]
     return pull_data(query, schema)
 
 
@@ -44,7 +43,7 @@ class TitleChain:
 
 
 # rough code for running this on a set of documents, will adjust
-df = get_doc_summaries()
+df = get_doc_summary()
 title_creator = TitleChain()
 titles = {"original_titles": [], "new_titles": []}
 for row in df.iter_rows():
