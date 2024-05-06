@@ -2,15 +2,14 @@ from collections import defaultdict
 
 import numpy as np
 from bertopic import BERTopic
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
 from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
 
 from ..utils.ml_utils import clean_comments
-
-
-def llm_filter(terms: list[str]) -> list[str]:
-    pass
 
 
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
@@ -37,6 +36,7 @@ class TopicModel:
     def __init__(self, model: BERTopic()):
         self.model = model
         self.topics = {}
+        self.terms = {}
 
     def _process_sentences(self, docs: list[str]) -> dict[str, int]:
         """
@@ -67,7 +67,10 @@ class TopicModel:
 
         query = self._generate_mmr_query(numeric_topics)
 
+        # intialize no topic default
         self.topics[-1] = []
+        self.terms[-1] = []
+
         for i in range(num_topics + 1):
             phrases = set()
             model_results = self.model.get_topic(i, full=True)
@@ -75,7 +78,8 @@ class TopicModel:
                 # print(model_topics)
                 phrases.update({phrase for (phrase, _) in model_topics})
 
-            self.topics[i] = mmr_sort(list(phrases), query[i], lam=0.75)
+            self.topics[i] = phrases
+            self.terms[i] = mmr_sort(list(phrases), query, lam=0.8)
 
         return self._aggregate_comments(sentences, input, numeric_topics, probs)
 
@@ -148,7 +152,45 @@ class TopicModel:
         # add way to make topic terms unique?
         comment_topics = {}
         for comment, topic_num in labeled_comments.items():
-            terms = self.topics[topic_num]
+            terms = self.terms[topic_num]
             comment_topics[comment] = terms[:n]
 
         return comment_topics
+
+
+class TopicChain:
+    def __init__(self, terms: list[str]):
+        self.promt_template = """
+        You are a term summarizer that is given a list of terms representing a
+        proposed regulation. Your job is to shorten the list to four or five
+        unique words that reflect the topic and is relevant to someone trying
+        to comprehensively understand the regulation.
+
+            List of terms: {terms}
+
+            Answer:"""
+
+        self.prompt = PromptTemplate.from_template(self.promt_template)
+        self.pipeline = HuggingFacePipeline.from_model_id(
+            model_id="google/flan-t5-base",
+            task="text2text-generation",
+            pipeline_kwargs={"max_length": 20},
+        )
+        self.chain = self.prompt | self.pipeline | StrOutputParser()
+        self.terms = terms
+
+    def generate_terms(self) -> list[str]:
+        """
+        Create better topic terms
+        """
+        term_string = self.chain.invoke({"terms": self.terms})
+        return self._clean_terms(term_string)
+
+    def _clean_terms(self, term_string: str) -> list[str]:
+        """
+        Cleans output from LLM
+        """
+        terms = term_string.split(",")
+        unique_terms = {term.strip() for term in terms}
+
+        return list(unique_terms)
