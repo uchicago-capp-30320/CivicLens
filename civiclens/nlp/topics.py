@@ -99,7 +99,7 @@ class TopicModel:
 
     def _aggregate_comments(
         self,
-        sentences: dict[int, str],
+        sentences: dict[str, int],
         input: list[str],
         numeric_topics: list[int],
         probs: np.ndarray,
