@@ -1,4 +1,5 @@
 import re
+import warnings
 
 import torch
 from bertopic import BERTopic
@@ -6,8 +7,13 @@ from bertopic.representation import KeyBERTInspired, PartOfSpeech
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
 from sklearn.feature_extraction.text import CountVectorizer
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
+warnings.filterwarnings("ignore")
+
+
+# topic models
 POS_TAGS = [[{"POS": "ADJ"}, {"POS": "NOUN"}], [{"POS": "NOUN"}]]
 
 REP_MODELS = {
@@ -20,6 +26,13 @@ BertModel = BERTopic(
     vectorizer_model=CountVectorizer(stop_words="english", ngram_range=(1, 2)),
     representation_model=REP_MODELS,
 )
+
+# sentiment models
+sentiment_model = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+sentiment_base = AutoModelForSequenceClassification.from_pretrained(
+    sentiment_model
+)
+sentiment_tokenizer = AutoTokenizer.from_pretrained(sentiment_model)
 
 
 def clean_comments(text: str) -> str:
