@@ -8,7 +8,6 @@ CREATE TABLE Dockets (
     objectId VARCHAR(255),
     highlightedContent VARCHAR(255)
 );
-
 -- Creating the Documents table
 CREATE TABLE Documents (
     id VARCHAR(255) PRIMARY KEY,
@@ -37,7 +36,6 @@ CREATE TABLE Documents (
     supplementaryInformation TEXT,
     fullText TEXT
 );
-
 -- Creating the Comments table
 CREATE TABLE PublicComments (
     id VARCHAR(255) PRIMARY KEY,
@@ -75,4 +73,16 @@ CREATE TABLE PublicComments (
     submitterRep VARCHAR(100),
     submitterRepAddress VARCHAR(255),
     submitterRepCityState VARCHAR(100)
+);
+-- Create the NLPoutput table 
+CREATE TABLE NLPoutput (
+    document_id VARCHAR(255) REFERENCES document(id) ON DELETE CASCADE,
+    rep_comments TEXT,
+    doc_plain_english_title VARCHAR(255),
+    num_total_comments INTEGER DEFAULT 0,
+    num_unique_comments INTEGER DEFAULT 0,
+    num_representative_comment INTEGER DEFAULT 0,
+    topics TEXT,
+    num_topics INTEGER DEFAULT 0,
+    nlp_last_updated TIMESTAMP
 );
