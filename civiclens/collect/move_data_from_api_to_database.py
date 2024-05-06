@@ -777,7 +777,7 @@ def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> N
                 if print_statements:
                     print(f"tried to add comments on document {document_id} to the db")
 
-            else:
+            else:  # doc exists in db; only need to add new comments
                 add_comments_to_db_for_existing_doc(
                     document_id, document_object_id, print_statements
                 )
