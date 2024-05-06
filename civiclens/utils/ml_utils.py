@@ -1,7 +1,6 @@
 import re
 import warnings
 
-import spacy
 import torch
 from bertopic import BERTopic
 from bertopic.representation import KeyBERTInspired, PartOfSpeech
@@ -11,7 +10,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
-spacy.load("en_core_web_sm")
 warnings.filterwarnings("ignore")
 
 

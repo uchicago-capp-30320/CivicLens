@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+import nltk
 import numpy as np
 from bertopic import BERTopic
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
@@ -10,6 +11,9 @@ from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
 
 from ..utils.ml_utils import clean_comments
+
+
+nltk.download("punkt")
 
 
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
