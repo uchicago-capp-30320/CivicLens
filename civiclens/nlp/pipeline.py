@@ -62,11 +62,16 @@ if __name__ == "__main__":
             df, df_rep_paraphrase, df_rep_form = comments.rep_comment_analysis(
                 doc_id
             )
+            total_comments = df.shape[0]
+            # unique comments would need to be put in dataclase and passed
+            # is num representative comments for form letters, paraphrases
+            # or both?
             # call topics code, return df
             # make sure all fields are correct in df
             # update nlp table - do this with andrew
             # change comments code so that it takes in an id only,
             # runs from a function
+            updated = "time"
             print(new_title)
             print(df)
             print(df_rep_form)
