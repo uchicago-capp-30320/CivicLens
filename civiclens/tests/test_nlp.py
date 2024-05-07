@@ -8,8 +8,8 @@ import pytest
 from bertopic import BERTopic
 
 from civiclens.nlp import comments
+from civiclens.nlp.models import BertModel
 from civiclens.nlp.topics import TopicModel, mmr_sort
-from civiclens.utils.ml_utils import BertModel
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -125,8 +125,8 @@ def test_process_sentences():
     ]
     correct = {
         "This is a comment.": 0,
-        "It has two sentences": 0,
-        "This is a comment with one sentence": 1,
+        "It has two sentences.": 0,
+        "This is a comment with one sentence.": 1,
     }
 
     assert correct == topic_model._process_sentences(docs)
