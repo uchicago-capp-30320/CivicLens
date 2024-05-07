@@ -7,10 +7,9 @@ from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
-from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
 
-from ..utils.ml_utils import clean_comments
+from ..utils.ml_utils import clean_comments, sentence_splitter
 
 
 # download files for sentence tokenizer
@@ -50,7 +49,7 @@ class TopicModel:
         sentences = {}
 
         for idx, doc in enumerate(docs):
-            doc_sentences = sent_tokenize(clean_comments(doc))
+            doc_sentences = sentence_splitter(clean_comments(doc))
             for sentence in doc_sentences:
                 if doc:
                     sentences[sentence] = idx
