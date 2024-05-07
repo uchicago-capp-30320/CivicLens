@@ -1,17 +1,7 @@
-# get all documents that meet a criteria of comments (pull nlp title as well)
-# create a doc id generator, loop through:
-# if doc id doesn't have  nlp title and does have a summary
-# # (where does nlp title live?):
-# create document title (how to insert and where?)
-# pull all comments for the doc id
-# run comments through the comments and topics functions
-# update nlp table using df
 import datetime
 
-import comments
-import titles
-
 from ..utils.database_access import pull_data
+from . import comments, titles
 
 
 def doc_generator(df):
@@ -24,9 +14,9 @@ if __name__ == "__main__":
     nlp_updated_query = """SELECT nlp_last_updated
                         FROM regulations_nlpoutput
                         ORDER BY nlp_last_updated ASC LIMIT 1"""
-    # last_updated = pull_data(nlp_updated_query, ['nlp_last_updated']) - later
+    # last_updated = pull_data(nlp_updated_query, ['nlp_last_updated'])
 
-    # make it a string
+    # make it a string, using a random date for now
     last_updated = datetime.datetime(2024, 3, 20, 4, 0)
     last_updated = last_updated.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -60,22 +50,27 @@ if __name__ == "__main__":
     # comment? like should document titles
     # just loop through documents separately from the comment loop and add
     # titles
+
     for _ in range(len(docs_to_update)):
         try:
             doc_id = next(doc_gen)[0]
             if doc_id not in docs_with_titles:
                 print("call title creator, handle null summary")
-                new_title = titles.get_doc_summary(id=doc_id)
+                doc_summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
+                new_title = title_creator.invoke(paragraph=doc_summary)
             # call comment code, topic code, return df
-            df_comments = comments.get_doc_comments()
-            df_rep_analysis = comments.rep_comment_analysis(
-                df_comments
-            )  # fix comments code
+            df, df_rep_paraphrase, df_rep_form = comments.rep_comment_analysis(
+                doc_id
+            )
             # call topics code, return df
             # make sure all fields are correct in df
             # update nlp table - do this with andrew
             # change comments code so that it takes in an id only,
             # runs from a function
+            print(new_title)
+            print(df)
+            print(df_rep_form)
+            print(df_rep_paraphrase)
         except StopIteration:
             print("NLP Update Completed")
             break

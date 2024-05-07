@@ -40,15 +40,3 @@ class TitleChain:
 
     def invoke(self, paragraph: str) -> str:
         return self.chain.invoke({"paragraph": paragraph})
-
-
-# rough code for running this on a set of documents, will adjust
-df = get_doc_summary()
-title_creator = TitleChain()
-titles = {"original_titles": [], "new_titles": []}
-for row in df.iter_rows():
-    if row[3] is not None:
-        titles["original_titles"].append(row[2])
-        titles["new_titles"].append(title_creator.invoke(paragraph=row[3]))
-
-df = pl.from_dict(titles)

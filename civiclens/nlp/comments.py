@@ -19,8 +19,7 @@ def get_doc_comments(id: str) -> pl.DataFrame:
     query = f"""
         SELECT id, document_id, comment
         FROM regulations_comment
-        WHERE document_id = '{id}'
-        );
+        WHERE document_id = '{id}';
         """
     # filter out attached files
     df = pull_data(query, ["id", "document_id", "comment"])
