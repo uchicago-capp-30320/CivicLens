@@ -1,14 +1,49 @@
 from collections import defaultdict
+from datetime import datetime
 
 import numpy as np
+import polars as pl
 from bertopic import BERTopic
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
 from ..utils.ml_utils import clean_comments, sentence_splitter
+
+
+class Comments(BaseModel, arbitrary_types_allowed=True):
+    df: pl.DataFrame
+    document: str = ""
+    rep_comments: list[str] = []
+    num_comments: int = 0
+    num_unique_comments: int = 0
+    num_rep_comments: int = 0
+    topics: dict = {}
+    created_at: datetime = datetime.today()
+    _comment_list: list = []
+
+    def __init__(self, *args, **kwargs):
+        # assigns other values
+        super().__init__(*args, **kwargs)
+        self.num_comments = len(self.df)
+
+    def to_list(self, field: str = "Comment"):
+        """
+        Returns list of comments
+        """
+        if not self._comment_list:
+            self._comment_list = self.df[field].to_list()
+
+        return self._comment_list
+
+    def __len__(self):
+        """
+        Return number of total comments
+        """
+        return self.num_comments
 
 
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
