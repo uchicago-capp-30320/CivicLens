@@ -1,38 +1,8 @@
 import re
-import warnings
 
 import torch
-from bertopic import BERTopic
-from bertopic.representation import KeyBERTInspired, PartOfSpeech
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
-from sklearn.feature_extraction.text import CountVectorizer
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-
-
-warnings.filterwarnings("ignore")
-
-
-# topic models
-POS_TAGS = [[{"POS": "ADJ"}, {"POS": "NOUN"}], [{"POS": "NOUN"}]]
-
-REP_MODELS = {
-    "KeyBert": KeyBERTInspired,
-    "POS": PartOfSpeech("en_core_web_sm", pos_patterns=POS_TAGS),
-}
-
-BertModel = BERTopic(
-    embedding_model=SentenceTransformer("all-mpnet-base-v2"),
-    vectorizer_model=CountVectorizer(stop_words="english", ngram_range=(1, 2)),
-    representation_model=REP_MODELS,
-)
-
-# sentiment models
-sentiment_model = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-sentiment_base = AutoModelForSequenceClassification.from_pretrained(
-    sentiment_model
-)
-sentiment_tokenizer = AutoTokenizer.from_pretrained(sentiment_model)
 
 
 def clean_comments(text: str) -> str:
@@ -66,6 +36,24 @@ def truncate(text: str, num_words: int) -> str:
     words = text.split(" ")
 
     return " ".join(words[:num_words])
+
+
+def sentence_splitter(text: str, sep: str = ".") -> list[str]:
+    """
+    Splits string into sentences.
+
+    Inputs:
+        text: string to process
+        sep: value to seperate string on, defaults to '.'
+
+    Returns:
+        List of strings split on the seperator valur
+    """
+    # remove periods not at the end of sentences
+    clean = re.sub(r"\.(?!\s)", " ", text)
+    sentences = clean.split(sep)
+
+    return [sentence.strip() + "." for sentence in sentences if sentence]
 
 
 def build_embeds(words: list[str]) -> dict[str, torch.tensor]:
