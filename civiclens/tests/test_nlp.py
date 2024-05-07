@@ -8,7 +8,7 @@ import pytest
 from bertopic import BERTopic
 
 from civiclens.nlp import comments
-from civiclens.nlp.topics import TopicModel
+from civiclens.nlp.topics import TopicModel, mmr_sort
 from civiclens.utils.ml_utils import BertModel
 
 
@@ -144,3 +144,24 @@ def test_catch_bertopic_errors():
     out = live_model.run_model(docs)
 
     assert out == {}
+
+
+def test_find_2_terms():
+    test_model = MagicMock(spec=BERTopic)
+    topic_model = TopicModel(test_model)
+
+    topic_model.terms = {0: ["red", "blue", "green"], 1: ["cat", "dog", "fish"]}
+    labeled_comments = {0: 1, 1: 0}
+    correct = {0: ["cat", "dog"], 1: ["red", "blue"]}
+
+    assert correct == topic_model.find_n_representative_topics(
+        labeled_comments, 2
+    )
+
+
+def test_mmr_sort():
+    docs = ["cat", "fish", "sheep", "apple"]
+    query = "orange"
+    out = mmr_sort(docs, query, lam=0.7)
+
+    assert out[0] == "apple"

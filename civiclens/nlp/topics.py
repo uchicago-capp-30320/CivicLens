@@ -13,6 +13,7 @@ from sentence_transformers import SentenceTransformer
 from ..utils.ml_utils import clean_comments
 
 
+# download files for sentence tokenizer
 nltk.download("punkt")
 
 
