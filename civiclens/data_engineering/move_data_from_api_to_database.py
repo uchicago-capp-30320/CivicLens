@@ -161,85 +161,173 @@ methods:
 
 
 class APItoDB(ABC):
-
-    self.api_key = constants.REG_GOV_API_KEY
+    def __init__(self):
+        self.api_key = constants.REG_GOV_API_KEY
 
     @abstractmethod
-    def _verify_database_existence(
-        table: str, api_field_val: str, db_field: str = "id"
+    def verify_database_existence(
+        self, table: str, api_field_val: str, db_field: str = "id"
     ) -> bool:
-        """
-        Use regulations.gov API to confirm a row exists in a db table
-
-        Inputs:
-            table (str): one of the tables in the CivicLens db
-            api_field_val (str): the value we're looking for in the table
-            db_field (str): the field in the table where we're looking for the value
-
-        Returns: boolean indicating the value was found
-        """
+        """Abstract method to verify existence of data in the database."""
         connection, cursor = connect_db_and_get_cursor()
         with connection:
             with cursor:
-                query = f"SELECT * \
-                        FROM {table} \
-                        WHERE {db_field} = %s;"
+                query = f"SELECT * FROM {table} WHERE {db_field} = %s;"
                 cursor.execute(query, (api_field_val,))
                 response = cursor.fetchall()
 
-        return response != []
+        return bool(response)
 
     @abstractmethod
-    def _pull_API_data(json_object: json, type_of_data: str, data_id: str):
+    def pull_API_data(self, type_of_data: str, data_id: str) -> dict:
+        """Abstract method to pull data from an external API."""
         API_data = pull_reg_gov_data(
             self.api_key, type_of_data, params={"filter[searchTerm]": data_id}
         )
         return API_data
 
-    # maybe a verify data format checking method here?
+    @abstractmethod
+    def pull_other_data():
+        pass
 
     @abstractmethod
-    def _insert_data_into_db(
-        API_data: json,
+    def insert_data_into_db(
+        self,
+        API_data: dict,
         table: str,
         table_cols: tuple[str],
         data_formats: tuple[str],
-        json_fields: tuple[json],
-    ):
+    ) -> dict:
+        """Abstract method to insert data into the database."""
         try:
-            connection, cursor = connect_db_and_get_cursor()
+            connection, cursor = self._connect_db_and_get_cursor()
             with connection:
                 with cursor:
+                    cols_str = ", ".join(table_cols)
+                    vals_str = ", ".join(data_formats)
                     cursor.execute(
-                        """
-                        INSERT INTO {table} (
-                            {table_cols}
-                        ) VALUES (
-                            {data_formats}
-                        )
-                        ON CONFLICT (id) DO NOTHING;
-                        """,
-                        json_fields,
+                        f"INSERT INTO {table} ({cols_str}) VALUES ({vals_str}) ON CONFLICT (id) DO NOTHING;",
+                        tuple(API_data[col] for col in table_cols),
                     )
         except Exception as e:
             error_message = f"Error inserting {API_data['id']} into {table}: {e}"
-            # print(error_message)
             return {
                 "error": True,
-                "message": e,
+                "message": str(e),
                 "description": error_message,
             }
 
+        # if no errors, return as such
         return {
             "error": False,
             "message": None,
             "description": None,
         }
 
-    def run():
-        if not self._verify_database_existence():
-            self._pull_API_data()
-            self._insert_data_into_db()
+    def run(
+        self, data_list: list[dict], table: str, print_statements: bool = True
+    ) -> None:
+        for data in data_list:
+            if self.verify_database_existence(table, data["id"]):
+                try:
+                    api_data = self.pull_API_data(
+                        type_of_data=table, data_id=data["id"]
+                    )
+                    insert_response = self._insert_data_into_db(
+                        API_data=api_data,
+                        table=table,
+                        table_cols=tuple(api_data.keys()),
+                        data_formats=tuple("%s" for _ in range(len(api_data))),
+                        json_fields=tuple(
+                            api_data.values()
+                        ),  # Example: passing all values as json_fields
+                    )
+                    if insert_response["error"]:
+                        print(insert_response["description"])
+                        # Add logging here if needed
+                    else:
+                        if print_statements:
+                            print(f"Added {data['id']} to the {table} table.")
+                except Exception as e:
+                    print(f"Error processing {data['id']} to the {table} table: {e}")
+
+
+class DocketAPItoDB(APItoDB):
+    def __init__(self):
+        super().__init__()
+
+    def verify_database_existence(
+        self, table: str, api_field_val: str, db_field: str = "id"
+    ) -> bool:
+        pass
+
+    def pull_API_data(self, type_of_data: str, data_id: str) -> dict:
+        pass
+
+    def pull_other_data():
+        pass
+
+    def insert_data_into_db(
+        self,
+        API_data: dict,
+        table: str,
+        table_cols: tuple[str],
+        data_formats: tuple[str],
+    ) -> dict:
+        """Override the abstract method to insert docket data into the database."""
+        try:
+            # Call the base class method to perform the database insertion
+            return self.insert_data_into_db_base(
+                API_data, table, table_cols, data_formats
+            )
+        except Exception as e:
+            error_message = f"Error inserting {API_data['id']} into {table}: {e}"
+            return {
+                "error": True,
+                "message": str(e),
+                "description": error_message,
+            }
+
+    def run(self, data_list: list[dict], print_statements: bool = True) -> None:
+        """Method to run the process of inserting dockets into the database."""
+        for data in data_list:
+            try:
+                # Pull API data for the current docket
+                api_data = self.pull_API_data(data["type_of_data"], data["id"])
+
+                # Define table and column information specific to dockets
+                table = "regulations_docket"
+                table_cols = (
+                    "id",
+                    "docket_type",
+                    "last_modified_date",
+                    "agency_id",
+                    "title",
+                    "object_id",
+                    "highlighted_content",
+                )
+                data_formats = (
+                    "%s",
+                    "%s",
+                    "%s",
+                    "%s",
+                    "%s",
+                    "%s",
+                    "%s",
+                )
+
+                # Insert docket data into the database
+                insert_response = self.insert_data_into_db(
+                    api_data, table, table_cols, data_formats
+                )
+
+                if insert_response["error"]:
+                    print(insert_response["description"])
+                else:
+                    if print_statements:
+                        print(f"Added docket {api_data['id']} to the database")
+            except Exception as e:
+                print(f"Error processing docket {data['id']}: {e}")
 
 
 def verify_database_existence(
