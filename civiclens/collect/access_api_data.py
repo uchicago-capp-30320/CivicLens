@@ -231,7 +231,7 @@ def pull_reg_gov_data(
                     }
                     print(f"Fetching more data from {last_modified_date}")
             else:
-                print("Failed to fetch data or API limit reached.")
+                print("Failed to fetch data")
                 continue_fetching = False
 
         # Remove Duplicates
@@ -252,8 +252,8 @@ def pull_reg_gov_data(
                 else:
                     doc_data = r_json["data"]
 
-                # Break if it's the last page
-                if r_json["meta"]["lastPage"]:
-                    return doc_data
+            # Break if it's the last page
+            if r_json["meta"]["lastPage"]:
+                return doc_data
 
     raise RuntimeError(f"Unrecoverable error; {r_json}")
