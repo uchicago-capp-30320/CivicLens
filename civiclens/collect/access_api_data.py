@@ -1,17 +1,8 @@
-import os
 import time
 from datetime import datetime
-
 import requests
 from requests.adapters import HTTPAdapter
 
-
-api_key = os.getenv("REG_GOV_API_KEY")
-if not api_key:
-    print(
-        "Regulations.gov API key not found in environment variables, using DEMO_KEY"
-    )
-    api_key = "DEMO_KEY"
 
 """
 This code pulls heavily from the following existing repositories:
@@ -81,13 +72,13 @@ def pull_reg_gov_data(
     end_date=None,
     params=None,
     print_remaining_requests=False,
-    wait_for_rate_limits=False,
+    wait_for_rate_reset=True,
     skip_duplicates=False,
 ):
     """
     Returns the JSON associated with a request to the API; max length of 24000
 
-    draws heavily from here: https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py
+    Draws heavily from this [repository](https://github.com/willjobs/regulations-public-comments/blob/master/comments_downloader.py)
 
     Args:
         data_type (str): 'dockets', 'documents', or 'comments' -- what kind of data we want back from the API
@@ -98,7 +89,7 @@ def pull_reg_gov_data(
             so that we always get the maximum page size of 250 elements per page.
         print_remaining_requests (bool, optional): Whether to print out the number of remaining
             requests this hour, based on the response headers. Defaults to False.
-        wait_for_rate_limits (bool, optional): Determines whether to wait to re-try if we run out of
+        wait_for_rate_reset (bool, optional): Determines whether to wait to re-try if we run out of
             requests in a given hour. Defaults to False.
         skip_duplicates (bool, optional): If a request returns multiple items when only 1 was expected,
             should we skip that request? Defaults to False.
@@ -109,6 +100,7 @@ def pull_reg_gov_data(
     # generate the right API request
     api_url = "https://api.regulations.gov/v4/"
     endpoint = f"{api_url}{data_type}"
+    params = params if params is not None else {}
 
     # Our API key has a rate limit of 1,000 requests/hour. If we hit that limit, we can
     # retry every WAIT_MINUTES minutes (more frequently than once an hour, in case our request limit
@@ -116,10 +108,7 @@ def pull_reg_gov_data(
     # interrupted. Otherwise we'd have to wait a while before getting interrupted. We could do this
     # with threads, but that gets more complicated than it needs to be.
     STATUS_CODE_OVER_RATE_LIMIT = 429
-    WAIT_MINUTES = 20  # time between attempts to get a response
-    POLL_SECONDS = 10  # run time.sleep() for this long, so we can check if we've been interrupted
-
-    params = params if params is not None else {}
+    WAIT_SECONDS = 3600  # Default to 1 hour
 
     # if any dates are specified, format those and add to the params
     if start_date or end_date:
@@ -135,7 +124,7 @@ def pull_reg_gov_data(
     session = requests.Session()
     session.mount("https", HTTPAdapter(max_retries=4))
 
-    def poll_for_response(api_key, else_func):
+    def poll_for_response(api_key, wait_for_rate_reset):
         r = session.get(
             endpoint, headers={"X-Api-Key": api_key}, params=params, verify=True
         )
@@ -155,9 +144,19 @@ def pull_reg_gov_data(
         else:
             if (
                 r.status_code == STATUS_CODE_OVER_RATE_LIMIT
-                and wait_for_rate_limits
+                and wait_for_rate_reset
             ):
-                else_func()
+                the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                retry_after = r.headers.get("Retry-After", None)
+                wait_time = (
+                    int(retry_after)
+                    if retry_after and retry_after.isdigit()
+                    else WAIT_SECONDS
+                )
+                print(
+                    f"Rate limit exceeded at {the_time}. Waiting {wait_time} seconds to retry."
+                )
+                time.sleep(wait_time)
             elif _is_duplicated_on_server(r.json()) and skip_duplicates:
                 print("****Duplicate entries on server. Skipping.")
                 print(r.json()["errors"][0]["detail"])
@@ -168,33 +167,20 @@ def pull_reg_gov_data(
 
         return [False, r.json()]
 
-    def wait_for_requests():
-        the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(
-            f"{the_time}: Hit rate limits. Waiting {WAIT_MINUTES} minutes to try again",
-            flush=True,
-        )
-        # We ran out of requests. Wait for WAIT_MINUTES minutes, but poll every POLL_SECONDS seconds for interruptions
-        for _ in range(int(WAIT_MINUTES * 60 / POLL_SECONDS)):
-            time.sleep(POLL_SECONDS)
-
     doc_data = None  # Initialize doc_data to None
     for i in range(1, 21):  # Fetch up to 20 pages
         params["page[number]"] = str(i)  # Add page number to the params
 
-        for _ in range(1, int(60 / WAIT_MINUTES) + 3):
-            success, r_json = poll_for_response(api_key, wait_for_requests)
+        success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
 
-            if success or (
-                _is_duplicated_on_server(r_json) and skip_duplicates
-            ):
-                if doc_data is not None:
-                    doc_data += r_json["data"]
-                else:
-                    doc_data = r_json["data"]
+        if success or (_is_duplicated_on_server(r_json) and skip_duplicates):
+            if doc_data is not None:
+                doc_data += r_json["data"]
+            else:
+                doc_data = r_json["data"]
 
-                # Break if it's the last page
-                if r_json["meta"]["lastPage"]:
-                    return doc_data
+            # Break if it's the last page
+            if r_json["meta"]["lastPage"]:
+                return doc_data
 
     raise RuntimeError(f"Unrecoverable error; {r_json}")
