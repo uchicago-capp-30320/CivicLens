@@ -17,7 +17,7 @@ python-dotenv = "^1.0.1"
 psycopg2-binary = "^2.9.9"
 pre-commit = "^3.7.0"
 pandas = "^2.2.2"
-polars = "^0.20.22"
+polars = "^0.20.25"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.3.5"
