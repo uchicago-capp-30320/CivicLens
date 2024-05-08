@@ -46,36 +46,31 @@ if __name__ == "__main__":
 
     title_creator = titles.TitleChain()
 
-    # should we do document titles even if they don't meet the threshold of a
-    # comment? like should document titles
-    # just loop through documents separately from the comment loop and add
-    # titles
-
-    for _ in range(len(docs_to_update)):
+    # for _ in range(len(docs_to_update)):
+    for _ in range(1):
         try:
             doc_id = next(doc_gen)[0]
+            comment_data = comments.rep_comment_analysis(doc_id)
+
             if doc_id not in docs_with_titles:
                 print("call title creator, handle null summary")
                 doc_summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
-                new_title = title_creator.invoke(paragraph=doc_summary)
-            # call comment code, topic code, return df
-            df, df_rep_paraphrase, df_rep_form = comments.rep_comment_analysis(
-                doc_id
+                if doc_summary is not None:
+                    new_title = title_creator.invoke(paragraph=doc_summary)
+                    comment_data.doc_plain_english_title = new_title
+            # TODO call topic code
+            # TODO update nlp table - do this with andrew
+            # Get the current date and time of nlp update
+            updated = datetime.datetime.now()
+            print(updated)
+            print(comment_data.doc_plain_english_title)
+            print(comment_data.doc_comments)
+            print(comment_data.rep_comments)
+            print(
+                comment_data.num_total_comments,
+                comment_data.num_unique_comments,
+                comment_data.num_representative_comment,
             )
-            total_comments = df.shape[0]
-            # unique comments would need to be put in dataclase and passed
-            # is num representative comments for form letters, paraphrases
-            # or both?
-            # call topics code, return df
-            # make sure all fields are correct in df
-            # update nlp table - do this with andrew
-            # change comments code so that it takes in an id only,
-            # runs from a function
-            updated = "time"
-            print(new_title)
-            print(df)
-            print(df_rep_form)
-            print(df_rep_paraphrase)
         except StopIteration:
             print("NLP Update Completed")
             break

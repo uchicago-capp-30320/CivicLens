@@ -1,9 +1,31 @@
+from dataclasses import dataclass, field
+
 import networkx as nx
 import polars as pl
 from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
 
 from ..utils.database_access import pull_data
+
+
+@dataclass
+class RepComments:
+    # clustered df for topics
+    doc_comments: pl.DataFrame = pl.DataFrame(
+        {
+            "id": pl.Series([], dtype=pl.Utf8),
+            "document_id": pl.Series([], dtype=pl.Utf8),
+            "comment": pl.Series([], dtype=pl.Utf8),
+            "cluster": pl.Series([], dtype=pl.Utf8),
+        }
+    )
+
+    # fields for nlp table
+    rep_comments: dict = field(default_factory=dict)
+    doc_plain_english_title: str = ""
+    num_total_comments: int = 0
+    num_unique_comments: int = 0
+    num_representative_comment: int = 0
 
 
 def get_doc_comments(id: str) -> pl.DataFrame:
@@ -176,17 +198,19 @@ def representative_comments(
     central_nodes = find_central_node(G, clusters)
     representative_dict = {
         "comments_represented": [],
-        "comment_index": [],
+        "comment_id": [],
         "document_id": [],
         "comment_text": [],
+        "form_letter": [],
     }
     for i, community in enumerate(clusters):
         community_size = len(community)
         central_node = list(central_nodes.keys())[i]
         representative_dict.get("comments_represented").append(community_size)
-        representative_dict.get("comment_index").append(central_node)
+        representative_dict.get("comment_id").append(df[central_node, 0])
         representative_dict.get("document_id").append(df[central_node, 1])
         representative_dict.get("comment_text").append(df[central_node, 2])
+        representative_dict.get("form_letter").append(form_letter)
 
     output_df = pl.DataFrame(representative_dict)
 
@@ -210,12 +234,6 @@ def rep_comment_analysis(id: str) -> tuple[pl.DataFrame]:
     df = get_doc_comments(id=id)
     df_paraphrases, df_form_letter = comment_similarity(df)
 
-    # we want to show form letters versus paraphrases count
-    print(df_paraphrases.shape)
-    print(df.shape)
-
-    output_data = [False, False, False]
-
     try:
         G_paraphrase = build_graph(df_paraphrases)
         clusters_paraphrase = get_clusters(G=G_paraphrase)
@@ -223,8 +241,6 @@ def rep_comment_analysis(id: str) -> tuple[pl.DataFrame]:
         df_rep_paraphrase = representative_comments(
             G_paraphrase, clusters_paraphrase, df, form_letter=False
         )
-        output_data[1] = df_rep_paraphrase
-
     except ZeroDivisionError:
         print("Paraphrase Clustering Not Possible: Empty DataFrame")
 
@@ -238,11 +254,25 @@ def rep_comment_analysis(id: str) -> tuple[pl.DataFrame]:
             df,
             form_letter=True,
         )
-        output_data[2] = df_rep_form
-
     except ZeroDivisionError:
         print("Form Letter Clustering Not Possible: Empty DataFrame")
 
-    output_data[0] = df
+    # fill out comment class
+    comment_data = RepComments()
+    comment_data.doc_comments = df
 
-    return tuple(output_data)
+    if df_rep_form.is_empty():
+        comment_data.rep_comments = df_rep_paraphrase.to_dict()
+        comment_data.num_representative_comment = df_rep_paraphrase.shape[0]
+    elif df_rep_paraphrase.is_empty():
+        comment_data.rep_comments = df_rep_form.to_dict()
+        comment_data.num_representative_comment = df_rep_form.shape[0]
+    else:
+        combined_data = pl.concat([df_rep_form, df_rep_paraphrase]).to_dict()
+        comment_data.rep_comments = combined_data
+        comment_data.num_representative_comment = combined_data.shape[0]
+
+    comment_data.num_total_comments = df.shape[0]
+    comment_data.num_unique_comments = df_paraphrases.shape[0]
+
+    return comment_data
