@@ -1,11 +1,36 @@
 import os
+from typing import Optional
 
 import polars as pl
 import psycopg2
-from typing import Optional
+
+class Database:
+    """
+    Wrapper for CivicLens postrgres DB.
+    """
+
+    def __init__(self):
+        self.conn = psycopg2.connect(
+            database=os.getenv("DATABASE"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+            host=os.getenv("DATABASE_HOST"),
+            port=os.getenv("DATABASE_PORT"),
+        )
+
+    def cursor(self):
+        return self.conn.cursor()
+
+    def close(self):
+        return self.conn.close()
 
 
-def pull_data(query: str, schema: Optional[list[str]] = [], return_type: str = "df") -> pl.DataFrame | list[tuple]:
+def pull_data(
+    query: str,
+    schema: Optional[list[str]] = [],
+    return_type: str = "df",
+    connection: Database = Database(),
+) -> pl.DataFrame | list[tuple]:
     """Takes a SQL Query and returns a polars dataframe
 
     Args:
@@ -20,20 +45,14 @@ def pull_data(query: str, schema: Optional[list[str]] = [], return_type: str = "
         raise ValueError("Must input schema to return df")
 
     try:
-        connection = psycopg2.connect(
-            database=os.getenv("DATABASE"),
-            user=os.getenv("DATABASE_USER"),
-            password=os.getenv("DATABASE_PASSWORD"),
-            host=os.getenv("DATABASE_HOST"),
-            port=os.getenv("DATABASE_PORT"),
-        )
-
         cursor = connection.cursor()
         cursor.execute(query)
         results = cursor.fetchall()
-
+        print(results)
     except (Exception, psycopg2.Error) as error:
-        raise RuntimeError(f"Error while connecting to PostgreSQL: {str(error).strip()}")
+        raise RuntimeError(
+            f"Error while connecting to PostgreSQL: {str(error).strip()}"
+        )
 
     finally:
         # Close the connection and cursor to free resources
