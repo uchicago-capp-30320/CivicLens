@@ -6,7 +6,7 @@ import argparse
 import datetime as dt
 from datetime import datetime
 
-from .access_api_data import pull_reg_gov_data
+from civiclens.collect.access_api_data import pull_reg_gov_data
 from civiclens.utils import constants
 
 
@@ -681,6 +681,76 @@ def insert_comment_into_db(comment_data: json) -> dict:
     }
 
 
+def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
+    """
+    Add comments to the comments table for a new doc (ie, when we have just
+        added the doc to the database)
+
+    Input: document_object_id (str): the object id for the document we want
+        comments for (comes from the document json object)
+
+    Returns: nothing; adds comments, if available, to the db
+    """
+    comment_data = pull_reg_gov_data(
+        constants.REG_GOV_API_KEY,
+        "comments",
+        params={"filter[commentOnId]": document_object_id},
+    )
+    # add comment data to comments table in the database
+    for comment in comment_data:
+        all_comment_data = merge_comment_text_and_data(
+            constants.REG_GOV_API_KEY, comment
+        )
+        insert_response = insert_comment_into_db(all_comment_data)
+
+        if insert_response["error"]:
+            print(insert_response["description"])
+            # would want to add logging here
+
+
+def add_comments_to_db_for_existing_doc(
+    document_id: str, document_object_id: str, print_statements: bool = True
+) -> None:
+    """
+    Gets the most recent comment in the comments table and pulls comments for
+        a doc from the API since then
+
+    Inputs:
+        document id (str): the id for the document we want comments for (comes
+            from the document json object)
+        document_object_id (str): the object id for the document we want
+            comments for (comes from the document json object)
+        print_statements (bool): whether to print during, default is true
+
+    Returns: nothing; adds comments, if available, to the db
+    """
+
+    # get date of most recent comment on this doc in the db
+    most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
+    if print_statements:
+        print(
+            f"comments found for document {document_id}, most recent was {most_recent_comment_date}"
+        )
+
+    comment_data = pull_reg_gov_data(
+        constants.REG_GOV_API_KEY,
+        "comments",
+        params={
+            "filter[commentOnId]": document_object_id,
+            "filter[lastModifiedDate][ge]": most_recent_comment_date,
+        },
+    )
+
+    for comment in comment_data:
+        all_comment_data = merge_comment_text_and_data(
+            constants.REG_GOV_API_KEY, comment
+        )
+        insert_response = insert_comment_into_db(all_comment_data)
+        if insert_response["error"]:
+            print(insert_response["description"])
+            # would want to add logging here
+
+
 def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
     """
     Add comments on a list of documents to the database
@@ -698,53 +768,19 @@ def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> N
         if commentable:
             if not verify_database_existence(
                 "regulations_comment", document_id, "document_id"
-            ):
+            ):  # doc doesn't exist in the db; it's new
                 if print_statements:
                     print(f"no comments found in database for document {document_id}")
-                comment_data = pull_reg_gov_data(
-                    constants.REG_GOV_API_KEY,
-                    "comments",
-                    params={"filter[commentOnId]": document_object_id},
-                )
-                # add comment data to comments table in the database
-                for comment in comment_data:
-                    all_comment_data = merge_comment_text_and_data(
-                        constants.REG_GOV_API_KEY, comment
-                    )
-                    insert_response = insert_comment_into_db(all_comment_data)
 
-                    if insert_response["error"]:
-                        print(insert_response["description"])
-                        # would want to add logging here
+                add_comments_to_db_for_new_doc(document_object_id)
 
                 if print_statements:
                     print(f"tried to add comments on document {document_id} to the db")
 
-            else:
-                # get date of most recent comment on this doc in the db
-                most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
-                if print_statements:
-                    print(
-                        f"comments found for document {document_id}, most recent was {most_recent_comment_date}"
-                    )
-
-                comment_data = pull_reg_gov_data(
-                    constants.REG_GOV_API_KEY,
-                    "comments",
-                    params={
-                        "filter[commentOnId]": document_object_id,
-                        "filter[lastModifiedDate][ge]": most_recent_comment_date,
-                    },
+            else:  # doc exists in db; only need to add new comments
+                add_comments_to_db_for_existing_doc(
+                    document_id, document_object_id, print_statements
                 )
-
-                for comment in comment_data:
-                    all_comment_data = merge_comment_text_and_data(
-                        constants.REG_GOV_API_KEY, comment
-                    )
-                    insert_response = insert_comment_into_db(all_comment_data)
-                    if insert_response["error"]:
-                        print(insert_response["description"])
-                        # would want to add logging here
 
 
 def pull_all_api_data_for_date_range(

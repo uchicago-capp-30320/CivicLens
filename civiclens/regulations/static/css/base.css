@@ -3520,7 +3520,22 @@ input[type="button"].btn-block {
       border-bottom-right-radius: calc(0.75rem - 1px);
       border-bottom-left-radius: calc(0.75rem - 1px); }
 
-.card-body {
+.card-sm {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  word-wrap: break-word;
+  background-color: lightgray;
+  background-clip: border-box;
+  border: 1px solid #eaecf3;
+  margin-bottom: 8px;
+  font-size: medium;
+  border-radius: 0.75rem; }
+  .card-sm > p {
+    margin-bottom: 0;}
+
+.card-sm-body {
   flex: 1 1 auto;
   min-height: 1px;
   padding: 1.75rem;

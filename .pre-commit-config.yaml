@@ -86,3 +86,8 @@ repos:
           - --safe
           - --target-version=py311
           - --line-length=80
+
+  - repo: https://github.com/thibaudcolas/curlylint
+    rev: "v0.13.1"
+    hooks:
+      - id: curlylint
