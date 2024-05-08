@@ -13,7 +13,7 @@ else
 fi
 
 # go to project directory
-cd /home/reubuntu/CivicLens
+cd /home/CivicLens
 
 # Run
 if poetry run python3 -m civiclens.collect.move_data_from_api_to_database "${LASTDATE}" "${TODAY}" -k -d -c; then
