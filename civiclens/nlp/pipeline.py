@@ -46,8 +46,7 @@ if __name__ == "__main__":
 
     title_creator = titles.TitleChain()
 
-    # for _ in range(len(docs_to_update)):
-    for _ in range(1):
+    for _ in range(len(docs_to_update)):
         try:
             doc_id = next(doc_gen)[0]
             comment_data = comments.rep_comment_analysis(doc_id)
