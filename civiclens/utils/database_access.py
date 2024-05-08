@@ -4,6 +4,7 @@ from typing import Optional
 import polars as pl
 import psycopg2
 
+
 class Database:
     """
     Wrapper for CivicLens postrgres DB.
@@ -26,10 +27,10 @@ class Database:
 
 
 def pull_data(
+    connection,
     query: str,
     schema: Optional[list[str]] = [],
     return_type: str = "df",
-    connection: Database = Database(),
 ) -> pl.DataFrame | list[tuple]:
     """Takes a SQL Query and returns a polars dataframe
 

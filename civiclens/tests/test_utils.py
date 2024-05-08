@@ -10,7 +10,7 @@ def test_sqlite():
     query = "SELECT 1"
     schema = ["numbers"]
     conn = sqlite3.connect("test.db")
-    out = pull_data(query, schema, return_type="list", connection=conn)
+    out = pull_data(conn, query, schema, return_type="list")
     assert out == [(1,)]
 
 
@@ -18,14 +18,14 @@ def test_to_df():
     query = "SELECT 1"
     schema = ["numbers"]
     conn = sqlite3.connect("test.db")
-    out = pull_data(query, schema, connection=conn)
+    out = pull_data(conn, query, schema)
     assert pl.DataFrame({"numbers": [1]}).equals(out)
 
 
 def test_to_list():
     query = "SELECT 1"
     conn = sqlite3.connect("test.db")
-    out = pull_data(query, return_type="list", connection=conn)
+    out = pull_data(conn, query, return_type="list")
     assert out == [(1,)]
 
 
@@ -33,12 +33,10 @@ def test_missing_schema():
     query = "SELECT 1"
     conn = sqlite3.connect("tutorial.db")
     with pytest.raises(ValueError):
-        pull_data(query, connection=conn)
+        pull_data(conn, query)
 
 
 def test_bad_query():
     conn = sqlite3.connect("tutorial.db")
     with pytest.raises(RuntimeError):
-        pull_data(
-            "SELECT data FROM not_a_table", return_type="list", connection=conn
-        )
+        pull_data(conn, "SELECT data FROM not_a_table", return_type="list")
