@@ -1,4 +1,3 @@
-import networkx as nx
 import polars as pl
 
 from civiclens.nlp import comments
@@ -23,7 +22,6 @@ def test_graph():
 
     # build graph
     G = comments.build_graph(df_paraphrase)
-    nx.draw(G)
 
     # cluster graph
     clusters = comments.get_clusters(G=G)
