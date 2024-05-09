@@ -47,3 +47,7 @@ def test_pull_reg_gov_data():
         "documents",
         params={"filter[searchTerm]": "CRC-2024-0073-0001"},
     )
+
+def test_format_datetime_for_api():
+    assert access_api_data.format_datetime_for_api(
+        "2020-08-10T15:58:52Z") == "2020-08-10 11:58:52"
