@@ -69,10 +69,49 @@ def document(request, doc_id):
         doc = Document.objects.get(id=doc_id)
     except Document.DoesNotExist:
         doc = None
-    try:
-        comments = Comment.objects.filter(document=doc_id)
-    except Comment.DoesNotExist:
-        comments = None
+    # try:
+    #     comments = Comment.objects.filter(document=doc_id)
+    # except Comment.DoesNotExist:
+    #     comments = None
+
+    # test data from jack
+    comments = {
+        "id": "7588edfc-4239-4970-970e-d080eecf4da7", 
+        "rep_comments": [
+            {"id": "ED-2023-OPE-0123-28272", 
+             "text": "The more student loan debt that can be forgiven the better. Over the years , I have had yo pause my student l9ans because of financial hardships I was facing.The period of time that loans were in repayment I had made my payments on time.My loans are currently in repayment, and if that burden could be lifted it would be life-changing for me. Right now. I find it very difficult to pay off my student loan debt. It has been following me for quite some time. Loan forgiveness would be good if I can qualify for it. ", 
+             "num_represented": 450, 
+             "topic": "Debt Forgiveness", 
+             "form_letter": True}, 
+             {"id": "ED-2023-OPE-0123-28250", 
+              "text": "Hello I am a current student who would greatly appreciate the privilege of having my student loans forgiven. Thank you so much in advance!", 
+              "num_represented": 231, 
+              "topic": "Student Loans", 
+              "form_letter": False}], 
+        "doc_plain_english_title": "Student Loan Debt Waiver: Department Of Education", 
+        "num_total_comments": 980, 
+        "num_unique_comments": 762, 
+        "num_rep_comments": 2, 
+        "topics": 
+            [{"topic": "Debt Forgiveness", 
+              "positive": 129, 
+              "negative": 98, 
+              "neutral": 32}, 
+            {"topic": "Student Loans", 
+             "positive": 123, 
+             "negative": 32, 
+             "neutral": 149
+             },
+            {"topic": "topic 3",
+             "positive": 1003, 
+             "negative": 32, 
+             "neutral": 149
+             }],
+        "num_topics": 2, 
+        "last_updated": "May 6, 2024",
+        "document_id": "ED-2023-OPE-0123-26398"
+    }
+
     return render(request, "document.html", {"doc": doc, "comments": comments})
 
 
