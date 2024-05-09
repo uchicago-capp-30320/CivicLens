@@ -7,7 +7,8 @@ from django.contrib.postgres.search import (
 )
 from django.shortcuts import render
 
-from .models import Comment, Document
+#from .models import Comment, Document
+from .models import Document
 
 
 def home(request):
