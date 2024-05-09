@@ -169,16 +169,16 @@ class TopicModel:
 
 
 class TopicChain:
-    def __init__(self, terms: list[str]):
+    def __init__(self):
         self.promt_template = """
-        You are a term summarizer that is given a list of terms representing a
-        proposed regulation. Your job is to shorten the list to four or five
-        unique words that reflect the topic and is relevant to someone trying
-        to comprehensively understand the regulation.
+        You will be given a list of terms seperated by commas and a
+        summary. Your task is to generate a label to represent the list of
+        terms that is releveant to the provided summary.
 
             List of terms: {terms}
 
-            Answer:"""
+            Summary: {summary}
+            """
 
         self.prompt = PromptTemplate.from_template(self.promt_template)
         self.pipeline = HuggingFacePipeline.from_model_id(
@@ -187,14 +187,15 @@ class TopicChain:
             pipeline_kwargs={"max_length": 20},
         )
         self.chain = self.prompt | self.pipeline | StrOutputParser()
-        self.terms = terms
 
-    def generate_terms(self) -> list[str]:
+    def generate_terms(self, terms: list[str], summary: str) -> list[str]:
         """
         Create better topic terms
         """
-        term_string = self.chain.invoke({"terms": self.terms})
-        return self._clean_terms(term_string)
+        term_string = self.chain.invoke(
+            {"terms": ", ".join(terms), "summary": summary}
+        )
+        return term_string
 
     def _clean_terms(self, term_string: str) -> list[str]:
         """
