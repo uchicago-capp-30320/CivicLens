@@ -1,4 +1,5 @@
 import polars as pl
+from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments
 
@@ -7,7 +8,8 @@ def test_comment_similarity():
     df = pl.read_csv(
         "civiclens/tests/nlp_test_data/sample_comments.csv", separator=","
     )
-    df_paraphrase, df_form_letter = comments.comment_similarity(df)
+    model = SentenceTransformer("all-mpnet-base-v2")
+    df_paraphrase, df_form_letter = comments.comment_similarity(df, model)
 
     assert df_paraphrase.shape == (377, 3)
     assert df_form_letter.shape == (1, 3)
