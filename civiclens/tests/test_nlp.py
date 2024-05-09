@@ -11,8 +11,8 @@ def test_comment_similarity():
     model = SentenceTransformer("all-mpnet-base-v2")
     df_paraphrase, df_form_letter = comments.comment_similarity(df, model)
 
-    assert df_paraphrase.shape == (377, 3)
-    assert df_form_letter.shape == (1, 3)
+    assert df_paraphrase.shape == (377, 4)
+    assert df_form_letter.shape == (1, 4)
     assert df_paraphrase.columns == df_paraphrase.columns
     assert df_form_letter.columns == df_form_letter.columns
 
