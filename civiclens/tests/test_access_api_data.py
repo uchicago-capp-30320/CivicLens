@@ -40,9 +40,12 @@ def test_api_date_format_params_NOT_dockets():
 # def test_pull_reg_gov_data():
 #     # get a known document
 #     # https://www.regulations.gov/document/CRC-2024-0073-0001
-
 #     assert access_api_data.pull_reg_gov_data(
 #         api_key,
 #         "documents",
 #         params={"filter[searchTerm]": "CRC-2024-0073-0001"},
 #     )
+
+def test_format_datetime_for_api():
+    assert access_api_data.format_datetime_for_api(
+        "2020-08-10T15:58:52Z") == "2020-08-10 11:58:52"
