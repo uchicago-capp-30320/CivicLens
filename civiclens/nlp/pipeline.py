@@ -54,14 +54,7 @@ if __name__ == "__main__":
         docs_to_update = """SELECT document_id
         FROM regulations_comment rc1
         GROUP BY document_id
-        HAVING COUNT(*) > 20
-        AND COUNT(*) >= 0.1 * (
-            SELECT COUNT(*)
-            FROM regulations_comment rc2
-            WHERE rc2.document_id = rc1.document_id
-            GROUP BY document_id
-            HAVING COUNT(*) > 20
-        )
+        HAVING COUNT(*) > 20;
         """
 
     db_docs = Database()
