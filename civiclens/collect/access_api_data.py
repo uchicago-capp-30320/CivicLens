@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import requests
 from requests.adapters import HTTPAdapter
 
@@ -64,6 +64,29 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
 
     return date_param
 
+def format_datetime_for_api(dt_str):
+    """
+    Converts a UTC datetime string from the API to a formatted string representing Eastern Time.
+
+    This helped function was constructed to process the `lastModifiedDate` timestamp obtained from 
+    the API's response into Eastern Time, that is required when making API requests.
+    Ref: https://open.gsa.gov/api/regulationsgov/#searching-for-comments-1
+
+    Inputs:
+        dt_str (str): The UTC datetime string in ISO 8601 format (e.g., "2020-08-10T15:58:52Z").
+
+    Returns:
+        str: The formatted datetime string in Eastern Time, formatted as "YYYY-MM-DD HH:MM:SS".
+
+    Example:
+        >>> format_datetime_for_api("2020-08-10T15:58:52Z")
+        '2020-08-10 11:58:52'
+    """
+    utc_dt = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    eastern_dt = utc_dt + timedelta(hours=-4)
+
+    return eastern_dt.strftime("%Y-%m-%d %H:%M:%S")
+
 
 def pull_reg_gov_data(
     api_key,
@@ -74,6 +97,7 @@ def pull_reg_gov_data(
     print_remaining_requests=False,
     wait_for_rate_reset=True,
     skip_duplicates=False,
+    comment_on_id = None,
 ):
     """
     Returns the JSON associated with a request to the API; max length of 24000
@@ -93,6 +117,8 @@ def pull_reg_gov_data(
             requests in a given hour. Defaults to False.
         skip_duplicates (bool, optional): If a request returns multiple items when only 1 was expected,
             should we skip that request? Defaults to False.
+        comment_on_id (str, optional): For documents containing > 5k objects, specify 'commentOnId'. Used
+            in chaining API requests. Defaults to None
 
     Returns:
         dict: JSON-ified request response
@@ -167,17 +193,64 @@ def pull_reg_gov_data(
 
         return [False, r.json()]
 
-    doc_data = None  # Initialize doc_data to None
-    for i in range(1, 21):  # Fetch up to 20 pages
-        params["page[number]"] = str(i)  # Add page number to the params
+    if data_type == "comments":
+        all_comments = []
+        unique_comments = {}
+        
+        params.update({
+            "filter[commentOnId]": comment_on_id,
+            "page[size]": 250,
+            "sort": "lastModifiedDate,documentId"
+        })
 
-        success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
+        last_modified_date = None
+        continue_fetching = True
 
-        if success or (_is_duplicated_on_server(r_json) and skip_duplicates):
-            if doc_data is not None:
-                doc_data += r_json["data"]
+        while continue_fetching:
+            success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
+            if success:
+                all_comments.extend(r_json['data'])
+                print(f"Fetched {len(r_json['data'])} comments, total: {len(all_comments)}")
+
+                # Check and handle the pagination
+                has_next_page = r_json["meta"].get("hasNextPage", False)
+                print(f"Has next page: {has_next_page}")
+
+                if len(r_json['data']) < 250 or not has_next_page:
+                    print("No more pages or fewer than 250 comments fetched, stopping...")
+                    continue_fetching = False
+                else:
+                    last_modified_date = format_datetime_for_api(r_json['data'][-1]['attributes']['lastModifiedDate'])
+                    params = {
+                        "filter[commentOnId]": comment_on_id,
+                        "filter[lastModifiedDate][ge]": last_modified_date,
+                        "page[size]": 250,
+                        "sort": "lastModifiedDate,documentId",
+                        "page[number]": 1,
+                        "api_key": api_key
+                    }
+                    print(f"Fetching more data from {last_modified_date}")
             else:
-                doc_data = r_json["data"]
+                print("Failed to fetch data")
+                continue_fetching = False
+
+        # Remove Duplicates
+        for comment in all_comments:
+            unique_comments[comment['id']] = comment
+        return list(unique_comments.values())
+    
+    else:
+        doc_data = None  # Initialize doc_data to None
+        for i in range(1, 21):  # Fetch up to 20 pages
+            params["page[number]"] = str(i)  # Add page number to the params
+
+            success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
+
+            if success or (_is_duplicated_on_server(r_json) and skip_duplicates):
+                if doc_data is not None:
+                    doc_data += r_json["data"]
+                else:
+                    doc_data = r_json["data"]
 
             # Break if it's the last page
             if r_json["meta"]["lastPage"]:
