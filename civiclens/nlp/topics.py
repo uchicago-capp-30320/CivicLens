@@ -2,22 +2,43 @@ from collections import defaultdict
 
 import numpy as np
 from bertopic import BERTopic
+from bertopic.representation import KeyBERTInspired, PartOfSpeech
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import CountVectorizer
 
 from ..utils.ml_utils import clean_comments, sentence_splitter
 
 
-## TODO: write function to add to the DB
-## TODO: implement topics with pipeline
+# Models
+POS_TAGS = [[{"POS": "ADJ"}, {"POS": "NOUN"}], [{"POS": "NOUN"}]]
+
+REP_MODELS = {
+    "KeyBert": KeyBERTInspired,
+    "POS": PartOfSpeech("en_core_web_sm", pos_patterns=POS_TAGS),
+}
+
+BertModel = BERTopic(
+    embedding_model=SentenceTransformer("all-mpnet-base-v2"),
+    vectorizer_model=CountVectorizer(stop_words="english", ngram_range=(1, 2)),
+    representation_model=REP_MODELS,
+)
 
 
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
     """
-    Sorts input terms by maximal marginal relevance
+    Sorts input terms by maximal marginal relevance (MMR).
+
+    Inputs:
+        terms: list of strings to sort
+        query_string: query terms to compare relevance against
+        lam: lambda value for MMR formula
+
+    Returns:
+        List of terms sorted by relevance to query terms
     """
     embeding_model = SentenceTransformer("all-MiniLM-L6-v2")
     term_matrix = embeding_model.encode(terms)
@@ -36,7 +57,7 @@ class TopicModel:
     Wrapper for BERT-based topic model.
     """
 
-    def __init__(self, model: BERTopic()):
+    def __init__(self, model: BERTopic = BertModel):
         self.model = model
         self.topics = {}
         self.terms = {}
@@ -62,7 +83,6 @@ class TopicModel:
         sentences = self._process_sentences(docs)
         input = list(sentences.keys())
 
-        # leave as empty dictionary if the model breaks
         try:
             numeric_topics, probs = self.model.fit_transform(input)
         except (ValueError, TypeError):
@@ -88,7 +108,7 @@ class TopicModel:
                 # print(model_topics)
                 phrases.update({phrase for (phrase, _) in model_topics})
 
-            self.topics[i] = phrases
+            self.topics[i] = list(phrases)
             self.terms[i] = mmr_sort(list(phrases), query, lam=0.8)
 
         return self._aggregate_comments(sentences, input, numeric_topics, probs)
@@ -171,13 +191,8 @@ class TopicModel:
 class TopicChain:
     def __init__(self):
         self.promt_template = """
-        You will be given a list of terms seperated by commas and a
-        summary. Your task is to generate a label to represent the list of
-        terms that is releveant to the provided summary.
-
-            List of terms: {terms}
-
-            Summary: {summary}
+            Provide a label that is relevant to someone who is civically engaged
+            and trying to understand regulation for this group of terms: {terms}
             """
 
         self.prompt = PromptTemplate.from_template(self.promt_template)
@@ -188,20 +203,27 @@ class TopicChain:
         )
         self.chain = self.prompt | self.pipeline | StrOutputParser()
 
-    def generate_terms(self, terms: list[str], summary: str) -> list[str]:
+    def generate_label(self, terms: list[str]) -> list[str]:
         """
         Create better topic terms
         """
-        term_string = self.chain.invoke(
-            {"terms": ", ".join(terms), "summary": summary}
-        )
+        term_string = self.chain.invoke({"terms": ", ".join(terms)})
         return term_string
 
-    def _clean_terms(self, term_string: str) -> list[str]:
-        """
-        Cleans output from LLM
-        """
-        terms = term_string.split(",")
-        unique_terms = {term.strip() for term in terms}
 
-        return list(unique_terms)
+def label_topics(topics: dict[int, list], model: TopicChain) -> dict[int, str]:
+    """
+    Generates a label for all topics
+
+    Inputs:
+        topics: dictionary of topics, as lists of terms
+        model: LLM model to generate labels
+
+    Returns:
+        Dictionary of topics, and labels
+    """
+    labels = {}
+    for topic, terms in topics.values():
+        labels[topic] = model.generate_label(terms)
+
+    return labels
