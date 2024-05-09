@@ -104,12 +104,12 @@ def document(request, doc_id):
              "neutral": 149
              },
             {"topic": "topic 3",
-             "positive": 1003, 
+             "positive": 103, 
              "negative": 32, 
              "neutral": 149
              },
             {"topic": "topic 4",
-             "positive": 1003, 
+             "positive": 903, 
              "negative": 32, 
              "neutral": 149
              },
