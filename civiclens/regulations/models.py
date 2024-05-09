@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Docket(models.Model):
     "Model representing a docket."
     id = models.CharField(max_length=255, primary_key=True)
@@ -9,6 +10,7 @@ class Docket(models.Model):
     title = models.TextField(null=True)
     object_id = models.CharField(max_length=255, blank=True, null=True)
     highlighted_content = models.CharField(max_length=255, blank=True, null=True)
+
 
 class Document(models.Model):
     "Model representing a document."
@@ -36,6 +38,7 @@ class Document(models.Model):
     dates = models.TextField(null=True)
     further_information = models.TextField(blank=True, null=True)
     supplementary_information = models.TextField(blank=True, null=True)
+
 
 class Comment(models.Model):
     "Model representing a public comment."
@@ -74,3 +77,23 @@ class Comment(models.Model):
     submitter_rep = models.CharField(max_length=100, blank=True, null=True)
     submitter_rep_address = models.CharField(max_length=255, blank=True, null=True)
     submitter_rep_city_state = models.CharField(max_length=100, blank=True, null=True)
+
+
+class AgencyReference(models.Model):
+    "Model representing a reference to an agency."
+    id = models.CharField(max_length=10, primary_key=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+
+
+class NLPoutput(models.Model):
+    "Model representing NLP output at the document level."
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    rep_comments = models.TextField(null=True)
+    doc_plain_english_title = models.CharField(max_length=255, blank=True, null=True)
+    num_total_comments = models.IntegerField(default=0)
+    num_unique_comments = models.IntegerField(default=0)
+    num_representative_comment = models.IntegerField(default=0)
+    topics = models.TextField(null=True)
+    num_topics = models.IntegerField(default=0)
+    last_updated = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)

@@ -1,21 +1,17 @@
 import os
+from typing import Optional
 
 import polars as pl
 import psycopg2
 
 
-def pull_data(query: str, schema: list[str]) -> pl.DataFrame:
-    """Takes a SQL Query and returns a polars dataframe
+class Database:
+    """
+    Wrapper for CivicLens postrgres DB.
+    """
 
-    Args:
-        query (str): SQL Query
-        schema (list[str]): list of column names for the dataframe
-
-    Returns:
-        pl.DataFrame: polars df of comment data
-    """ """"""
-    try:
-        connection = psycopg2.connect(
+    def __init__(self):
+        self.conn = psycopg2.connect(
             database=os.getenv("DATABASE"),
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
@@ -23,12 +19,41 @@ def pull_data(query: str, schema: list[str]) -> pl.DataFrame:
             port=os.getenv("DATABASE_PORT"),
         )
 
+    def cursor(self):
+        return self.conn.cursor()
+
+    def close(self):
+        return self.conn.close()
+
+
+def pull_data(
+    connection,
+    query: str,
+    schema: Optional[list[str]] = [],
+    return_type: str = "df",
+) -> pl.DataFrame | list[tuple]:
+    """Takes a SQL Query and returns a polars dataframe
+
+    Args:
+        query (str): SQL Query
+        schema (list[str]): list of column names for the dataframe
+        return_type (str): "df" or "list"
+
+    Returns:
+        Polars df of comment data or list of comment data
+    """ """"""
+    if return_type == "df" and not schema:
+        raise ValueError("Must input schema to return df")
+
+    try:
         cursor = connection.cursor()
         cursor.execute(query)
         results = cursor.fetchall()
-
+        print(results)
     except (Exception, psycopg2.Error) as error:
-        print("Error while connecting to PostgreSQL", error)
+        raise RuntimeError(
+            f"Error while connecting to PostgreSQL: {str(error).strip()}"
+        )
 
     finally:
         # Close the connection and cursor to free resources
@@ -37,6 +62,7 @@ def pull_data(query: str, schema: list[str]) -> pl.DataFrame:
             connection.close()
             print("PostgreSQL connection is closed")
 
-    df = pl.DataFrame(results, schema=schema)
+    if return_type == "df":
+        results = pl.DataFrame(results, schema=schema)
 
-    return df
+    return results
