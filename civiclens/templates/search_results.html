@@ -5,39 +5,40 @@
 {% endblock title %}
 
 {% block content %}
-
-  <!-- search bar -->
-  <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
-    <div class="container-sm py-0">
-      <div class="form-group">
-        <form action="/regulations/search/results/" method="GET">
-          {{ form.as_p }}
+  <div class="form-group">
+    <form action="/regulations/search/results/" method="GET">
+      {% csrf_token %}
+      {{ form.as_p }}
+    <!-- search bar -->
+      <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
+        <div class="container-sm py-0">
+          {% comment %} <div class="form-group">
+            <form action="/regulations/search/results/" method="GET">
+              {% csrf_token %}
+              {{ form.as_p }} {% endcomment %}
           <div class="input-group mb-4">
             <input class="form-control" id="q" name="q" type="text" value="{{Search.search_term}}">
             <button class="btn btn-primary">Search</button>
           </div>
-        </form>
-      </div>
-    </div>
-  </section>
+            {% comment %} </form>
+          </div> {% endcomment %}
+        </div>
+      </section>
 
   <!-- sort/filter section -->
-  <section class="slice py-0" style="background-color:#FDFFF7" id="core-block">
-    <div class="container">
-      <div class="form-group">
-        <form action="/regulations/search/results/" method="GET">
-          {{ form.as_p }}
+      <section class="slice py-0" style="background-color:#FDFFF7" id="core-block">
+        <div class="container">
+          {% comment %} <div class="form-group">
+            <form action="/regulations/search/results/" method="get"> {% endcomment %}
           <!-- include existing search term in filter -->
-          <input id="q" name="q" type="hidden" value="{{Search.search_term}}">
-
+          {% comment %} <input id="q" name="q" type="hidden" value="{{Search.search_term}}"> {% endcomment %}
           <!-- include existing search term in filter -->
           <div class="input-group mb-3 order-md-1">
             <div class="col-md-3" >
-
               <!-- sort section -->
               <span class="h6 font-weight-bold" >Sort by:</span>
               <div class="form-check">
-                <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevent">
+                <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevant">
                 <label class="form-check-label" for="most_relevant">
                   Most relevant
                 </label>
@@ -117,7 +118,7 @@
                   </label>
                 </div>
               <p></p>
-              <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7">Refine results</button>
+              {% comment %} <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7">Refine results</button> {% endcomment %}
               </div>
             </div>
 
@@ -155,14 +156,12 @@
               {% endif %}
             </div>
           </div>
-        </form>
-      </div>
-    </div>
-
-
-
-
-  </section>
+            {% comment %} </form>
+          </div> {% endcomment %}
+        </div>
+      </section>
+    </form>
+  </div>
 
 
 {% endblock content %}
