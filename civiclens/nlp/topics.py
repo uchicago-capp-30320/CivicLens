@@ -11,6 +11,10 @@ from sentence_transformers import SentenceTransformer
 from ..utils.ml_utils import clean_comments, sentence_splitter
 
 
+## TODO: write function to add to the DB
+## TODO: implement topics with pipeline
+
+
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
     """
     Sorts input terms by maximal marginal relevance
@@ -58,6 +62,7 @@ class TopicModel:
         sentences = self._process_sentences(docs)
         input = list(sentences.keys())
 
+        # leave as empty dictionary if the model breaks
         try:
             numeric_topics, probs = self.model.fit_transform(input)
         except (ValueError, TypeError):
