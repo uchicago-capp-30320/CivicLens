@@ -7,6 +7,8 @@ def clean_text(text: str, patterns: list[tuple] = []) -> str:
 
     Inputs:
         text (str): comment text
+        patterns (list[str]): optional list of regular expression patterns
+            to pass in
 
     Returns:
         Cleaned verison of text
