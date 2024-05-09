@@ -5,7 +5,7 @@ import polars as pl
 from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
 
-from ..utils.database_access import pull_data
+from ..utils.database_access import Database, pull_data
 
 
 @dataclass
@@ -26,6 +26,7 @@ class RepComments:
     num_total_comments: int = 0
     num_unique_comments: int = 0
     num_representative_comment: int = 0
+    topics: dict = field(default_factory=dict)
 
 
 def get_doc_comments(id: str) -> pl.DataFrame:
@@ -33,7 +34,7 @@ def get_doc_comments(id: str) -> pl.DataFrame:
     polars dataframe
 
     Args:
-        schema (list[str]): columns in the dataframe
+        id (int): document id
 
     Returns:
         pl.DataFrame: formated polars df
@@ -44,7 +45,10 @@ def get_doc_comments(id: str) -> pl.DataFrame:
         WHERE document_id = '{id}';
         """
     # filter out attached files
-    df = pull_data(query, ["id", "document_id", "comment"])
+    db = Database()
+    df = pull_data(
+        query=query, connection=db.conn, schema=["id", "document_id", "comment"]
+    )
     pattern = (
         r"(?i)^see attached file(s)?\.?$"
         r"|(?i)^please see attached?\.?$"
@@ -54,8 +58,7 @@ def get_doc_comments(id: str) -> pl.DataFrame:
 
     filtered_df = df.filter(~pl.col("comment").str.contains(pattern))
 
-    # create null column for clusters
-    # (this should exist in sql eventually)
+    # TODO create clusters column in comment table and delete these lines
     rows = filtered_df.shape[0]
     filtered_df = filtered_df.with_columns(
         pl.Series("cluster", [None] * rows).cast(pl.Utf8)
@@ -69,10 +72,11 @@ def comment_similarity(df: pl.DataFrame) -> pl.DataFrame:
     model from hugging face.
 
     Args:
-        df (pl.DataFrame): comment data
+        pl.DataFrame: df with comment data
 
     Returns:
-        pl.DataFrame: df with pairs of comment indices and a cosine similarity
+        df_paraphrase, df_form_letter (tuple[pl.DataFrame]): cosine
+        similarities for form letters and non form letters
     """
     model = SentenceTransformer("all-mpnet-base-v2")
     paraphrases = util.paraphrase_mining(
@@ -227,9 +231,7 @@ def rep_comment_analysis(id: str) -> tuple[pl.DataFrame]:
         id (str): document id for comment analysis
 
     Returns:
-        tuple[pl.DataFrame]: a tuple with the modified comment dataframe,
-        a dataframe with representative comments for individual submissions,
-        and a dataframe with representative comments for form letters
+        RepComment: dataclass with comment data
     """
     df = get_doc_comments(id=id)
     df_paraphrases, df_form_letter = comment_similarity(df)
@@ -240,7 +242,7 @@ def rep_comment_analysis(id: str) -> tuple[pl.DataFrame]:
         df = assign_clusters(df=df, clusters=clusters_paraphrase)
         df_rep_paraphrase = representative_comments(
             G_paraphrase, clusters_paraphrase, df, form_letter=False
-        )
+        ).sort(pl.col("comments_represented"), descending=True)
     except ZeroDivisionError:
         print("Paraphrase Clustering Not Possible: Empty DataFrame")
 
@@ -253,7 +255,7 @@ def rep_comment_analysis(id: str) -> tuple[pl.DataFrame]:
             clusters_form_letter,
             df,
             form_letter=True,
-        )
+        ).sort(pl.col("comments_represented"), descending=True)
     except ZeroDivisionError:
         print("Form Letter Clustering Not Possible: Empty DataFrame")
 

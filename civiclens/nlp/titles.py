@@ -3,17 +3,26 @@ from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 
-from ..utils.database_access import pull_data
+from ..utils.database_access import Database, pull_data
 
 
 def get_doc_summary(id: str) -> pl.DataFrame:
+    """Gets the id and summary for a given document
+
+    Args:
+        id (int): document id
+
+    Returns:
+        pl.DataFrame: formatted polars df
+    """
+    db = Database()
     query = f"""
             SELECT id, summary
             FROM regulations_document
             WHERE id = '{id}'
             """
     schema = ["id", "summary"]
-    return pull_data(query, schema)
+    return pull_data(query=query, connection=db.conn, schema=schema)
 
 
 class TitleChain:
