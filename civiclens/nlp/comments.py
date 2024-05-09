@@ -1,9 +1,37 @@
+from dataclasses import dataclass, field
+from datetime import datetime
+from uuid import uuid4
+
 import networkx as nx
 import polars as pl
 from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
 
 from civiclens.utils.database_access import pull_data
+
+
+@dataclass
+class RepComments:
+    # clustered df for topics
+    document_id: str
+    doc_comments: pl.DataFrame = pl.DataFrame(
+        {
+            "id": pl.Series([], dtype=pl.Utf8),
+            "document_id": pl.Series([], dtype=pl.Utf8),
+            "comment": pl.Series([], dtype=pl.Utf8),
+            "cluster": pl.Series([], dtype=pl.Utf8),
+        }
+    )
+
+    # fields for nlp table
+    rep_comments: dict = field(default_factory=dict)
+    doc_plain_english_title: str = ""
+    num_total_comments: int = 0
+    num_unique_comments: int = 0
+    num_representative_comment: int = 0
+    topics: dict = field(default_factory=dict)
+    last_updated: datetime = datetime.now()
+    uuid: str = str(uuid4())
 
 
 def get_doc_comments(schema: list[str]) -> pl.DataFrame:

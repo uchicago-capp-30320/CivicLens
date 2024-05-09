@@ -4,6 +4,8 @@ from typing import Optional
 import polars as pl
 import psycopg2
 
+from civiclens.nlp.comments import RepComments
+
 
 class Database:
     """
@@ -27,7 +29,7 @@ class Database:
 
 
 def pull_data(
-    connection,
+    connection: Database,
     query: str,
     schema: Optional[list[str]] = [],
     return_type: str = "df",
@@ -66,3 +68,41 @@ def pull_data(
         results = pl.DataFrame(results, schema=schema)
 
     return results
+
+
+def upload_comments(connection: Database, comments: RepComments) -> None:
+    """
+    Uploads comment data to database.
+    """
+    query = """INSERT INTO (
+                    "id", 
+                    "rep_comments",
+                    "doc_plain_english_title", 
+                    "num_total_comments", 
+                    "num_unique_comments", 
+                    "num_representative_comment", 
+                    "topics", "num_topics", 
+                    "last_updated", 
+                    "document_id") \
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) \
+                ON CONFLICT (id) DO NOTHING;"""
+
+    values = (
+        comments.uuid,
+        comments.rep_comments,
+        comments.doc_plain_english_title,
+        comments.num_total_comments,
+        comments.num_unique_comments,
+        comments.num_representative_comment,
+        comments.topics,
+        len(comments.topics),
+        comments.last_updated,
+        comments.document_id,
+    )
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query, values)
+        
+    except Exception as e:
+        return f"Upload failed, error: {e}"
