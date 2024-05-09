@@ -1,14 +1,15 @@
 import re
+from typing import Optional
 
 
-def clean_text(text: str, patterns: list[tuple] = []) -> str:
+def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
     """
     String cleaning function for comments.
 
     Inputs:
         text (str): comment text
         patterns (list[str]): optional list of regular expression patterns
-            to pass in
+            to pass in (eg. [(r'\w+', "-")])
 
     Returns:
         Cleaned verison of text
