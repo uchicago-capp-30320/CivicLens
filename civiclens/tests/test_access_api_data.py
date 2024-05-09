@@ -4,6 +4,9 @@ api_key = "DEMO_KEY"
 
 
 def test_is_duplicated_on_server():
+    """
+    500 status should get flagged as something duplicated
+    """
     test_json = {
         "errors": [{"status": "500", "detail": "Incorrect result size"}],
     }
@@ -11,6 +14,9 @@ def test_is_duplicated_on_server():
 
 
 def test_api_date_format_params_dockets():
+    """
+    Ensure we return the right parameters for dockets
+    """
     assert access_api_data.api_date_format_params(
         "dockets", "01-01-0001", "12-12-1212"
     ) == {
@@ -20,6 +26,9 @@ def test_api_date_format_params_dockets():
 
 
 def test_api_date_format_params_NOT_dockets():
+    """
+    Ensure we return the right parameters for documents
+    """
     assert access_api_data.api_date_format_params(
         "documents", "01-01-0001", "12-12-1212"
     ) == {
@@ -39,6 +48,9 @@ def test_api_date_format_params_NOT_dockets():
 
 
 def test_format_datetime_for_api():
+    """
+    Check date formatted in the right way
+    """
     assert (
         access_api_data.format_datetime_for_api("2020-08-10T15:58:52Z")
         == "2020-08-10 11:58:52"
