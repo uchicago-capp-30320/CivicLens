@@ -86,14 +86,13 @@ class TopicModel:
         try:
             numeric_topics, probs = self.model.fit_transform(input)
         except (ValueError, TypeError):
-            # log error somewhere, what to return
+            # log error somewhere
             return {}
 
         num_topics = max(numeric_topics)
 
         if num_topics < 0:
-            # should this be an error
-            raise ValueError("Unable to generate topics")
+            return {}
 
         query = self._generate_mmr_query(numeric_topics)
 

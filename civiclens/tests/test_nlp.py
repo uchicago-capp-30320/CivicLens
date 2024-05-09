@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 import networkx as nx
 import numpy as np
 import polars as pl
-import pytest
 from bertopic import BERTopic
 
 from civiclens.nlp import comments
@@ -130,13 +129,6 @@ def test_process_sentences():
     }
 
     assert correct == topic_model._process_sentences(docs)
-
-
-def test_no_topics_error():
-    docs = sample_df["comment"].to_list()[:5]
-
-    with pytest.raises(ValueError):
-        live_model.run_model(docs)
 
 
 def test_catch_bertopic_errors():
