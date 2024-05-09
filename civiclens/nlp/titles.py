@@ -22,7 +22,7 @@ def get_doc_summary(id: str) -> pl.DataFrame:
             WHERE id = '{id}'
             """
     schema = ["id", "summary"]
-    return pull_data(query=query, connection=db.conn, schema=schema)
+    return pull_data(query=query, connection=db, schema=schema)
 
 
 class TitleChain:

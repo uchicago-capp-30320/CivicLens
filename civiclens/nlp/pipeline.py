@@ -1,39 +1,53 @@
 import datetime
 
+import polars as pl
+from sentence_transformers import SentenceTransformer
+
 from ..utils.database_access import Database, pull_data
 from . import comments, titles
 
 
-def doc_generator(df):
+def doc_generator(df: pl.DataFrame):
+    """creates a doc generator"""
     for row in df.iter_rows():
         yield (row)
 
 
-if __name__ == "__main__":
-    # get time nlp last updated
-    nlp_updated_query = """SELECT nlp_last_updated
+def get_last_update():
+    """gets the timestamp of last update"""
+    nlp_updated_query = """SELECT last_updated
                         FROM regulations_nlpoutput
-                        ORDER BY nlp_last_updated ASC LIMIT 1"""
-
+                        ORDER BY last_updated ASC LIMIT 1"""
     db_date = Database()
     last_updated = pull_data(
         query=nlp_updated_query,
-        connection=db_date.conn,
-        schema=["nlp_last_updated"],
-    )[0, "nlp_last_updated"]
-
-    if last_updated is not None:
+        connection=db_date,
+        schema=["last_updated"],
+    )
+    if not last_updated.is_empty():
+        last_updated = last_updated[0, "last_updated"]
         last_updated = last_updated.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        last_updated = None
+    return last_updated
 
-    # what docs dont need new titles
+
+def docs_have_titles():
+    """Gets all docs that have nlp titles already"""
     titles_query = """SELECT document_id
                     FROM regulations_nlpoutput
                     WHERE doc_plain_english_title IS NOT NULL"""
     db_title = Database()
     docs_with_titles = pull_data(
-        query=titles_query, connection=db_title.conn, schema=["document_id"]
+        query=titles_query, connection=db_title, schema=["document_id"]
     )
     docs_with_titles = docs_with_titles["document_id"].to_list()
+    return docs_with_titles
+
+
+if __name__ == "__main__":
+    last_updated = get_last_update()
+    docs_with_titles = docs_have_titles()
 
     # what docs need comment nlp update
     if last_updated is not None:
@@ -59,17 +73,18 @@ if __name__ == "__main__":
 
     db_docs = Database()
     df_docs_to_update = pull_data(
-        query=docs_to_update, connection=db_docs.conn, schema=["document"]
+        query=docs_to_update, connection=db_docs, schema=["document"]
     )
     doc_gen = doc_generator(df_docs_to_update)
 
     title_creator = titles.TitleChain()
+    sbert_model = SentenceTransformer("all-mpnet-base-v2")
 
     for _ in range(len(docs_to_update)):
         try:
             # do rep comment nlp
             doc_id = next(doc_gen)[0]
-            comment_data = comments.rep_comment_analysis(doc_id)
+            comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
 
             # generate title if there is not already one
             if doc_id not in docs_with_titles:

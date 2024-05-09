@@ -11,14 +11,7 @@ from ..utils.database_access import Database, pull_data
 @dataclass
 class RepComments:
     # clustered df for topics
-    doc_comments: pl.DataFrame = pl.DataFrame(
-        {
-            "id": pl.Series([], dtype=pl.Utf8),
-            "document_id": pl.Series([], dtype=pl.Utf8),
-            "comment": pl.Series([], dtype=pl.Utf8),
-            "cluster": pl.Series([], dtype=pl.Utf8),
-        }
-    )
+    doc_comments: pl.DataFrame = pl.DataFrame()
 
     # fields for nlp table
     rep_comments: dict = field(default_factory=dict)
@@ -47,7 +40,7 @@ def get_doc_comments(id: str) -> pl.DataFrame:
     # filter out attached files
     db = Database()
     df = pull_data(
-        query=query, connection=db.conn, schema=["id", "document_id", "comment"]
+        query=query, connection=db, schema=["id", "document_id", "comment"]
     )
     pattern = (
         r"(?i)^see attached file(s)?\.?$"
@@ -66,19 +59,21 @@ def get_doc_comments(id: str) -> pl.DataFrame:
     return filtered_df
 
 
-def comment_similarity(df: pl.DataFrame) -> pl.DataFrame:
+def comment_similarity(
+    df: pl.DataFrame, model: SentenceTransformer
+) -> pl.DataFrame:
     """Create df with comment mappings and their semantic similarity scores
     according to the SBERT paraphrase mining method using the all-mpnet-base-v2
     model from hugging face.
 
     Args:
-        pl.DataFrame: df with comment data
+        df (pl.DataFrame): df with comment data
+        model (SentenceTransformer): sbert sentence transformer model
 
     Returns:
         df_paraphrase, df_form_letter (tuple[pl.DataFrame]): cosine
         similarities for form letters and non form letters
     """
-    model = SentenceTransformer("all-mpnet-base-v2")
     paraphrases = util.paraphrase_mining(
         model, df["comment"].to_list(), show_progress_bar=True
     )
@@ -97,7 +92,14 @@ def comment_similarity(df: pl.DataFrame) -> pl.DataFrame:
     )
 
     df_paraphrases = df_full.filter(pl.col("similarity") <= 0.99)
+    df_paraphrases = df_paraphrases.with_columns(
+        pl.lit(False).alias("form_letter")
+    )
+
     df_form_letter = df_full.filter(pl.col("similarity") > 0.99)
+    df_form_letter = df_form_letter.with_columns(
+        pl.lit(True).alias("form_letter")
+    )
 
     return df_paraphrases, df_form_letter
 
@@ -224,7 +226,9 @@ def representative_comments(
         return output_df
 
 
-def rep_comment_analysis(id: str) -> tuple[pl.DataFrame]:
+def rep_comment_analysis(
+    id: str, model: SentenceTransformer
+) -> tuple[pl.DataFrame]:
     """Runs all representative comment code for a document
 
     Args:
@@ -234,7 +238,7 @@ def rep_comment_analysis(id: str) -> tuple[pl.DataFrame]:
         RepComment: dataclass with comment data
     """
     df = get_doc_comments(id=id)
-    df_paraphrases, df_form_letter = comment_similarity(df)
+    df_paraphrases, df_form_letter = comment_similarity(df, model)
 
     try:
         G_paraphrase = build_graph(df_paraphrases)
