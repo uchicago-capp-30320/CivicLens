@@ -107,7 +107,13 @@ def document(request, doc_id):
              "positive": 1003, 
              "negative": 32, 
              "neutral": 149
-             }],
+             },
+            {"topic": "topic 4",
+             "positive": 1003, 
+             "negative": 32, 
+             "neutral": 149
+             },
+             ],
         "num_topics": 2, 
         "last_updated": "May 6, 2024",
         "document_id": "ED-2023-OPE-0123-26398"
