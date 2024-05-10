@@ -11,6 +11,9 @@ from .models import Comment, Document, AgencyReference
 
 from django.db.models import Count
 
+from django.utils import timezone
+
+
 
 def home(request):
     return render(request, "home.html")
@@ -21,6 +24,7 @@ def search_page(request):
 
 
 def search_results(request):
+    today = timezone.now().date()
     context = {}
     
     if request.method == "GET":
@@ -42,6 +46,7 @@ def search_results(request):
                 Document.objects.annotate(rank=SearchRank(vector, search_query))
                 .annotate(headline=search_headline)
                 .filter(rank__gte=0.0001)
+                .filter(comment_end_date__gte=today)
                 .order_by("-rank")
             )
             if not documents.exists():
@@ -53,6 +58,7 @@ def search_results(request):
                         + TrigramSimilarity("agency_type", query)  # +
                     )
                     .filter(rank__gt=0.20)
+                    .filter(comment_end_date__gte=today)
                     .order_by("-rank")
                 ) 
             if sort_by == 'most_recent':
