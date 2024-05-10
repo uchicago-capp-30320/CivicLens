@@ -25,10 +25,10 @@ def search_page(request):
 
 def search_results(request):
     context = {}
+    
     if request.method == "GET":
         query = request.GET.get("q", "")
         sort_by = request.GET.get("sort_by", "most_relevant")
-        print(sort_by)
 
         if query:
             vector = (
