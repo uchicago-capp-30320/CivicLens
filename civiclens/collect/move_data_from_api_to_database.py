@@ -152,7 +152,7 @@ def verify_database_existence(
     table: str, api_field_val: str, db_field: str = "id"
 ) -> bool:
     """
-    Use regulations.gov API to confirm a row exists in a db table
+    Confirm a row exists in a db table for a given id
 
     Inputs:
         table (str): one of the tables in the CivicLens db
@@ -170,7 +170,7 @@ def verify_database_existence(
             cursor.execute(query, (api_field_val,))
             response = cursor.fetchall()
 
-    return response != []
+    return bool(response)
 
 
 def get_most_recent_doc_comment_date(doc_id: str) -> str:
