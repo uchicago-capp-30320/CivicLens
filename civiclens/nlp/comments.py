@@ -211,9 +211,7 @@ def representative_comments(
         return output_df
 
 
-def rep_comment_analysis(
-    id: str, model: SentenceTransformer
-) -> tuple[pl.DataFrame]:
+def rep_comment_analysis(id: str, model: SentenceTransformer) -> RepComments:
     """Runs all representative comment code for a document
 
     Args:

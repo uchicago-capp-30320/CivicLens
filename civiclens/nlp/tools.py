@@ -36,6 +36,7 @@ class RepComments:
     topics: list = Field(default=[])
     last_updated: datetime = datetime.now()
     uuid: int = uuid4().int
+    search_vector: list = Field(default=[])
 
     def get_all_comments(self):
         """
@@ -75,6 +76,7 @@ class Comment:
     topic_label: str = ""
     topic: list[str] = None
     form_letter: bool = False
+    sentiment: str = ""
 
 
 # order topics by number of total comments represented
@@ -121,32 +123,14 @@ def extract_formletters(
     return form_comments
 
 
-def sentiment_analysis(
-    comments: list[Comment], model, tokenizer
-) -> list[tuple]:
+# look into using a fixture for the pipeline
+def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
     """
-    Run sentiment analysis on comments.
-
-    Inputs:
-        docs: list of documents to analyze
-        model: HuggingFace model for sequence classification
-        tokenizer: HuggingFace tokenizer model
-
-    Returns:
-        List of tuples (text, sentiment label)
+    Analyze sentiment of a comment.
     """
+    try:
+        out = pipeline(comment.text)
+    except Exception:
+        return ""
 
-    tokenizer_kwargs = {"padding": True, "truncation": True, "max_length": 512}
-    pipe = pipeline(
-        "text-classification",
-        model=model,
-        tokenizer=tokenizer,
-        **tokenizer_kwargs,
-    )
-
-    results = {}
-    for comment in comments:
-        out = pipe(comment.text)[0]
-        results[comment.id] = out["label"]
-
-    return results
+    return out["label"]

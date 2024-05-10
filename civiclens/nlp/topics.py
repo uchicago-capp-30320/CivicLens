@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Callable
 
 import numpy as np
 from bertopic import BERTopic
@@ -11,7 +12,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 
 from ..utils.ml_utils import clean_comments, sentence_splitter
-from .tools import Comment
+from .tools import Comment, RepComments
 
 
 # Models
@@ -227,3 +228,55 @@ def label_topics(topics: dict[int, list], model: TopicChain) -> dict[int, str]:
         labels[topic] = model.generate_label(terms)
 
     return labels
+
+
+def topic_comment_analysis(
+    comment_data: RepComments,
+    model: TopicModel = None,
+    labeler: TopicChain = None,
+    sentiment_analyzer: Callable = None,
+) -> RepComments:
+    """
+    Run topic and sentiment analysis.
+    """
+    # cache this
+    comments = comment_data.to_list()
+    comment_topics = model.run_model(comments)
+    # add logic for re-doing analysis here
+    topic_labels = label_topics(comment_topics, labeler)
+
+    for comment in comments:
+        comment.topic_label = topic_labels[comment_topics[comment.id]]
+        comment.topic = comment_topics[comment.id]
+        # need fixture for this function to work
+        comment.sentiment = sentiment_analyzer(comment.text)
+
+    # create new instance of the class ?
+    comment_data.rep_comments = comments
+    comment_data.topics = create_topics(comments)
+    comment_data.search_vector = model.generate_search_vector()
+
+    return comment_data
+
+
+def create_topics(comments: list[Comment]) -> dict:
+    """
+    Condense topics for document summary
+    """
+    temp = defaultdict(dict)
+    for comment in comments:
+        temp[comment.topic_label][comment.sentiment] = (
+            temp[comment.topic_label].get(comment.sentiment, 0)
+            + comment.num_represented
+        )
+        temp[comment.topic_label]["total"] = (
+            temp[comment.topic_label].get("total", 0) + comment.num_represented
+        )
+
+    topics = []
+    # create output dictionary
+    for topic_label, partial in temp.values():
+        partial["topic"] = topic_label
+        topics.append(partial)
+
+    return topics

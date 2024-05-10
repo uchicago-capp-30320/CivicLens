@@ -2,7 +2,11 @@ from bertopic import BERTopic
 from bertopic.representation import KeyBERTInspired, PartOfSpeech
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    pipeline,
+)
 
 
 # topic models
@@ -25,3 +29,11 @@ sentiment_base = AutoModelForSequenceClassification.from_pretrained(
     sentiment_model
 )
 sentiment_tokenizer = AutoTokenizer.from_pretrained(sentiment_model)
+tokenizer_kwargs = {"padding": True, "truncation": True, "max_length": 512}
+
+sentiment_pipeline = pipeline(
+    "text-classification",
+    model=sentiment_base,
+    tokenizer=sentiment_tokenizer,
+    **tokenizer_kwargs,
+)

@@ -1,10 +1,13 @@
-import datetime
+from functools import partial
 
 import polars as pl
 from sentence_transformers import SentenceTransformer
 
-from ..utils.database_access import Database, pull_data
+from ..utils.database_access import Database, pull_data, upload_comments
 from . import comments, titles
+from .models import sentiment_pipeline
+from .tools import sentiment_analysis
+from .topics import TopicChain, TopicModel, topic_comment_analysis
 
 
 def doc_generator(df: pl.DataFrame):
@@ -79,6 +82,9 @@ if __name__ == "__main__":
 
     title_creator = titles.TitleChain()
     sbert_model = SentenceTransformer("all-mpnet-base-v2")
+    sentiment_analyzer = partial(
+        sentiment_analysis, pipeline=sentiment_pipeline
+    )
 
     for _ in range(len(docs_to_update)):
         try:
@@ -94,11 +100,16 @@ if __name__ == "__main__":
                     comment_data.doc_plain_english_title = new_title
 
             # TODO call topic code
-            # Get the current timestamp of nlp update
-            updated = datetime.datetime.now()
-            # TODO update nlp table with comment_data, updated time, and topic
-            # code
-            # TODO update document table with topic search terms
+            comment_data = topic_comment_analysis(
+                comment_data,
+                model=TopicModel(),
+                labeler=TopicChain(),
+                sentiment_analyzer=sentiment_analyzer,
+            )
+
+            # TODO add to nlp table, update upload function to search column
+            upload_comments(Database(), comment_data)
+
         except StopIteration:
             print("NLP Update Completed")
             break
