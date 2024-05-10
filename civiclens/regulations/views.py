@@ -102,14 +102,19 @@ def search_results(request):
 
 def document(request, doc_id):
     try:
-        doc = Document.objects.get(id=doc_id)
+        doc = Document.objects.filter(id=doc_id).annotate(comment_count=Count(
+            'comment')
+        ).get()
+        
     except Document.DoesNotExist:
         doc = None
     try:
         comments = Comment.objects.filter(document=doc_id)
+        unique_comments = comments.distinct("comment").count()
     except Comment.DoesNotExist:
         comments = None
-    return render(request, "document.html", {"doc": doc, "comments": comments})
+        unique_comments = 0
+    return render(request, "document.html", {"doc": doc, "comments": comments, "unique_comments": unique_comments})
 
 
 def comment(request):

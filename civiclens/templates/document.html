@@ -11,8 +11,12 @@
 <section class="slice py-3" style="background-color:#FDFFF7" id="core-block">
   <!-- title section -->
   <div class="container p-4 py-0" style="background-color: rgba(180, 47, 55, 0.15); border: 15px solid #FDFFF7;">
-    <h5>doc.ai_title</h5>
-    <h6 class="font-italic font-weight-normal">Original title: {{doc.title}}</h6>
+    {% if doc.ai_title %}
+      <h5>{{ doc.ai_title }}</h5>
+      <h6 class="font-italic font-weight-normal">Original title: {{ doc.title }}</h6>
+    {% else %}
+      <h5>{{ doc.title }}</h5> 
+    {% endif %}
   </div>
     
   <!-- two sectioned part of the page -->
@@ -27,7 +31,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Comment by</a>
-              <a class="font-weight-normal">doc.comment_deadline</a>
+              <a class="font-weight-normal">{{ doc.comment_end_date }}</a>
             </p>
           </div>
         </div>
@@ -36,7 +40,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Posted on</a>
-              <a class="font-weight-normal">doc.comment_posted_date</a>
+              <a class="font-weight-normal">{{ doc.posted_date }}</a>
             </p>
           </div>
         </div>
@@ -44,8 +48,8 @@
         <div class="card-sm" style="background-color: lightgrey;">
           <div class="card-body py-2 px-3">
             <p class="card-text">
-              <a class="font-weight-bold">Agnecy</a> 
-              <a class="font-weight-normal">doc.agency</a>
+              <a class="font-weight-bold">Agency</a> 
+              <a class="font-weight-normal">{{ doc.agency_id }}</a>
             </p>
           </div>
         </div>
@@ -54,7 +58,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Comments received</a>
-              <a class="font-weight-normal">doc.n_comments</a>
+              <a class="font-weight-normal">{{ doc.comment_count }}</a>
             </p>
           </div>
         </div>
@@ -63,7 +67,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Unique comments received</a>
-              <a class="font-weight-normal">doc.n_unique_comments</a>
+              <a class="font-weight-normal">{{ unique_comments }}</a>
             </p>
           </div>
         </div>
@@ -80,7 +84,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Document ID</a>
-              <a class="font-weight-normal">{{doc.id}}</a>
+              <a class="font-weight-normal">{{ doc.id }}</a>
             </p>
           </div>
         </div>
@@ -89,7 +93,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Federal Register ID</a>
-              <a class="font-weight-normal">doc.federal_register_id</a>
+              <a class="font-weight-normal">{{ doc.fr_doc_num }}</a>
             </p>
           </div>
         </div>
@@ -98,7 +102,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Docket ID</a>
-              <a class="font-weight-normal">doc.docket_id</a>
+              <a class="font-weight-normal">{{ doc.docket_id }}</a>
             </p>
           </div>
         </div>
@@ -116,65 +120,89 @@
       <div class="col-md-8">
         <span class="h6">Summary</span>
         <p></p>
-        <div class="card p-3">
-          <div class="card-body">
-            <p class="card-text">doc.original_summary...</p>
+          <div class="card p-3">
+            <div class="card-body">
+              {% if doc.summary %}
+                  <p class="card-text">{{ doc.summary }}</p>
+                  {% else %}
+                  <p class="card-text">There is no summary for this document.</p>
+                  {% endif %}
+            </div>
           </div>
-        </div>
-        <span class="h6">doc.n_topics topics emerged from doc.n_comments.</span>
-        <p></p>
-        <span class="p">[methods here...]</span>
-        <span class="p">[methods here...]</span>
-        <span class="p">[methods here...]</span>
+        {% if comments %}
+          <span class="h6">doc.n_topics topics emerged from {{ doc.comment_count }} total comments.</span>
+          <p></p>
+          <span class="p">[methods here...]</span>
+          <span class="p">[methods here...]</span>
+          <span class="p">[methods here...]</span>
 
-        <div class="container p-10" style="background-color: red;">
-          <p  style="text-align:center;">graph container</p>
-        </div>
-        <p class="text-right text-muted small">
-          <a class="font-italic">topics last updated:</a> doc.topics_last_updated
-        </p>
-
-        <hr>
-        <p></p>
-        <span class="h6">doc.n_rep_comments representing doc.n_comments total comments.</span>
-        <p>The following comments capture the core themes of the comments received. 
-          [potentially include some clarity on the methods used here].
-        </p>
-
-        <!-- cards for each representative comment -->
-        <div class="card p-0">
-          <div class="card-body">
-            <p class="card-text p-2">comment.text...</p>
+          <div class="container p-10" style="background-color: red;">
+            <p  style="text-align:center;">graph container</p>
           </div>
-          <div class="card-footer p-2">
-            <p class="text-muted text-right mb-0">[need to find some way to put these on the same line]</p>
-            <p class="card-text body font-weight-bold text-dark mb-0">Topic: comment.topic</p>
-            <p class="card-text body  text-dark">comment.n_like_this comments like this</p>
-            <p class="text-muted text-right mb-0">comment.TYPE_OF_COMMENTER</p>
-            <p class="text-muted text-right mb-0">comment.commenter_name</p>
-            <p class="text-muted text-right">commented on comment.date_received.</p>
-            
-          </div>
-        </div>
+          <p class="text-right text-muted small">
+            <a class="font-italic">topics last updated:</a> doc.topics_last_updated
+          </p>
 
-        <div style="text-align: center;">
-          <button class="btn btn-sm" style="background-color:#21315C; color:#FDFFF7;">
-            <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
-              Add your own comment!
-            </a>
-          </button>
-      
-          <button class="btn btn-sm btn-outline-primary" style="background-color:white; color:#21315C;">
-            <a href="https://www.regulations.gov/document/{{doc.id}}/comment" target="_blank" class="font-weight-normal">
-              Browse all existing comments
-            </a>
-          </button>
-        </div>
+          <hr>
+          <p></p>
+          <span class="h6">doc.n_rep_comments representing {{ doc.comment_count }} total comments.</span>
+          <p>The following comments capture the core themes of the comments received. 
+            [potentially include some clarity on the methods used here].
+          </p>
+          {% for comment in comments %}
+          <!-- cards for each representative comment -->
+            <div class="card p-0">
+              <div class="card-body">
+                <p class="card-text p-2">{{ comment.comment }}</p>
+              </div>
+              <div class="card-footer p-2">
+                {% comment %} <p class="text-muted text-right mb-0">[need to find some way to put these on the same line]</p>
+                <p class="card-text body font-weight-bold text-dark mb-0">Topic: comment.topic</p>
+                <p class="card-text body  text-dark">comment.n_like_this comments like this</p>
+                <p class="text-muted text-right mb-0">comment.TYPE_OF_COMMENTER</p>
+                <p class="text-muted text-right mb-0">comment.commenter_name</p>
+                <p class="text-muted text-right">commented on comment.date_received.</p> {% endcomment %}
+                <p class="text-muted text-right mb-0">[need to find some way to put these on the same line]</p>
+                <p class="card-text body font-weight-bold text-dark mb-0">Topic: comment.topic</p>
+                <p class="card-text body  text-dark">comment.n_like_this comments like this</p>
+                <p class="text-muted text-right mb-0">comment.TYPE_OF_COMMENTER</p>
+                {% if comment.organization %}
+                  <p class="text-muted text-right mb-0">comment.commenter_name</p>
+                {% elif comment.last_name %}
+                  <p class="text-muted text-right mb-0">{{comment.first_name}} {{comment.last_name}}</p>
+                {% endif %}
+                <p class="text-muted text-right">commented on {{ comment.receive_date }}.</p> 
+                
+              </div>
+            </div>
+          {% endfor %}
+          
+
+          <div style="text-align: center;">
+            <button class="btn btn-sm" style="background-color:#21315C; color:#FDFFF7;">
+              <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
+                Add your own comment!
+              </a>
+            </button>
+        
+            <button class="btn btn-sm btn-outline-primary" style="background-color:white; color:#21315C;">
+              <a href="https://www.regulations.gov/document/{{doc.id}}/comment" target="_blank" class="font-weight-normal">
+                Browse all existing comments
+              </a>
+            </button>
+          </div>
+        {% else %}
+          <div style="text-align: center;">
+            <button class="btn btn-sm" style="background-color:#21315C; color:#FDFFF7;">
+              <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
+                Be the first to comment!
+              </a>
+            </button>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
 </section>
 
 {% endblock content %}
-
-
