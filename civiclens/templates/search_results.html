@@ -11,8 +11,10 @@
 {% block content %}
 <div class="form-group">
   <form action="/regulations/search/results/" method="GET">
+    <input type="hidden" name="source" value="search_results">
     {% csrf_token %}
     {{ form.as_p }}
+
     <!-- search bar section -->
     <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
       <div class="container-sm py-0">
@@ -61,12 +63,11 @@
             <span class="h6 font-weight-bold">Filter by:</span>
             <h6 class="font-italic font-weight-normal">Number of comments</h6>
             <div class="custom-switch">
-              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault">
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault" name="comments_any" value=True>
               <label class="custom-control-label" for="flexSwitchCheckDefault">Contains any comments</label>
             </div>
-
             <div class="custom-switch">
-              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2">
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2" name="comments_over_hundred" value=True>
               <label class="custom-control-label" for="flexSwitchCheckDefault2">Contains 100+ comments</label>
             </div>
             <p></p>
@@ -86,25 +87,25 @@
             <div class="form-group" >
               <label for="exampleFormControlSelect2" class="font-italic">Category</label>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="true" id="rule" name="rule" checked>
+                <input class="form-check-input" type="checkbox" name="rule" id="rule" value="Rule" checked>
                 <label class="form-check-label" for="rule">
                   Rule
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="true" id="proposed_rule" name="proposed_rule" checked>
+                <input class="form-check-input" type="checkbox" name="proposed_rule" id="Proposed Rule" value="Proposed Rule" checked>
                 <label class="form-check-label" for="proposed_rule">
                   Proposed Rule
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="true" id="notice" name="notice" checked>
+                <input class="form-check-input" type="checkbox" name="notice" id="notice" value="Notice" checked>
                 <label class="form-check-label" for="notice">
                   Notice
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="true" id="other" name="other" checked>
+                <input class="form-check-input" type="checkbox" name="other" id="other" value="Other" checked>
                 <label class="form-check-label" for="other">
                   Other
                 </label>
