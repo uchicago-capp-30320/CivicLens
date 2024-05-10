@@ -42,14 +42,6 @@ export function drawGraph() {
         .selectAll('text')
         .attr('font-size', 14);
 
-    // Add x-axis label
-    svg.append('text')
-        .attr('x', width / 2)
-        .attr('y', height + margin.top*1.5) // Adjust vertical position as needed
-        .attr('text-anchor', 'middle')
-        .text('Number of Comments') // this needs a bit of work
-        .attr('font-size', 12);
-
     svg.append("g")
         .call(yAxis)
         .call(g => g.select('.domain').remove())
