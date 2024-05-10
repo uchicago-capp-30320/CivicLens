@@ -368,6 +368,38 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
     return doc
 
 
+def qa_document_data(document_data: json) -> None:
+    """
+    Run assert statement to check document data looks right
+    """
+
+    attributes = document_data["attributes"]
+
+    document_data["id"],
+    attributes["documentType"],
+    attributes["lastModifiedDate"],
+    attributes["frDocNum"],
+    attributes["withdrawn"],
+    attributes["agencyId"],
+    assert type(attributes["commentEndDate"]) is datetime
+    assert type(attributes["postedDate"]) is datetime
+    attributes["docketId"],
+    attributes["subtype"],
+    assert type(attributes["commentStartDate"]) is datetime
+    attributes["openForComment"],
+    attributes["objectId"],
+    assert "https" in document_data["links"]["self"]
+    assert ".gov" in document_data["links"]["self"]
+    document_data["agencyType"],
+    document_data["CFR"],
+    document_data["RIN"],
+    attributes["title"],
+    document_data["summary"],
+    document_data["dates"],
+    document_data["furtherInformation"],
+    document_data["supplementaryInformation"]
+
+
 def insert_document_into_db(document_data: json) -> dict:
     """
     Insert the info on a document into the documents table
