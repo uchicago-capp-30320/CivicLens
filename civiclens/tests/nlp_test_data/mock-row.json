@@ -1,0 +1,42 @@
+{
+  "doc_plain_english_title": "Student Loan Debt Waiver: Department Of Education",
+  "document_id": "ED-2023-OPE-0123-26398",
+  "id": "7588edfc-4239-4970-970e-d080eecf4da7",
+  "last_updated": "May 6, 2024",
+  "num_rep_comments": 2,
+  "num_topics": 2,
+  "num_total_comments": 980,
+  "num_unique_comments": 762,
+  "rep_comments": [
+    {
+      "form_letter": true,
+      "id": "ED-2023-OPE-0123-28272",
+      "num_represented": 450,
+      "text": "The more student loan debt that can be forgiven the better. Over the years , I have had yo pause my student l9ans because of financial hardships I was facing.The period of time that loans were in repayment I had made my payments on time.My loans are currently in repayment, and if that burden could be lifted it would be life-changing for me. Right now. I find it very difficult to pay off my student loan debt. It has been following me for quite some time. Loan forgiveness would be good if I can qualify for it. ",
+      "topic": "Debt Forgiveness"
+    },
+    {
+      "form_letter": false,
+      "id": "ED-2023-OPE-0123-28250",
+      "num_represented": 231,
+      "text": "Hello I am a current student who would greatly appreciate the privilege of having my student loans forgiven. Thank you so much in advance!",
+      "topic": "Student Loans"
+    }
+  ],
+  "topics": [
+    {
+      "negative": 98,
+      "neutral": 32,
+      "positive": 129,
+      "souce": "comment",
+      "topic": "Debt Forgivness"
+    },
+    {
+      "negative": 32,
+      "neutral": 149,
+      "positive": 123,
+      "source": "document",
+      "topic": "Student Loans"
+    }
+  ]
+}
