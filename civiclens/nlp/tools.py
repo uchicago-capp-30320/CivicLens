@@ -23,7 +23,7 @@ class RepComments:
     num_representative_comment: int = 0
     topics: list = Field(default=list)
     last_updated: datetime = datetime.now()
-    uuid: str = str(uuid4())
+    uuid: int = uuid4().int
 
 
 def extract_formletters(
