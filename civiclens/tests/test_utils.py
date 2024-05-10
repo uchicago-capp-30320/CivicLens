@@ -1,5 +1,6 @@
 import json
 import sqlite3
+from pathlib import Path
 
 import polars as pl
 import pytest
@@ -8,7 +9,9 @@ from civiclens.nlp.tools import RepComments
 from civiclens.utils.database_access import pull_data, upload_comments
 
 
-with open("nlp_test_data/mock-row.json", "r") as f:
+BASE_DIR = Path(__file__).resolve().parent
+
+with open(BASE_DIR / "nlp_test_data/mock-row.json", "r") as f:
     mock_data = json.load(f)
 
 fake_id = "65cc9e17-7a50-44b9-9196-c402c62b6a15"
