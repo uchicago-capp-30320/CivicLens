@@ -257,6 +257,7 @@ def insert_docket_into_db(docket_data: json) -> dict:
                         attributes["highlightedContent"],
                     ),
                 )
+                connection.commit()
     except Exception as e:
         error_message = (
             f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
@@ -427,6 +428,7 @@ def insert_document_into_db(document_data: json) -> dict:
                     query,
                     fields_to_insert,
                 )
+                connection.commit()
 
     except Exception as e:
         error_message = (
