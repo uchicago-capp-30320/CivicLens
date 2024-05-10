@@ -16,8 +16,20 @@ django = "^5.0.4"
 python-dotenv = "^1.0.1"
 psycopg2-binary = "^2.9.9"
 pre-commit = "^3.7.0"
+sentence-transformers = "^2.7.0"
+networkx = "^3.3"
+langchain-community = "^0.0.36"
+langchain-core = "^0.1.50"
+bertopic = "^0.16.1"
+spacy = "^3.7.4"
 pandas = "^2.2.2"
+langchain = "^0.1.17"
+matplotlib = "^3.8.4"
+en-core-web-sm = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0.tar.gz"}
 polars = "^0.20.25"
+
+
+
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.3.5"
