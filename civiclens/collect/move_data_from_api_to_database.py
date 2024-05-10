@@ -117,6 +117,9 @@ def extract_xml_text_from_doc(doc: json) -> json:
     """
     processed_data = []
 
+    if not doc:
+        return processed_data
+
     fr_doc_num = doc["attributes"]["frDocNum"]
     if fr_doc_num:
         xml_url = fetch_fr_document_details(fr_doc_num)
