@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import polars as pl
 import psycopg2
@@ -31,9 +31,9 @@ class Database:
 def pull_data(
     connection: Database,
     query: str,
-    schema: Optional[list[str]] = [],
+    schema: Optional[List[str]] = None,
     return_type: str = "df",
-) -> pl.DataFrame | list[tuple]:
+) -> pl.DataFrame | List[Tuple]:
     """Takes a SQL Query and returns a polars dataframe
 
     Args:
@@ -51,11 +51,10 @@ def pull_data(
         cursor = connection.cursor()
         cursor.execute(query)
         results = cursor.fetchall()
-        print(results)
     except (Exception, psycopg2.Error) as error:
         raise RuntimeError(
             f"Error while connecting to PostgreSQL: {str(error).strip()}"
-        )
+        ) from error
 
     finally:
         # Close the connection and cursor to free resources
