@@ -75,14 +75,14 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
     Uploads comment data to database.
     """
     query = """INSERT INTO (
-                    "id", 
+                    "id",
                     "rep_comments",
-                    "doc_plain_english_title", 
-                    "num_total_comments", 
-                    "num_unique_comments", 
-                    "num_representative_comment", 
-                    "topics", "num_topics", 
-                    "last_updated", 
+                    "doc_plain_english_title",
+                    "num_total_comments",
+                    "num_unique_comments",
+                    "num_representative_comment",
+                    "topics", "num_topics",
+                    "last_updated",
                     "document_id") \
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) \
                 ON CONFLICT (id) DO NOTHING;"""
@@ -103,6 +103,6 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
     try:
         cursor = connection.cursor()
         cursor.execute(query, values)
-        
+
     except Exception as e:
         return f"Upload failed, error: {e}"
