@@ -92,7 +92,7 @@ def search_results(request):
             context["documents"] = documents
     else:
         context["documents"] = None
-
+    
     context["search"] = query
 
     return render(request, "search_results.html", 
