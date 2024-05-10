@@ -70,8 +70,8 @@ class TopicModel:
         sentences = {}
 
         for comment in docs:
-            sentences = sentence_splitter(clean_comments(comment.text))
-            for sentence in sentences:
+            split_text = sentence_splitter(clean_comments(comment.text))
+            for sentence in split_text:
                 if comment.text:
                     sentences[sentence] = comment.id
 
@@ -86,13 +86,14 @@ class TopicModel:
 
         try:
             numeric_topics, probs = self.model.fit_transform(input)
-        except (ValueError, TypeError):
-            # log error somewhere
+        except (ValueError, TypeError) as e:
+            print(f"Hugging Face error: {e}")
             return {}
 
         num_topics = max(numeric_topics)
 
         if num_topics < 0:
+            print("Too few topics generated")
             return {}
 
         query = self._generate_mmr_query(numeric_topics)
@@ -105,7 +106,6 @@ class TopicModel:
             phrases = set()
             model_results = self.model.get_topic(i, full=True)
             for model_topics in model_results.values():
-                # print(model_topics)
                 phrases.update({phrase for (phrase, _) in model_topics})
 
             self.topics[i] = list(phrases)

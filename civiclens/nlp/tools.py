@@ -6,37 +6,61 @@ import torch
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 from sentence_transformers.util import cos_sim
-from transformers import pipeline
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    pipeline,
+)
+
+
+tokenizer = AutoTokenizer.from_pretrained(
+    "cardiffnlp/twitter-roberta-base-sentiment-latest"
+)
+model = AutoModelForSequenceClassification.from_pretrained(
+    "cardiffnlp/twitter-roberta-base-sentiment-latest"
+)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class RepComments:
     # clustered df for topics
     document_id: str
-    doc_comments: pl.DataFrame = Field(default=pl.DataFrame())
+    doc_comments: pl.DataFrame = Field(default=pl.DataFrame)
 
     # fields for nlp table
-    rep_comments: list = Field(default=list)
+    rep_comments: list = Field(default=[])
     doc_plain_english_title: str = ""
     num_total_comments: int = 0
     num_unique_comments: int = 0
     num_representative_comment: int = 0
-    topics: list = Field(default=list)
+    topics: list = Field(default=[])
     last_updated: datetime = datetime.now()
     uuid: int = uuid4().int
 
+    def get_all_comments(self):
+        """
+        Converts dataframe to list of Comment objects.
+        """
+        if self.doc_comments.is_empty():
+            return []
+
+        return [
+            Comment(id=comment["id"], text=comment["comment"])
+            for comment in self.doc_comments.to_dicts()
+        ]
+
     def to_list(self):
         """
-        Converts RepComments to list of Comment objects
+        Converts representative comments to list of Comment objects.
         """
         if not self.rep_comments:
             return []
 
         return [
             Comment(
-                text=comment["text"],
+                text=comment["comment_text"],
                 num_represented=comment["comments_represented"],
-                id=["commnent_id"],
+                id=comment["comment_id"],
                 form_letter=comment["form_letter"],
             )
             for comment in self.rep_comments
@@ -51,6 +75,9 @@ class Comment:
     topic_label: str = ""
     topic: list[str] = None
     form_letter: bool = False
+
+
+# order topics by number of total comments represented
 
 
 def extract_formletters(
@@ -109,10 +136,6 @@ def sentiment_analysis(
         List of tuples (text, sentiment label)
     """
 
-    def iter_comments(comments: list[Comment]):
-        for comment in comments:
-            yield comment.text
-
     tokenizer_kwargs = {"padding": True, "truncation": True, "max_length": 512}
     pipe = pipeline(
         "text-classification",
@@ -121,8 +144,9 @@ def sentiment_analysis(
         **tokenizer_kwargs,
     )
 
-    results = []
-    for idx, out in enumerate(pipe(iter_comments(comments))):
-        results.append((comments[idx], out["label"]))
+    results = {}
+    for comment in comments:
+        out = pipe(comment.text)[0]
+        results[comment.id] = out["label"]
 
     return results
