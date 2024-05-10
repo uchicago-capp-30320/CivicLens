@@ -11,7 +11,7 @@ from ..utils.database_access import Database, pull_data
 @dataclass
 class RepComments:
     # clustered df for topics
-    doc_comments: pl.DataFrame = pl.DataFrame()
+    doc_comments: pl.DataFrame = field(default_factory=pl.DataFrame())
 
     # fields for nlp table
     rep_comments: dict = field(default_factory=dict)
