@@ -9,8 +9,6 @@ from django.shortcuts import render
 
 from .models import Comment, Document
 
-from .forms import Search
-
 from django.db.models import Count
 
 
