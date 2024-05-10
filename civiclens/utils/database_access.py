@@ -1,8 +1,11 @@
+import json
 import os
 from typing import List, Optional, Tuple
 
 import polars as pl
 import psycopg2
+
+from civiclens.nlp.tools import RepComments
 
 
 class Database:
@@ -25,9 +28,12 @@ class Database:
     def close(self):
         return self.conn.close()
 
+    def commit(self):
+        return self.conn.commit()
+
 
 def pull_data(
-    connection,
+    connection: Database,
     query: str,
     schema: Optional[List[str]] = None,
     return_type: str = "df",
@@ -65,3 +71,53 @@ def pull_data(
         results = pl.DataFrame(results, schema=schema)
 
     return results
+
+
+def upload_comments(connection: Database, comments: RepComments) -> None:
+    """
+    Uploads comment data to database.
+
+    Inputs:
+        connection: Postgres client
+        comments: comments to be uploaded
+    """
+    query = """INSERT INTO regulations_nlpoutput (
+                    "id",
+                    "rep_comments",
+                    "doc_plain_english_title",
+                    "num_total_comments",
+                    "num_unique_comments",
+                    "num_representative_comment",
+                    "topics",
+                    "num_topics",
+                    "last_updated",
+                    "document_id"
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO NOTHING;
+                    """
+
+    values = (
+        comments.uuid,
+        json.dumps(comments.rep_comments),
+        comments.doc_plain_english_title,
+        comments.num_total_comments,
+        comments.num_unique_comments,
+        comments.num_representative_comment,
+        json.dumps(comments.topics),
+        len(comments.topics),
+        comments.last_updated.strftime("%m/%d/%Y, %H:%M:%S"),
+        comments.document_id,
+    )
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query, values)
+        connection.commit()
+
+    except Exception as e:
+        return f"Upload failed, error: {e}"
+
+    if connection:
+        cursor.close()
+        connection.close()
+        print("PostgreSQL connection is closed")

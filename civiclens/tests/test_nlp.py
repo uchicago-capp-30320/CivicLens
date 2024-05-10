@@ -1,23 +1,29 @@
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import numpy as np
 import polars as pl
+from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments
-from civiclens.nlp.topics import BertModel, TopicModel, mmr_sort
+from civiclens.nlp.models import BertModel
+from civiclens.nlp.topics import TopicModel, mmr_sort
 
 
-live_model = TopicModel()
+BASE_DIR = Path(__file__).resolve().parent
+
+# load real model to test error catching
+live_model = TopicModel(BertModel)
+
 sample_df = pl.read_csv(
-    "civiclens/tests/nlp_test_data/sample_comments.csv", separator=","
+    BASE_DIR / "nlp_test_data/sample_comments.csv", separator=","
 )
 
 
 def test_comment_similarity():
-    model = SentenceTransformer("all-mpnet-base-v2")
     df_paraphrase, df_form_letter = comments.comment_similarity(
-        sample_df, model
+        sample_df, model=SentenceTransformer("all-mpnet-base-v2")
     )
 
     assert df_paraphrase.shape == (377, 4)
@@ -66,7 +72,7 @@ def test_agg_comments():
     probs = np.array([0.3, 0.8, 0.5])
     topics = [0, 1, 0]
 
-    test_model = MagicMock(spec=BertModel)
+    test_model = MagicMock(spec=BERTopic)
     topic_model = TopicModel(test_model)
     output = topic_model._aggregate_comments(sentences, inputs, topics, probs)
     assert output == {0: 1, 1: 0}
@@ -78,7 +84,7 @@ def test_agg_comments_equal_probs():
     probs = np.array([0.3, 0.3, 0.5])
     topics = [0, 1, 0]
 
-    test_model = MagicMock(spec=BertModel)
+    test_model = MagicMock(spec=BERTopic)
     topic_model = TopicModel(test_model)
     output = topic_model._aggregate_comments(sentences, inputs, topics, probs)
     # should select first topic
@@ -86,7 +92,7 @@ def test_agg_comments_equal_probs():
 
 
 def test_gen_search_vector():
-    test_model = MagicMock(spec=BertModel)
+    test_model = MagicMock(spec=BERTopic)
     topic_model = TopicModel(test_model)
 
     topic_model.topics = {0: ["green", "red"], 1: ["blue", "orange"]}
@@ -100,7 +106,7 @@ def test_gen_search_vector():
 
 
 def test_gen_search_unique():
-    test_model = MagicMock(spec=BertModel)
+    test_model = MagicMock(spec=BERTopic)
     topic_model = TopicModel(test_model)
 
     topic_model.topics = {0: ["green", "red"], 1: ["green", "orange"]}
@@ -109,7 +115,7 @@ def test_gen_search_unique():
 
 
 def test_process_sentences():
-    test_model = MagicMock(spec=BertModel)
+    test_model = MagicMock(spec=BERTopic)
     topic_model = TopicModel(test_model)
 
     docs = [
@@ -133,7 +139,7 @@ def test_catch_bertopic_errors():
 
 
 def test_find_2_terms():
-    test_model = MagicMock(spec=BertModel)
+    test_model = MagicMock(spec=BERTopic)
     topic_model = TopicModel(test_model)
 
     topic_model.terms = {0: ["red", "blue", "green"], 1: ["cat", "dog", "fish"]}
