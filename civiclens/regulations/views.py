@@ -1,33 +1,67 @@
-from django.shortcuts import render, redirect  # noqa: F401
-from .models import Comment, Document # noqa: F401
-from .forms import Search
+from django.contrib.postgres.search import (
+    SearchHeadline,
+    SearchQuery,
+    SearchRank,
+    SearchVector,
+    TrigramSimilarity,
+)
+from django.shortcuts import render
+
+from .models import Comment, Document
 
 
 def home(request):
     return render(request, "home.html")
 
 
-def search_page(request):        
+def search_page(request):
     return render(request, "search_page.html")
 
-# @api.get("/regulations/search/results/")
+
 def search_results(request):
-    
     context = {}
-
-    # get response and save query term to output context
     if request.method == "GET":
-        search = Search()
-        search.search_term = request.GET["q"]
-        # search.sort_by = request.GET["sort_by"]
-        
-        context["Search"] = search
-    
-        print(search)
+        query = request.GET.get("q", "")
 
-        return render(request, "search_results.html", context=context)
+        if query:
+            vector = (
+                SearchVector("title", weight="A")
+                + SearchVector("summary", weight="B")
+                + SearchVector("agency_id", weight="D")
+                + SearchVector("agency_type", weight="D")
+                + SearchVector("further_information", weight="D")
+            )
+            search_query = SearchQuery(query)
+            search_headline = SearchHeadline("title", search_query)
+            documents = (
+                Document.objects.annotate(rank=SearchRank(vector, search_query))
+                .annotate(headline=search_headline)
+                .filter(rank__gte=0.0001)
+            ).order_by("-rank")
+
+            documents = documents.order_by("-rank")
+
+            if not documents.exists():
+                documents = (
+                    Document.objects.annotate(
+                        rank=TrigramSimilarity("title", query)
+                        + TrigramSimilarity("summary", query)
+                        + TrigramSimilarity("agency_id", query)
+                        + TrigramSimilarity("agency_type", query)  # +
+                    )
+                    .filter(rank__gt=0.20)
+                    .order_by("-rank")
+                )
+
+            context["documents"] = documents
+            print("Search Term:", query)
+            print("Documents Found:", documents.count())
     else:
-        return render(request, "search_page.html", context=context)
+        context["documents"] = None
+
+    context["search"] = query
+
+    return render(request, "search_results.html", {"context": context})
 
 
 def document(request, doc_id):
