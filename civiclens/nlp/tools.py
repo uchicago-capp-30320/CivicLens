@@ -25,6 +25,33 @@ class RepComments:
     last_updated: datetime = datetime.now()
     uuid: int = uuid4().int
 
+    def to_list(self):
+        """
+        Converts RepComments to list of Comment objects
+        """
+        if not self.rep_comments:
+            return []
+
+        return [
+            Comment(
+                text=comment["text"],
+                num_represented=comment["comments_represented"],
+                id=["commnent_id"],
+                form_letter=comment["form_letter"],
+            )
+            for comment in self.rep_comments
+        ]
+
+
+@dataclass
+class Comment:
+    text: str = ""
+    num_represented: int = 1
+    id: str = str(uuid4())
+    topic_label: str = ""
+    topic: list[str] = None
+    form_letter: bool = False
+
 
 def extract_formletters(
     docs: list[str],
@@ -67,7 +94,9 @@ def extract_formletters(
     return form_comments
 
 
-def sentiment_analysis(docs: list[str], model, tokenizer) -> list[tuple]:
+def sentiment_analysis(
+    comments: list[Comment], model, tokenizer
+) -> list[tuple]:
     """
     Run sentiment analysis on comments.
 
@@ -80,9 +109,9 @@ def sentiment_analysis(docs: list[str], model, tokenizer) -> list[tuple]:
         List of tuples (text, sentiment label)
     """
 
-    def iter_docs(docs):
-        for doc in docs:
-            yield doc
+    def iter_comments(comments: list[Comment]):
+        for comment in comments:
+            yield comment.text
 
     tokenizer_kwargs = {"padding": True, "truncation": True, "max_length": 512}
     pipe = pipeline(
@@ -93,7 +122,7 @@ def sentiment_analysis(docs: list[str], model, tokenizer) -> list[tuple]:
     )
 
     results = []
-    for idx, out in enumerate(pipe(iter_docs(docs))):
-        results.append((docs[idx], out["label"]))
+    for idx, out in enumerate(pipe(iter_comments(comments))):
+        results.append((comments[idx], out["label"]))
 
     return results

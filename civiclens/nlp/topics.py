@@ -11,6 +11,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 
 from ..utils.ml_utils import clean_comments, sentence_splitter
+from .tools import Comment
 
 
 # Models
@@ -62,21 +63,21 @@ class TopicModel:
         self.topics = {}
         self.terms = {}
 
-    def _process_sentences(self, docs: list[str]) -> dict[str, int]:
+    def _process_sentences(self, docs: list[Comment]) -> dict[str, str]:
         """
         Map setences to comments.
         """
         sentences = {}
 
-        for idx, doc in enumerate(docs):
-            doc_sentences = sentence_splitter(clean_comments(doc))
-            for sentence in doc_sentences:
-                if doc:
-                    sentences[sentence] = idx
+        for comment in docs:
+            sentences = sentence_splitter(clean_comments(comment.text))
+            for sentence in sentences:
+                if comment.text:
+                    sentences[sentence] = comment.id
 
         return sentences
 
-    def run_model(self, docs: list[str]):
+    def run_model(self, docs: list[Comment]):
         """
         Runs model and generates topics.
         """
@@ -128,7 +129,7 @@ class TopicModel:
 
     def _aggregate_comments(
         self,
-        sentences: dict[str, int],
+        sentences: dict[str, str],
         input: list[str],
         numeric_topics: list[int],
         probs: np.ndarray,
@@ -173,7 +174,7 @@ class TopicModel:
         return list(search_vector)
 
     def find_n_representative_topics(
-        self, labeled_comments: dict[int | str, int], n: int
+        self, labeled_comments: dict[str, int], n: int
     ) -> dict[int, list[str]]:
         """
         Generates n topic terms per comment.
