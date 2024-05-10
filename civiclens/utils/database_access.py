@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 import polars as pl
 import psycopg2
 
-from civiclens.nlp.comments import RepComments
+from civiclens.nlp.tools import RepComments
 
 
 class Database:

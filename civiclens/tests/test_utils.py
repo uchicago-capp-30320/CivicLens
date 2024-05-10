@@ -4,11 +4,24 @@ import sqlite3
 import polars as pl
 import pytest
 
-from civiclens.utils.database_access import pull_data
+from civiclens.nlp.tools import RepComments
+from civiclens.utils.database_access import pull_data, upload_comments
 
 
 with open("nlp_test_data/mock-row.json", "r") as f:
-    mock_data = json.loads(f)
+    mock_data = json.load(f)
+
+fake_id = "65cc9e17-7a50-44b9-9196-c402c62b6a15"
+fake_comments = RepComments(
+    document_id=mock_data["document_id"],
+    rep_comments=mock_data["rep_comments"],
+    doc_plain_english_title=mock_data["doc_plain_english_title"],
+    num_total_comments=890,
+    num_representative_comment=14,
+    num_unique_comments=723,
+    topics=mock_data["topics"],
+    uuid=fake_id,
+)
 
 
 def test_sqlite():
@@ -49,3 +62,8 @@ def test_bad_query():
 
 def test_nlp_upload():
     conn = sqlite3.connect("test.db")
+    upload_comments(conn, fake_comments)
+    results = pull_data(
+        conn, f"SELECT id FROM regulations_nlpoutput where id = '{fake_id}';"
+    )
+    assert results == [(fake_id,)]

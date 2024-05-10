@@ -1,7 +1,28 @@
+from dataclasses import dataclass, field
+from datetime import datetime
+from uuid import uuid4
+
 import polars as pl
 import torch
 from sentence_transformers.util import cos_sim
 from transformers import pipeline
+
+
+@dataclass
+class RepComments:
+    # clustered df for topics
+    document_id: str
+    doc_comments: pl.DataFrame = field(default_factory=pl.DataFrame())
+
+    # fields for nlp table
+    rep_comments: list | dict = field(default_factory=list)
+    doc_plain_english_title: str = ""
+    num_total_comments: int = 0
+    num_unique_comments: int = 0
+    num_representative_comment: int = 0
+    topics: list = field(default_factory=list)
+    last_updated: datetime = datetime.now()
+    uuid: str = str(uuid4())
 
 
 def extract_formletters(
