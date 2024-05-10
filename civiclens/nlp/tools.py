@@ -16,7 +16,7 @@ class RepComments:
     doc_comments: pl.DataFrame = Field(default=pl.DataFrame())
 
     # fields for nlp table
-    rep_comments: list | dict = Field(default=dict)
+    rep_comments: list = Field(default=list)
     doc_plain_english_title: str = ""
     num_total_comments: int = 0
     num_unique_comments: int = 0
