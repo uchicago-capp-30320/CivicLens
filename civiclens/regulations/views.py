@@ -9,6 +9,9 @@ from django.shortcuts import render
 
 from .models import Comment, Document
 
+from django.db.models import Count
+
+
 
 def home(request):
     return render(request, "home.html")
@@ -20,8 +23,10 @@ def search_page(request):
 
 def search_results(request):
     context = {}
+    
     if request.method == "GET":
         query = request.GET.get("q", "")
+        sort_by = request.GET.get("sort_by", "most_relevant")
 
         if query:
             vector = (
@@ -37,10 +42,8 @@ def search_results(request):
                 Document.objects.annotate(rank=SearchRank(vector, search_query))
                 .annotate(headline=search_headline)
                 .filter(rank__gte=0.0001)
-            ).order_by("-rank")
-
-            documents = documents.order_by("-rank")
-
+                .order_by("-rank")
+            )
             if not documents.exists():
                 documents = (
                     Document.objects.annotate(
@@ -51,16 +54,22 @@ def search_results(request):
                     )
                     .filter(rank__gt=0.20)
                     .order_by("-rank")
-                )
-
+                ) 
+            if sort_by == 'most_recent':
+                documents = documents.order_by("-posted_date")
+            elif sort_by in ['most_comments', 'least_comments']:
+                documents = documents.annotate(comment_count=Count('comment'))
+                if sort_by == 'most_comments':
+                    documents = documents.order_by("-comment_count")
+                elif sort_by == 'least_comments':
+                    documents = documents.order_by("comment_count")
+            
             context["documents"] = documents
-            print("Search Term:", query)
-            print("Documents Found:", documents.count())
     else:
         context["documents"] = None
-
+    
     context["search"] = query
-
+    
     return render(request, "search_results.html", {"context": context})
 
 
