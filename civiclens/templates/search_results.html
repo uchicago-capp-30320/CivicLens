@@ -5,163 +5,149 @@
 {% endblock title %}
 
 {% block content %}
-  <div class="form-group">
-    <form action="/regulations/search/results/" method="GET">
-      {% csrf_token %}
-      {{ form.as_p }}
-    <!-- search bar -->
-      <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
-        <div class="container-sm py-0">
-          {% comment %} <div class="form-group">
-            <form action="/regulations/search/results/" method="GET">
-              {% csrf_token %}
-              {{ form.as_p }} {% endcomment %}
-          <div class="input-group mb-4">
-            <input class="form-control" id="q" name="q" type="text" value="{{Search.search_term}}">
-            <button class="btn btn-primary">Search</button>
-          </div>
-            {% comment %} </form>
-          </div> {% endcomment %}
+<div class="form-group">
+  <form action="/regulations/search/results/" method="GET">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <!-- search bar section -->
+    <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
+      <div class="container-sm py-0">
+        <div class="input-group mb-4">
+          <input class="form-control" id="q" name="q" type="text" value="{{Search.search_term}}">
+          <button class="btn btn-primary">Search</button>
         </div>
-      </section>
+      </div>
+    </section>
 
-  <!-- sort/filter section -->
-      <section class="slice py-0" style="background-color:#FDFFF7" id="core-block">
-        <div class="container">
-          {% comment %} <div class="form-group">
-            <form action="/regulations/search/results/" method="get"> {% endcomment %}
-          <!-- include existing search term in filter -->
-          {% comment %} <input id="q" name="q" type="hidden" value="{{Search.search_term}}"> {% endcomment %}
-          <!-- include existing search term in filter -->
-          <div class="input-group mb-3 order-md-1">
-            <div class="col-md-3" >
-              <!-- sort section -->
-              <span class="h6 font-weight-bold" >Sort by:</span>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevant">
-                <label class="form-check-label" for="most_relevant">
-                  Most relevant
-                </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="sort_by" id="most_recent" value="most_recent" >
-                <label class="form-check-label" for="most_recent">
-                  Most recent
-                </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="sort_by" id="most_comments" value="most_comments">
-                <label class="form-check-label" for="most_comments">
-                  Most comments
-                </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="sort_by" id="least_comments" value="least_comments" >
-                <label class="form-check-label" for="least_comments">
-                  Least comments
-                </label>
-              </div>
-
-              <!-- filter section -->
-              <p></p>
-              <p></p>
-              <span class="h6 font-weight-bold">Filter by:</span>
-              <h6 class="font-italic font-weight-normal">Number of comments</h6>
-              <div class="custom-switch">
-                <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault">
-                <label class="custom-control-label" for="flexSwitchCheckDefault">Contains any comments</label>
-              </div>
-
-              <div class="custom-switch">
-                <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2">
-                <label class="custom-control-label" for="flexSwitchCheckDefault2">Contains 100+ comments</label>
-              </div>
-              <p></p>
-
-              <div class="form-group">
-                <label class="font-italic">Agency</label>
-                <select multiple class="form-control" id="include_agencies">
-                  <!-- for loop through all agencies in the database -- USE JINJA -->
-                  <option>Agency 1</option>
-                  <option>Longer Agency Name 2</option>
-                  <option>Agency 3</option>
-                  <option>Agency 4</option>
-                  <option>Agency 5</option>
-                </select>
-              </div>
-
-                <!-- filter by types of documents, default to all -->
-              <div class="form-group" >
-                <label for="exampleFormControlSelect2" class="font-italic">Category</label>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="true" id="rule" name="rule" checked>
-                  <label class="form-check-label" for="rule">
-                    Rule
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="true" id="proposed_rule" name="proposed_rule" checked>
-                  <label class="form-check-label" for="proposed_rule">
-                    Proposed Rule
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="true" id="notice" name="notice" checked>
-                  <label class="form-check-label" for="notice">
-                    Notice
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="true" id="other" name="other" checked>
-                  <label class="form-check-label" for="other">
-                    Other
-                  </label>
-                </div>
-              <p></p>
-              {% comment %} <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7">Refine results</button> {% endcomment %}
-              </div>
+    <!-- sort/filter section -->
+    <section class="slice py-0" style="background-color:#FDFFF7" id="core-block">
+      <div class="container">
+        <div class="input-group mb-3 order-md-1">
+          <div class="col-md-3" >
+            <!-- sort section -->
+            <span class="h6 font-weight-bold" >Sort by:</span>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevant">
+              <label class="form-check-label" for="most_relevant">
+                Most relevant
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sort_by" id="most_recent" value="most_recent" >
+              <label class="form-check-label" for="most_recent">
+                Most recent
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sort_by" id="most_comments" value="most_comments">
+              <label class="form-check-label" for="most_comments">
+                Most comments
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sort_by" id="least_comments" value="least_comments" >
+              <label class="form-check-label" for="least_comments">
+                Least comments
+              </label>
             </div>
 
-              <!-- container for the actual Documents -->
+            <!-- filter section -->
+            <p></p>
+            <p></p>
+            <span class="h6 font-weight-bold">Filter by:</span>
+            <h6 class="font-italic font-weight-normal">Number of comments</h6>
+            <div class="custom-switch">
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault">
+              <label class="custom-control-label" for="flexSwitchCheckDefault">Contains any comments</label>
+            </div>
 
-            <div class="col-md-8 order-md-2">
-              <span class="h6 font-weight-normal font-italic">Displaying {{ context.documents.count }} results for "{{ context.search }}".</span>
-              <p></p>
-              {% if context.documents %}
-              {% for doc in context.documents %}
-                <div class="card p-3">
-                  <div class="card-body">
-                  {% if doc.ai_title %}
-                    <p class="text-left font-weight-bolder mb-0">
-                      <a href="{% url 'document' doc.id %}"> {{ doc.ai_title }}</a>
-                    </p>
-                    <p class="font-italic bodytext-muted">Original Title: {{ doc.title }}</p>
-                  {% else %}
-                    <p class="text-left font-weight-bolder mb-0">
-                      <a href="{% url 'document' doc.id %}"> {{ doc.title }}</a>
-                    </p>
-                  {% endif %}
-                  {% if doc.summary %}
-                    <p class="card-text">{{ doc.summary|truncatewords:30 }}</p>
-                  {% endif %}
-                    <button href="#" class="badge mb-2">doc.topic</button>
-                  </div>
-                  <div class="card-footer text-muted p-0 text-right" >
-                    comment by {{ doc.comment_end_date }}
-                  </div>
-                </div>
-                {% endfor %}
-              {% else %}
-                  Your search did not match any documents at this time.  Try adjusting your search query, or browse through agencies to find something similar.
-              {% endif %}
+            <div class="custom-switch">
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2">
+              <label class="custom-control-label" for="flexSwitchCheckDefault2">Contains 100+ comments</label>
+            </div>
+            <p></p>
+
+            <div class="form-group">
+              <label class="font-italic">Agency</label>
+              <select multiple class="form-control" id="include_agencies">
+                <!-- for loop through all agencies in the database -- USE JINJA -->
+                <option>Agency 1</option>
+                <option>Longer Agency Name 2</option>
+                <option>Agency 3</option>
+                <option>Agency 4</option>
+                <option>Agency 5</option>
+              </select>
+            </div>
+
+              <!-- filter by types of documents, default to all -->
+            <div class="form-group" >
+              <label for="exampleFormControlSelect2" class="font-italic">Category</label>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="rule" name="rule" checked>
+                <label class="form-check-label" for="rule">
+                  Rule
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="proposed_rule" name="proposed_rule" checked>
+                <label class="form-check-label" for="proposed_rule">
+                  Proposed Rule
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="notice" name="notice" checked>
+                <label class="form-check-label" for="notice">
+                  Notice
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="other" name="other" checked>
+                <label class="form-check-label" for="other">
+                  Other
+                </label>
+              </div>
+            <p></p>
+            {% comment %} <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7">Refine results</button> {% endcomment %}
             </div>
           </div>
-            {% comment %} </form>
-          </div> {% endcomment %}
-        </div>
-      </section>
-    </form>
-  </div>
 
+            <!-- container for the actual Documents -->
+
+          <div class="col-md-8 order-md-2">
+            <span class="h6 font-weight-normal font-italic">Displaying {{ context.documents.count }} results for "{{ context.search }}".</span>
+            <p></p>
+            {% if context.documents %}
+            {% for doc in context.documents %}
+              <div class="card p-3">
+                <div class="card-body">
+                {% if doc.ai_title %}
+                  <p class="text-left font-weight-bolder mb-0">
+                    <a href="{% url 'document' doc.id %}"> {{ doc.ai_title }}</a>
+                  </p>
+                  <p class="font-italic bodytext-muted">Original Title: {{ doc.title }}</p>
+                {% else %}
+                  <p class="text-left font-weight-bolder mb-0">
+                    <a href="{% url 'document' doc.id %}"> {{ doc.title }}</a>
+                  </p>
+                {% endif %}
+                {% if doc.summary %}
+                  <p class="card-text">{{ doc.summary|truncatewords:30 }}</p>
+                {% endif %}
+                  <button href="#" class="badge mb-2">doc.topic</button>
+                </div>
+                <div class="card-footer text-muted p-0 text-right" >
+                  comment by {{ doc.comment_end_date }}
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              Your search did not match any documents at this time.  Try adjusting your search query, or browse through agencies to find something similar.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+  </form>
+</div>
 
 {% endblock content %}
