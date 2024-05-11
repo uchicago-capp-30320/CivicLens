@@ -16262,4 +16262,18 @@ section {
   display: inline-block;
   width: 100%; }
 
+.agency-container {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.agency-list {
+  width: 300px; /* Adjust as needed */
+  white-space: nowrap; /* Prevents wrapping inside <select> */
+  overflow-x: auto;
+  display: block;
+  padding-left: 0;
+}
+
+
 /*# sourceMappingURL=quick-website.css.map */
