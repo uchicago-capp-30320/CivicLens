@@ -242,9 +242,10 @@ def topic_comment_analysis(
     # cache this
     comments = comment_data.to_list()
     comment_topics = model.run_model(comments)
-    # add logic for re-doing analysis here
+    # add logic for re-doing analysis here, try and except for too few topics
     topic_labels = label_topics(comment_topics, labeler)
 
+    # handle failure to create topics
     for comment in comments:
         comment.topic_label = topic_labels[comment_topics[comment.id]]
         comment.topic = comment_topics[comment.id]
@@ -279,4 +280,5 @@ def create_topics(comments: list[Comment]) -> dict:
         partial["topic"] = topic_label
         topics.append(partial)
 
+    # sort topics by "total"
     return topics

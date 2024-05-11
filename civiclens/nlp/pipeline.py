@@ -64,8 +64,7 @@ if __name__ == "__main__":
             FROM regulations_comment rc2
             WHERE rc2.document_id = rc1.document_id
             GROUP BY document_id
-            HAVING COUNT(*) > 20
-        )
+            HAVING COUNT(*) > 20 )
         """
     else:
         docs_to_update = """SELECT document_id
@@ -100,9 +99,12 @@ if __name__ == "__main__":
                     comment_data.doc_plain_english_title = new_title
 
             # TODO call topic code
+            topic_model = (
+                TopicModel()
+            )  # see if this is the best way of reseting things
             comment_data = topic_comment_analysis(
                 comment_data,
-                model=TopicModel(),
+                model=topic_model,
                 labeler=TopicChain(),
                 sentiment_analyzer=sentiment_analyzer,
             )

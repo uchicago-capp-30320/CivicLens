@@ -129,8 +129,9 @@ def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
     Analyze sentiment of a comment.
     """
     try:
-        out = pipeline(comment.text)
-    except Exception:
+        out = pipeline(comment.text)[0]
+    except Exception as e:
+        print(e)
         return ""
 
     return out["label"]

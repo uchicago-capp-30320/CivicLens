@@ -8,6 +8,7 @@ from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments
 from civiclens.nlp.models import BertModel
+from civiclens.nlp.tools import Comment, RepComments
 from civiclens.nlp.topics import TopicModel, mmr_sort
 
 
@@ -34,7 +35,7 @@ def test_comment_similarity():
 
 def test_graph():
     df_paraphrase = pl.read_csv(
-        "civiclens/tests/nlp_test_data/df_paraphrase.csv", separator=","
+        BASE_DIR / "nlp_test_data/df_paraphrase.csv", separator=","
     )
 
     # build graph
@@ -50,7 +51,7 @@ def test_graph():
 def test_cluster_assignment():
     # read in correct df with clustered comments
     df_cluster = pl.read_csv(
-        "civiclens/tests/nlp_test_data/sample_comments_cluster.csv",
+        BASE_DIR / "nlp_test_data/sample_comments_cluster.csv",
         separator=",",
     )
 
@@ -119,20 +120,21 @@ def test_process_sentences():
     topic_model = TopicModel(test_model)
 
     docs = [
-        "This is a comment. It has two sentences",
-        "This is a comment with one sentence",
+        Comment(text="This is a comment. It has two sentences", id="0"),
+        Comment(text="This is a comment with one sentence", id="1"),
     ]
     correct = {
-        "This is a comment.": 0,
-        "It has two sentences.": 0,
-        "This is a comment with one sentence.": 1,
+        "This is a comment.": "0",
+        "It has two sentences.": "0",
+        "This is a comment with one sentence.": "1",
     }
 
     assert correct == topic_model._process_sentences(docs)
 
 
 def test_catch_bertopic_errors():
-    docs = sample_df["comment"].to_list()[:2]
+    comments = RepComments(document_id="test", doc_comments=sample_df.sample(2))
+    docs = comments.get_all_comments()
     out = live_model.run_model(docs)
 
     assert out == {}

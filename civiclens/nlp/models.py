@@ -10,17 +10,17 @@ from transformers import (
 
 
 # topic models
-POS_TAGS = [[{"POS": "ADJ"}, {"POS": "NOUN"}], [{"POS": "NOUN"}]]
+pos_tags = [[{"POS": "ADJ"}, {"POS": "NOUN"}], [{"POS": "NOUN"}]]
 
-REP_MODELS = {
+rep_models = {
     "KeyBert": KeyBERTInspired,
-    "POS": PartOfSpeech("en_core_web_sm", pos_patterns=POS_TAGS),
+    "POS": PartOfSpeech("en_core_web_sm", pos_patterns=pos_tags),
 }
 
 BertModel = BERTopic(
     embedding_model=SentenceTransformer("all-mpnet-base-v2"),
     vectorizer_model=CountVectorizer(stop_words="english", ngram_range=(1, 2)),
-    representation_model=REP_MODELS,
+    representation_model=rep_models,
 )
 
 # sentiment models
