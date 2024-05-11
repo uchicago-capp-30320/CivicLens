@@ -11,7 +11,11 @@ from .models import Comment, Document, AgencyReference
 
 from django.db.models import Count
 
+from django.db.models.functions import TruncDate
+
 from django.utils import timezone
+
+from django.core.exceptions import ObjectDoesNotExist
 
 
 
@@ -22,7 +26,7 @@ def home(request):
 def search_page(request):
     return render(request, "search_page.html")
 
-
+#require method decorqator to only allow GET requests
 def search_results(request):
     today = timezone.now().date()
     context = {}
@@ -103,18 +107,77 @@ def search_results(request):
 def document(request, doc_id):
     try:
         doc = Document.objects.filter(id=doc_id).annotate(comment_count=Count(
-            'comment')
+            "comment")
         ).get()
         
     except Document.DoesNotExist:
         doc = None
     try:
-        comments = Comment.objects.filter(document=doc_id)
-        unique_comments = comments.distinct("comment").count()
+        comments_api = Comment.objects.filter(document=doc_id).annotate(
+            posted_date_only=TruncDate("posted_date")).annotate(
+            modify_date_only=TruncDate("modify_date")).annotate(
+            receive_date_only=TruncDate("receive_date")
+        )
+        comments_last_updated = comments_api.latest("modify_date_only").modify_date_only
+        unique_comments = comments_api.distinct("comment").count()
     except Comment.DoesNotExist:
-        comments = None
+        comments_api = None
         unique_comments = 0
-    return render(request, "document.html", {"doc": doc, "comments": comments, "unique_comments": unique_comments})
+    
+    if comments_api:
+        try:
+            latest_comment = comments_api.latest('modify_date_only')
+            comments_last_updated = latest_comment.modify_date_only
+        except ObjectDoesNotExist:
+            comments_last_updated = "No comments found."
+    else:
+        comments_last_updated = "No comments found."
+        
+    # test data from jack
+    comments_nlp = {
+        "id": "7588edfc-4239-4970-970e-d080eecf4da7", 
+        "rep_comments": [
+            {"id": "ED-2023-OPE-0123-28272", 
+             "text": "The more student loan debt that can be forgiven the better. Over the years , I have had yo pause my student l9ans because of financial hardships I was facing.The period of time that loans were in repayment I had made my payments on time.My loans are currently in repayment, and if that burden could be lifted it would be life-changing for me. Right now. I find it very difficult to pay off my student loan debt. It has been following me for quite some time. Loan forgiveness would be good if I can qualify for it. ", 
+             "num_represented": 450, 
+             "topic": "Debt Forgiveness", 
+             "form_letter": True}, 
+             {"id": "ED-2023-OPE-0123-28250", 
+              "text": "Hello I am a current student who would greatly appreciate the privilege of having my student loans forgiven. Thank you so much in advance!", 
+              "num_represented": 231, 
+              "topic": "Student Loans", 
+              "form_letter": False}], 
+        "doc_plain_english_title": "Student Loan Debt Waiver: Department Of Education", 
+        "num_total_comments": 980, 
+        "num_unique_comments": 762, 
+        "num_rep_comments": 2, 
+        "topics": 
+            [{"topic": "Debt Forgiveness", 
+              "positive": 129, 
+              "negative": 98, 
+              "neutral": 32}, 
+            {"topic": "Student Loans", 
+             "positive": 123, 
+             "negative": 32, 
+             "neutral": 149
+             },
+            {"topic": "topic 3",
+             "positive": 103, 
+             "negative": 32, 
+             "neutral": 149
+             },
+            {"topic": "topic 4",
+             "positive": 903, 
+             "negative": 32, 
+             "neutral": 149
+             },
+             ],
+        "num_topics": 2, 
+        "last_updated": "May 6, 2024",
+        "document_id": "ED-2023-OPE-0123-26398"
+    }
+    # comments_nlp = {} 
+    return render(request, "document.html", {"doc": doc, "comments_nlp": comments_nlp, "comments_api": comments_api, "unique_comments": unique_comments, "comments_last_updated": comments_last_updated})
 
 
 def comment(request):
