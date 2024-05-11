@@ -98,10 +98,7 @@ if __name__ == "__main__":
                     new_title = title_creator.invoke(paragraph=doc_summary)
                     comment_data.doc_plain_english_title = new_title
 
-            # TODO call topic code
-            topic_model = (
-                TopicModel()
-            )  # see if this is the best way of reseting things
+            topic_model = TopicModel()
             comment_data = topic_comment_analysis(
                 comment_data,
                 model=topic_model,
@@ -109,7 +106,8 @@ if __name__ == "__main__":
                 sentiment_analyzer=sentiment_analyzer,
             )
 
-            # TODO add to nlp table, update upload function to search column
+            # TODO update upload function to search column
+            # TODO logging for upload errors
             upload_comments(Database(), comment_data)
 
         except StopIteration:
