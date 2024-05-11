@@ -7,7 +7,7 @@ from django.contrib.postgres.search import (
 )
 from django.shortcuts import render
 
-from .models import Comment, Document, AgencyReference
+from .models import Document, AgencyReference
 
 from django.db.models import Count
 
