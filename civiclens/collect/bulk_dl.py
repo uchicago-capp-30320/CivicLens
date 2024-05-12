@@ -102,20 +102,31 @@ class BulkDl:
         """
         Retrieves all docket IDs by looping through predefined agencies and stores them in a CSV file.
         """
-        all_docket_ids = set()
+        all_dockets = []
 
         for agency in self.agencies:
             filter_params = {'filter[agencyId]': agency}
 
             agency_dockets = self.fetch_all_pages('dockets', filter_params)
 
-            all_docket_ids.update(docket['id'] for docket in agency_dockets)
+            for docket in agency_dockets:
+                # Extract relevant information from each docket
+                docket_details = {
+                    'docket_id': docket.get('id'),
+                    'docket_type': docket.get('attributes', {}).get('docketType'),
+                    'last_modified': docket.get('attributes', {}).get('lastModifiedDate'),
+                    'agency_id': docket.get('attributes', {}).get('agencyId'),
+                    'title': docket.get('attributes', {}).get('title'),
+                    'obj_id': docket.get('attributes', {}).get('objectId')
+                }
+                all_dockets.append(docket_details)
 
-            # Store as pandas dataframe.
-            # We can change this mode of storage if you have a different idea, 
-            # I think this is a sensible approach, to limit use of our API calls. 
-            df = pd.DataFrame(all_docket_ids).drop_duplicates()
-            df.to_csv('dockets.csv', index=False)
+        # Store as pandas dataframe.
+        # We can change this mode of storage if you have a different idea, 
+        # I think this is a sensible approach, to limit use of our API calls. 
+        df = pd.DataFrame(all_dockets)
+        df.drop_duplicates(subset=['docket_id'], inplace=True)  # Ensure there are no duplicate dockets based on docket_id
+        df.to_csv('dockets_detailed.csv', index=False)
 
     def fetch_documents_by_date_ranges(self, start_date, end_date):
         """
@@ -137,13 +148,31 @@ class BulkDl:
 
         print(f"Total documents fetched: {len(all_documents)}")
 
-        # Extract document IDs, openForComment
-        document_lst = [(doc['id'], doc['attributes']['openForComment']) for doc in all_documents]
+        # Extract relevant data from documents
+        document_lst = []
+        for document in all_documents:
+            doc_data = {
+                'Doc_ID': document.get('id'),
+                'Doc_Type': document.get('attributes', {}).get('documentType'),
+                'Last_Modified': document.get('attributes', {}).get('lastModifiedDate'),
+                'FR_Doc_Num': document.get('attributes', {}).get('frDocNum'),
+                'Withdrawn': document.get('attributes', {}).get('withdrawn'),
+                'Agency_ID': document.get('attributes', {}).get('agencyId'),
+                'Comment_End_Date': document.get('attributes', {}).get('commentEndDate'),
+                'Title': document.get('attributes', {}).get('title'),
+                'Posted_Date': document.get('attributes', {}).get('postedDate'),
+                'Docket_ID': document.get('attributes', {}).get('docketId'),
+                'Subtype': document.get('attributes', {}).get('subtype'),
+                'Comment_Start_Date': document.get('attributes', {}).get('commentStartDate'),
+                'Open_For_Comment': document.get('attributes', {}).get('openForComment'),
+                'Object_ID': document.get('attributes', {}).get('objectId')
+            }
+            document_lst.append(doc_data)
 
         # Save to DataFrame and CSV
-        df = pd.DataFrame(document_lst, columns=['Doc_ID', 'openForComment'])
+        df = pd.DataFrame(document_lst)
         df = df.drop_duplicates()
-        df.to_csv('doc_ids_2024.csv', index=False)
+        df.to_csv('doc_detailed_2024.csv', index=False)
 
     @staticmethod # for now, we can put this in utils if that is preferred.
     def generate_date_ranges(start_date, end_date):
@@ -163,5 +192,8 @@ class BulkDl:
             week_end = current_date + datetime.timedelta(days=6)
             yield (current_date, min(week_end, end_date))
             current_date = week_end + datetime.timedelta(days=1)
+
+
+    
 
     
