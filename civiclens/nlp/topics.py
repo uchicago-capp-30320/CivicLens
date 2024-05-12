@@ -98,7 +98,7 @@ class TopicModel:
                 phrases.update({phrase for (phrase, _) in model_topics})
 
             self.topics[i] = list(phrases)
-            self.terms[i] = mmr_sort(list(phrases), query, lam=0.8)
+            self.terms[i] = mmr_sort(list(phrases), query, lam=0.95)
 
         return self._aggregate_comments(sentences, input, numeric_topics, probs)
 
@@ -179,16 +179,17 @@ class TopicModel:
         return comment_topics
 
 
-class TopicChain:
+class LabelChain:
     def __init__(self):
         self.promt_template = """
-            Provide a label that is relevant to someone who is civically engaged
-            and trying to understand regulation for this group of terms: {terms}
+            You are given the following list of words: {terms}. Generate a tag
+            for these words that is relevant to summary who is civically engaged
+            and try to understand federal regulation.
             """
 
         self.prompt = PromptTemplate.from_template(self.promt_template)
         self.pipeline = HuggingFacePipeline.from_model_id(
-            model_id="google/flan-t5-base",
+            model_id="fabiochiu/t5-base-tag-generation",
             task="text2text-generation",
             pipeline_kwargs={"max_length": 20},
         )
@@ -199,10 +200,11 @@ class TopicChain:
         Create better topic terms
         """
         term_string = self.chain.invoke({"terms": ", ".join(terms)})
-        return term_string
+        term_list = term_string.split(",")
+        return term_list[0]
 
 
-def label_topics(topics: dict[int, list], model: TopicChain) -> dict[int, str]:
+def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
     """
     Generates a label for all topics
 
@@ -223,7 +225,7 @@ def label_topics(topics: dict[int, list], model: TopicChain) -> dict[int, str]:
 def topic_comment_analysis(
     comment_data: RepComments,
     model: TopicModel = None,
-    labeler: TopicChain = None,
+    labeler: LabelChain = None,
     sentiment_analyzer: Callable = None,
 ) -> RepComments:
     """
@@ -236,12 +238,12 @@ def topic_comment_analysis(
     except TooFewTopics:
         return comment_data
     # add logic for re-doing analysis here, try and except for too few topics
-    topic_labels = label_topics(model.get_terms(), labeler)
+    topic_terms = model.get_terms()
+    topic_labels = label_topics(topic_terms, labeler)
 
     # TODO: label rep comment by source (comment or summary)
 
     # handle failure to create topics
-    print(topic_labels)
     for comment in comments:
         comment.topic_label = topic_labels[comment_topics[comment.id]]
         comment.topic = comment_topics[comment.id]

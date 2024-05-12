@@ -7,7 +7,7 @@ from ..utils.database_access import Database, pull_data, upload_comments
 from . import comments, titles
 from .models import sentiment_pipeline
 from .tools import sentiment_analysis
-from .topics import TopicChain, TopicModel, topic_comment_analysis
+from .topics import LabelChain, TopicModel, topic_comment_analysis
 
 
 def doc_generator(df: pl.DataFrame):
@@ -80,6 +80,7 @@ if __name__ == "__main__":
     doc_gen = doc_generator(df_docs_to_update)
 
     title_creator = titles.TitleChain()
+    labeler = LabelChain()
     sbert_model = SentenceTransformer("all-mpnet-base-v2")
     sentiment_analyzer = partial(
         sentiment_analysis, pipeline=sentiment_pipeline
@@ -102,7 +103,7 @@ if __name__ == "__main__":
             comment_data = topic_comment_analysis(
                 comment_data,
                 model=topic_model,
-                labeler=TopicChain(),
+                labeler=labeler,
                 sentiment_analyzer=sentiment_analyzer,
             )
 
