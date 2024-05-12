@@ -192,6 +192,47 @@ class BulkDl:
             week_end = current_date + datetime.timedelta(days=6)
             yield (current_date, min(week_end, end_date))
             current_date = week_end + datetime.timedelta(days=1)
+    
+
+    def fetch_comment_count_by_documents(self, document_ids, file_output_path):
+        """
+        Fetches comments count for each document ID that is open for comments.
+
+        Args:
+            document_ids (DataFrame): DataFrame containing document IDs under the column 'Object_ID'.
+                                      This can be obtained from the output of fetch_documents_by_date_ranges()
+            file_output_path (str): Path to save the output csv file.
+
+        Returns:
+            None: Results are saved directly to a csv file specified by file_output_path.
+        """
+        base_url = f"{self.base_url}/comments"
+        results = []
+
+        for commentId in document_ids['Object_ID']:
+            continue_fetching = True
+            while continue_fetching:
+                params = {
+                    'filter[commentOnId]': commentId
+                }
+
+                response = requests.get(base_url, headers=self.headers, params=params)
+                if response.status_code == 200:
+                    data = response.json()
+                    total_elements = data['meta']['totalElements']
+                    results.append({'id': commentId, 'total_elements': total_elements})
+                    continue_fetching = False
+                elif response.status_code == 429:  # Rate limit exceeded
+                    retry_after = response.headers.get("Retry-After", None)
+                    wait_time = int(retry_after) if retry_after and retry_after.isdigit() else 3600
+                    print(f"Rate limit exceeded. Waiting {wait_time} seconds to retry.")
+                    time.sleep(wait_time)
+                else:
+                    results.append({'id': commentId, 'total_elements': 'Failed to fetch'})
+                    continue_fetching = False
+
+        results_df = pd.DataFrame(results)
+        results_df.to_csv(file_output_path)
 
 
     
