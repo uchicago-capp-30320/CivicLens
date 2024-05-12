@@ -1,25 +1,10 @@
-from dataclasses import dataclass, field
-
 import networkx as nx
 import polars as pl
 from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
 
 from ..utils.database_access import Database, pull_data
-
-
-@dataclass
-class RepComments:
-    # clustered df for topics
-    doc_comments: pl.DataFrame = field(default_factory=pl.DataFrame())
-
-    # fields for nlp table
-    rep_comments: dict = field(default_factory=dict)
-    doc_plain_english_title: str = ""
-    num_total_comments: int = 0
-    num_unique_comments: int = 0
-    num_representative_comment: int = 0
-    topics: dict = field(default_factory=dict)
+from .tools import RepComments
 
 
 def get_doc_comments(id: str) -> pl.DataFrame:

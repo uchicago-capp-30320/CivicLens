@@ -1,7 +1,29 @@
+from datetime import datetime
+from uuid import uuid4
+
 import polars as pl
 import torch
+from pydantic import ConfigDict, Field
+from pydantic.dataclasses import dataclass
 from sentence_transformers.util import cos_sim
 from transformers import pipeline
+
+
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
+class RepComments:
+    # clustered df for topics
+    document_id: str
+    doc_comments: pl.DataFrame = Field(default=pl.DataFrame())
+
+    # fields for nlp table
+    rep_comments: list = Field(default=list)
+    doc_plain_english_title: str = ""
+    num_total_comments: int = 0
+    num_unique_comments: int = 0
+    num_representative_comment: int = 0
+    topics: list = Field(default=list)
+    last_updated: datetime = datetime.now()
+    uuid: int = uuid4().int
 
 
 def extract_formletters(
