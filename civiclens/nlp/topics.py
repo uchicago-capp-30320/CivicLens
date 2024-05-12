@@ -9,7 +9,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from sentence_transformers import SentenceTransformer
 
-from ..utils.ml_utils import clean_comments, sentence_splitter
+from ..utils.ml_utils import TooFewTopics, clean_comments, sentence_splitter
 from .tools import Comment, RepComments
 
 
@@ -77,8 +77,7 @@ class TopicModel:
         num_topics = max(numeric_topics)
 
         if num_topics < 0:
-            print("Too few topics generated")
-            return {}
+            raise TooFewTopics
 
         query = self._generate_mmr_query(numeric_topics)
 
@@ -223,12 +222,18 @@ def topic_comment_analysis(
     Run topic and sentiment analysis.
     """
     # cache this
-    comments = comment_data.to_list()
-    comment_topics = model.run_model(comments)
+    try:
+        comments = comment_data.to_list()
+        comment_topics = model.run_model(comments)
+    except TooFewTopics:
+        return comment_data
     # add logic for re-doing analysis here, try and except for too few topics
     topic_labels = label_topics(comment_topics, labeler)
 
+    # TODO: label rep comment by source (comment or summary)
+
     # handle failure to create topics
+    print(comment_topics)
     for comment in comments:
         comment.topic_label = topic_labels[comment_topics[comment.id]]
         comment.topic = comment_topics[comment.id]

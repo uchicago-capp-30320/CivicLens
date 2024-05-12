@@ -5,6 +5,12 @@ from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
 
 
+class TooFewTopics(Exception):
+    def __init__(self, message="Not enough topics generated"):
+        self.message = message
+        super().__init__(self.message)
+
+
 def clean_comments(text: str) -> str:
     """
     String cleaning function for comments.
