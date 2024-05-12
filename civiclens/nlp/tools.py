@@ -6,19 +6,7 @@ import torch
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 from sentence_transformers.util import cos_sim
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    pipeline,
-)
-
-
-tokenizer = AutoTokenizer.from_pretrained(
-    "cardiffnlp/twitter-roberta-base-sentiment-latest"
-)
-model = AutoModelForSequenceClassification.from_pretrained(
-    "cardiffnlp/twitter-roberta-base-sentiment-latest"
-)
+from transformers import pipeline
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
