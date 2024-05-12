@@ -3,31 +3,14 @@ from typing import Callable
 
 import numpy as np
 from bertopic import BERTopic
-from bertopic.representation import KeyBERTInspired, PartOfSpeech
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from sentence_transformers import SentenceTransformer
-from sklearn.feature_extraction.text import CountVectorizer
 
 from ..utils.ml_utils import clean_comments, sentence_splitter
 from .tools import Comment, RepComments
-
-
-# Models
-POS_TAGS = [[{"POS": "ADJ"}, {"POS": "NOUN"}], [{"POS": "NOUN"}]]
-
-REP_MODELS = {
-    "KeyBert": KeyBERTInspired,
-    "POS": PartOfSpeech("en_core_web_sm", pos_patterns=POS_TAGS),
-}
-
-BertModel = BERTopic(
-    embedding_model=SentenceTransformer("all-mpnet-base-v2"),
-    vectorizer_model=CountVectorizer(stop_words="english", ngram_range=(1, 2)),
-    representation_model=REP_MODELS,
-)
 
 
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
@@ -59,7 +42,7 @@ class TopicModel:
     Wrapper for BERT-based topic model.
     """
 
-    def __init__(self, model: BERTopic = BertModel):
+    def __init__(self, model: BERTopic):
         self.model = model
         self.topics = {}
         self.terms = {}
@@ -249,15 +232,22 @@ def topic_comment_analysis(
     for comment in comments:
         comment.topic_label = topic_labels[comment_topics[comment.id]]
         comment.topic = comment_topics[comment.id]
-        # need fixture for this function to work
         comment.sentiment = sentiment_analyzer(comment.text)
 
-    # create new instance of the class ?
-    comment_data.rep_comments = comments
-    comment_data.topics = create_topics(comments)
-    comment_data.search_vector = model.generate_search_vector()
+    comments = sorted(
+        comments, key=lambda comment: comment.num_represented, reverse=True
+    )
 
-    return comment_data
+    return RepComments(
+        doc_comments=comment_data.doc_comments,
+        rep_comments=comments,
+        doc_plain_english_title=comment_data.doc_plain_english_title,
+        num_total_comments=comment_data.num_total_comments,
+        num_unique_comments=comment_data.num_unique_comments,
+        num_representative_comment=comment_data.num_representative_comment,
+        topics=create_topics(comments),
+        search_vector=model.generate_search_vector(),
+    )
 
 
 def create_topics(comments: list[Comment]) -> dict:
@@ -265,6 +255,7 @@ def create_topics(comments: list[Comment]) -> dict:
     Condense topics for document summary
     """
     temp = defaultdict(dict)
+
     for comment in comments:
         temp[comment.topic_label][comment.sentiment] = (
             temp[comment.topic_label].get(comment.sentiment, 0)
@@ -276,9 +267,9 @@ def create_topics(comments: list[Comment]) -> dict:
 
     topics = []
     # create output dictionary
-    for topic_label, partial in temp.values():
+    for topic_label, partial in temp.items():
         partial["topic"] = topic_label
         topics.append(partial)
 
     # sort topics by "total"
-    return topics
+    return sorted(topics, key=lambda topic: topic["total"], reverse=True)
