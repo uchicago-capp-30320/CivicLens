@@ -15,7 +15,7 @@ from civiclens.utils.constants import (
     DATABASE_HOST,
     DATABASE_PORT,
 )
-from utils.text import clean_text
+from civiclens.utils.text import clean_text
 
 
 def fetch_fr_document_details(fr_doc_num: str) -> str:
@@ -207,6 +207,10 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     return most_recent_date
 
 
+def clean_docket_data(docket_data: json) -> None:
+    pass
+
+
 def qa_docket_data(docket_data: json) -> None:
     """
     Run assert statements to check docket data looks right
@@ -219,16 +223,30 @@ def qa_docket_data(docket_data: json) -> None:
     attributes = docket_data["attributes"]
 
     try:
-        assert len(docket_data["id"]) < 255
-        assert attributes["docketType"] in ["Rulemaking", "Nonrulemaking"]
-        assert type(attributes["lastModifiedDate"]) is datetime
-        assert attributes["agencyId"].isalpha()
-        assert type(attributes["title"]) is str
-        assert attributes["objectId"][:2] == "0b"
+        # need to check that docket_data is in the right format
+        assert (
+            isinstance(docket_data, list) or len(docket_data) < 1
+        ), "docket data in wrong format"
+        data_for_db = docket_data[0]
+        assert "attributes" in data_for_db, "'attributes' not in docket_data"
+
+        # check the fields
+        assert len(docket_data["id"]) < 255, "id field longer than 255 characters"
+        assert attributes["docketType"] in [
+            "Rulemaking",
+            "Nonrulemaking",
+        ], "docketType unexpected value"
+        assert (
+            len(attributes["lastModifiedDate"]) == 20
+        ), "lastModifiedDate is unexpected length"
+        assert attributes["agencyId"].isalpha(), "agencyId is not just letter"
+        assert isinstance(attributes["title"], str), "title is not string"
+        assert attributes["objectId"][:2] == "0b", "objectId does not start with '0b'"
         # attributes["highlightedContent"]
 
         return True
-    except:
+    except AssertionError as e:
+        print(f"AssertionError: {e}")
         return False
 
 
@@ -240,22 +258,6 @@ def insert_docket_into_db(docket_data: json) -> dict:
 
     Returns: nothing unless an error; adds the info into the table
     """
-
-    # need to check that docket_data is in the right format
-    if not isinstance(docket_data, list) or len(docket_data) < 1:
-        return {
-            "error": True,
-            "message": "wrong data format",
-            "description": "Invalid docket data format - not a list or an empty list",
-        }
-
-    data_for_db = docket_data[0]
-    if "attributes" not in data_for_db:
-        return {
-            "error": True,
-            "message": "wrong data format",
-            "description": "Invalid docket data format - no attributes json object",
-        }
 
     data_for_db = docket_data[0]
     attributes = data_for_db["attributes"]
@@ -329,9 +331,13 @@ def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> No
                 "dockets",
                 params={"filter[searchTerm]": docket_id},
             )
+
+            # clean
+            clean_docket_data(docket_data)
+
             if not qa_docket_data(docket_data):
                 print(
-                    f"docket {docket_data} appears to have data in the wrong format; not added"
+                    f"docket {docket_id} appears to have data in the wrong format; not added"
                 )
                 continue
             # add docket_data to docket table in the database
@@ -397,6 +403,14 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
 
 
 def validate_fr_doc_num(field_value):
+    """
+    Check the fr_doc_num field is in the right format
+    """
+
+    # this is a decision: we accept None as a value
+    if field_value is None:
+        return True
+
     if field_value == "Not Found":
         return True
 
@@ -405,6 +419,11 @@ def validate_fr_doc_num(field_value):
 
     # else
     return False
+
+
+def clean_document_data(document_data: json) -> None:
+    if document_data["summary"] is not None:
+        document_data["summary"] = clean_text(document_data["summary"])
 
 
 def qa_document_data(document_data: json) -> True:
@@ -428,29 +447,47 @@ def qa_document_data(document_data: json) -> True:
             "Rule",
         ]
         # attributes["lastModifiedDate"]
-        assert validate_fr_doc_num(attributes["frDocNum"])
-        assert attributes["withdrawn"] is False
+        assert validate_fr_doc_num(
+            attributes["frDocNum"]
+        ), "frDocNum contains unexpected characters or is None"
+        assert attributes["withdrawn"] is False, "withdrawn is True"
         # attributes["agencyId"]
-        assert type(attributes["commentEndDate"]) is datetime
-        assert type(attributes["postedDate"]) is datetime
+        assert (
+            len((attributes["commentEndDate"])) == 20
+        ), "commentEndDate is unexpected length"
+        assert len(attributes["postedDate"]) == 20, "postedDate is unexpected length"
         # attributes["docketId"]
         # attributes["subtype"]
-        assert type(attributes["commentStartDate"]) is datetime
-        assert attributes["openForComment"] is True
+        assert (
+            len(attributes["commentStartDate"]) == 20
+        ), "commentStartDate is expected length"
+        assert attributes["openForComment"] is True, "openForComment is False"
         # attributes["objectId"]
-        assert "https" in document_data["links"]["self"]
-        assert ".gov" in document_data["links"]["self"]
+        assert (
+            "https" in document_data["links"]["self"]
+        ), "'https' is not in document_data['links']['self']"
+        assert (
+            ".gov" in document_data["links"]["self"]
+        ), "'.gov' is not in document_data['links']['self']"
         # document_data["agencyType"]
-        assert document_data["CFR"].isalpha()
+        assert (
+            document_data["CFR"] == "Not Found" or document_data["CFR"].isalpha()
+        ), "CFR is not alpha characters"
         # document_data["RIN"]
-        assert type(attributes["title"]) is str
-        assert type(document_data["summary"]) is str
+        assert type(attributes["title"]) is str, "title is not string"
+        assert (
+            document_data["summary"] is None or type(document_data["summary"]) is str
+        ), "summary is not string"
         # document_data["dates"]
         # document_data["furtherInformation"]
-        assert type(document_data["supplementaryInformation"]) is str
+        assert (
+            document_data["supplementaryInformation"] is None
+            or type(document_data["supplementaryInformation"]) is str
+        ), "supplementaryInformation is not string"
 
         return True
-    except:
+    except AssertionError as e:
+        print(f"AssertionError: {e}")
         return False
 
 
@@ -526,7 +563,7 @@ def insert_document_into_db(document_data: json) -> dict:
 
     except Exception as e:
         error_message = (
-            f"Error inserting document {document_data['id']} into dockets table: {e}"
+            f"Error inserting document {document_data['id']} into documents table: {e}"
         )
         # print(error_message)
         return {
@@ -567,7 +604,7 @@ def add_documents_to_db(doc_list: list[dict], print_statements: bool = True) -> 
                 continue
 
             # clean step
-            doc["summary"] = clean_text(doc["summary"])
+            clean_document_data(full_doc_info)
 
             # insert step
             insert_response = insert_document_into_db(full_doc_info)
@@ -620,6 +657,16 @@ def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
     return all_comment_data
 
 
+def clean_comment_data(comment_data: json) -> None:
+
+    comment_text_attributes = comment_data["data"]["attributes"]
+
+    for date_field in ["modifyDate", "postedDate", "receiveDate"]:
+        comment_text_attributes[date_field] = (
+            datetime.strptime(date_field, "%Y-%m-%dT%H:%M:%SZ") if date_field else None
+        )
+
+
 def qa_comment_data(comment_data: json) -> None:
     """
     Run assert statements to check comment data looks right
@@ -631,15 +678,18 @@ def qa_comment_data(comment_data: json) -> None:
 
     attributes = comment_data["attributes"]
     try:
-        assert len(comment_data["id"]) < 255
+        assert len(comment_data["id"]) < 255, "id is more than 255 characters"
 
-        assert attributes["objectId"][:2] == "09"
-        assert attributes["commentOn"][:2] == "09"
+        assert attributes["objectId"][:2] == "09", "objectId does not start with '09'"
+        assert attributes["commentOn"][:2] == "09", "commentOn does not start with '09'"
         # comment_data["commentOnDocumentId"]
-        assert attributes["duplicateComments"] == 0
+        assert attributes["duplicateComments"] == 0, "duplicateComments != 0"
         # assert comment_data["stateProvinceRegion"]
-        assert attributes["subtype"] in ["Public Comment", "Comment(s)"]
-        assert type(attributes["comment"]) is str
+        assert attributes["subtype"] in [
+            "Public Comment",
+            "Comment(s)",
+        ], "subtype is not an expected value"
+        assert type(attributes["comment"]) is str, "comment is not string"
         # comment_data["firstName"]
         # comment_data["lastName"]
         # comment_data["address1"]
@@ -653,12 +703,18 @@ def qa_comment_data(comment_data: json) -> None:
         # comment_data["govAgencyType"]
         # comment_data["organization"]
         # comment_data["originalDocumentId"]
-        assert type(attributes["modifyDate"]) is datetime
+        assert isinstance(
+            attributes["modifyDate"], datetime
+        ), "modifyDate is not datetime"
         # comment_data["pageCount"]
-        assert type(attributes["postedDate"]) is datetime
-        assert type(attributes["receiveDate"]) is datetime
+        assert isinstance(
+            attributes["postedDate"], datetime
+        ), "postedDate is not datetime"
+        assert isinstance(
+            attributes["receiveDate"], datetime
+        ), "receiveDate is not datetime"
         # comment_data["trackingNbr"]
-        assert attributes["withdrawn"] is False
+        assert attributes["withdrawn"] is False, "withdrawn is not False"
         # comment_data["reasonWithdrawn"]
         # comment_data["zip"]
         # comment_data["restrictReason"]
@@ -668,7 +724,8 @@ def qa_comment_data(comment_data: json) -> None:
         # comment_data["submitterRepCityState"]
 
         return True
-    except:
+    except AssertionError as e:
+        print(f"AssertionError: {e}")
         return False
 
 
@@ -708,18 +765,9 @@ def insert_comment_into_db(comment_data: json) -> dict:
     organization = comment_text_attributes.get("organization", "")
     originalDocumentId = comment_text_attributes.get("originalDocumentId", "")
     modifyDate = comment_text_attributes.get("modifyDate", "")
-    modifyDate = (
-        datetime.strptime(modifyDate, "%Y-%m-%dT%H:%M:%SZ") if modifyDate else None
-    )
     pageCount = comment_text_attributes.get("pageCount", 0)
     postedDate = comment_text_attributes.get("postedDate", "")
-    postedDate = (
-        datetime.strptime(postedDate, "%Y-%m-%dT%H:%M:%SZ") if postedDate else None
-    )
     receiveDate = comment_text_attributes.get("receiveDate", "")
-    receiveDate = (
-        datetime.strptime(receiveDate, "%Y-%m-%dT%H:%M:%SZ") if receiveDate else None
-    )
     title = attributes.get("title", "")
     trackingNbr = comment_text_attributes.get("trackingNbr", "")
     withdrawn = comment_text_attributes.get("withdrawn", False)
@@ -856,6 +904,10 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
     # add comment data to comments table in the database
     for comment in comment_data:
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
+
+        # clean
+        clean_comment_data(all_comment_data)
+
         if not qa_comment_data(all_comment_data):
             print(
                 f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
@@ -904,6 +956,10 @@ def add_comments_to_db_for_existing_doc(
 
     for comment in comment_data:
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
+
+        # clean
+        clean_comment_data(all_comment_data)
+
         if not qa_comment_data(all_comment_data):
             print(
                 f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
