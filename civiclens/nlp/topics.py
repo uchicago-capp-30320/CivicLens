@@ -163,7 +163,7 @@ class TopicModel:
         """
         Generates n topic terms per comment.
         """
-        # add way to make topic terms unique?
+        # add way to make topic terms unique
         comment_topics = {}
         for comment, topic_num in labeled_comments.items():
             terms = self.terms[topic_num]
@@ -229,7 +229,6 @@ def topic_comment_analysis(
     """
     Run topic and sentiment analysis.
     """
-    # cache this
     try:
         comments = comment_data.to_list()
         # append summary to the document list

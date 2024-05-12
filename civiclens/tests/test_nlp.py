@@ -96,7 +96,7 @@ def test_gen_search_vector():
     test_model = MagicMock(spec=BERTopic)
     topic_model = TopicModel(test_model)
 
-    topic_model.topics = {0: ["green", "red"], 1: ["blue", "orange"]}
+    topic_model.terms = {0: ["green", "red"], 1: ["blue", "orange"]}
     # check all the values are the same
     assert set(topic_model.generate_search_vector()) == {
         "green",
@@ -110,7 +110,7 @@ def test_gen_search_unique():
     test_model = MagicMock(spec=BERTopic)
     topic_model = TopicModel(test_model)
 
-    topic_model.topics = {0: ["green", "red"], 1: ["green", "orange"]}
+    topic_model.terms = {0: ["green", "red"], 1: ["green", "orange"]}
     # check all values are unique
     assert len(topic_model.generate_search_vector()) == 3
 
