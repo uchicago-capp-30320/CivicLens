@@ -51,15 +51,21 @@ class TopicModel:
         """
         Map setences to comments.
         """
-        sentences = {}
+        sentences = defaultdict(list)
 
         for comment in docs:
             split_text = sentence_splitter(clean_comments(comment.text))
             for sentence in split_text:
                 if comment.text:
-                    sentences[sentence] = comment.id
+                    sentences[sentence].append(comment.id)
 
         return sentences
+
+    def get_terms(self) -> dict[int, list]:
+        """
+        Returns generated terms for all topics
+        """
+        return self.terms
 
     def run_model(self, docs: list[Comment]):
         """
@@ -123,10 +129,12 @@ class TopicModel:
         """
         topics_by_comment = defaultdict(dict)
         for idx, topic in enumerate(numeric_topics):
-            comment_id = sentences[input[idx]]
-            topics_by_comment[comment_id][topic] = (
-                topics_by_comment[comment_id].get(topic, 0) + probs[idx]
-            )
+            # turn into array and loop through to handle form letter bug
+            comment_ids = sentences[input[idx]]
+            for id in comment_ids:
+                topics_by_comment[id][topic] = (
+                    topics_by_comment[id].get(topic, 0) + probs[idx]
+                )
 
         # find highest probability topic
         assigned_topics = {}
@@ -206,7 +214,7 @@ def label_topics(topics: dict[int, list], model: TopicChain) -> dict[int, str]:
         Dictionary of topics, and labels
     """
     labels = {}
-    for topic, terms in topics.values():
+    for topic, terms in topics.items():
         labels[topic] = model.generate_label(terms)
 
     return labels
@@ -228,22 +236,23 @@ def topic_comment_analysis(
     except TooFewTopics:
         return comment_data
     # add logic for re-doing analysis here, try and except for too few topics
-    topic_labels = label_topics(comment_topics, labeler)
+    topic_labels = label_topics(model.get_terms(), labeler)
 
     # TODO: label rep comment by source (comment or summary)
 
     # handle failure to create topics
-    print(comment_topics)
+    print(topic_labels)
     for comment in comments:
         comment.topic_label = topic_labels[comment_topics[comment.id]]
         comment.topic = comment_topics[comment.id]
-        comment.sentiment = sentiment_analyzer(comment.text)
+        comment.sentiment = sentiment_analyzer(comment)
 
     comments = sorted(
         comments, key=lambda comment: comment.num_represented, reverse=True
     )
 
     return RepComments(
+        document_id=comment_data.document_id,
         doc_comments=comment_data.doc_comments,
         rep_comments=comments,
         doc_plain_english_title=comment_data.doc_plain_english_title,
