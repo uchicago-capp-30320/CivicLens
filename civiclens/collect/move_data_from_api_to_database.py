@@ -15,6 +15,7 @@ from civiclens.utils.constants import (
     DATABASE_HOST,
     DATABASE_PORT,
 )
+from utils.text import clean_text
 
 
 def fetch_fr_document_details(fr_doc_num: str) -> str:
@@ -564,6 +565,11 @@ def add_documents_to_db(doc_list: list[dict], print_statements: bool = True) -> 
                     f"document {document_id} appears to have data in the wrong format; not added"
                 )
                 continue
+
+            # clean step
+            doc["summary"] = clean_text(doc["summary"])
+
+            # insert step
             insert_response = insert_document_into_db(full_doc_info)
             if insert_response["error"]:
                 print(insert_response["description"])
