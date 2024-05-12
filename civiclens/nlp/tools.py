@@ -37,6 +37,7 @@ class RepComments:
     last_updated: datetime = datetime.now()
     uuid: int = uuid4().int
     search_vector: list = Field(default=[])
+    summary: str = ""
 
     def get_all_comments(self):
         """
@@ -77,6 +78,7 @@ class Comment:
     topic: list[str] = None
     form_letter: bool = False
     sentiment: str = ""
+    source: str = "Comment"
 
     def to_dict(self):
         """

@@ -3,11 +3,9 @@ from typing import Callable
 
 import numpy as np
 from bertopic import BERTopic
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
 from sentence_transformers import SentenceTransformer
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from ..utils.ml_utils import TooFewTopics, clean_comments, sentence_splitter
 from .tools import Comment, RepComments
@@ -44,7 +42,6 @@ class TopicModel:
 
     def __init__(self, model: BERTopic):
         self.model = model
-        self.topics = {}
         self.terms = {}
 
     def _process_sentences(self, docs: list[Comment]) -> dict[str, str]:
@@ -85,10 +82,7 @@ class TopicModel:
         if num_topics < 0:
             raise TooFewTopics
 
-        query = self._generate_mmr_query(numeric_topics)
-
         # intialize no topic default
-        self.topics[-1] = []
         self.terms[-1] = []
 
         for i in range(num_topics + 1):
@@ -97,8 +91,7 @@ class TopicModel:
             for model_topics in model_results.values():
                 phrases.update({phrase for (phrase, _) in model_topics})
 
-            self.topics[i] = list(phrases)
-            self.terms[i] = mmr_sort(list(phrases), query, lam=0.95)
+            self.terms[i] = list(phrases)
 
         return self._aggregate_comments(sentences, input, numeric_topics, probs)
 
@@ -153,13 +146,13 @@ class TopicModel:
         """
         Creates array of topics to use in Django serach model.
         """
-        if not self.topics:
+        if not self.terms:
             raise RuntimeError(
                 "Must run topic model before generating search vector"
             )
 
         search_vector = set()
-        for term_list in self.topics.values():
+        for term_list in self.terms.values():
             search_vector.update(term_list)
 
         return list(search_vector)
@@ -181,27 +174,32 @@ class TopicModel:
 
 class LabelChain:
     def __init__(self):
-        self.promt_template = """
-            You are given the following list of words: {terms}. Generate a tag
-            for these words that is relevant to summary who is civically engaged
-            and try to understand federal regulation.
-            """
-
-        self.prompt = PromptTemplate.from_template(self.promt_template)
-        self.pipeline = HuggingFacePipeline.from_model_id(
-            model_id="fabiochiu/t5-base-tag-generation",
-            task="text2text-generation",
-            pipeline_kwargs={"max_length": 20},
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "fabiochiu/t5-base-tag-generation"
         )
-        self.chain = self.prompt | self.pipeline | StrOutputParser()
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            "fabiochiu/t5-base-tag-generation"
+        )
 
-    def generate_label(self, terms: list[str]) -> list[str]:
+    def generate_label(self, terms: list[str]) -> str:
         """
-        Create better topic terms
+        Create better topic terms.
         """
-        term_string = self.chain.invoke({"terms": ", ".join(terms)})
-        term_list = term_string.split(",")
-        return term_list[0]
+        text = ", ".join(terms)
+
+        inputs = self.tokenizer(
+            [text], max_length=512, truncation=True, return_tensors="pt"
+        )
+        output = self.model.generate(
+            **inputs, num_beams=8, do_sample=True, min_length=10, max_length=64
+        )
+
+        decoded_output = self.tokenizer.batch_decode(
+            output, skip_special_tokens=True
+        )[0]
+        tags = tuple(set(decoded_output.strip().split(", ")))
+
+        return tags
 
 
 def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
@@ -234,14 +232,19 @@ def topic_comment_analysis(
     # cache this
     try:
         comments = comment_data.to_list()
+        # append summary to the document list
+        if comment_data.summary:
+            comments += [
+                Comment(
+                    text=comment_data.summary, id="Summary", source="Summary"
+                )
+            ]
         comment_topics = model.run_model(comments)
     except TooFewTopics:
         return comment_data
     # add logic for re-doing analysis here, try and except for too few topics
     topic_terms = model.get_terms()
     topic_labels = label_topics(topic_terms, labeler)
-
-    # TODO: label rep comment by source (comment or summary)
 
     # handle failure to create topics
     for comment in comments:

@@ -93,11 +93,12 @@ if __name__ == "__main__":
             comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
 
             # generate title if there is not already one
-            if doc_id not in docs_with_titles:
-                doc_summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
-                if doc_summary is not None:
-                    new_title = title_creator.invoke(paragraph=doc_summary)
-                    comment_data.doc_plain_english_title = new_title
+            comment_data.summary = titles.get_doc_summary(id=doc_id)[
+                0, "summary"
+            ]
+            if doc_id not in docs_with_titles and comment_data.summary:
+                new_title = title_creator.invoke(paragraph=comment_data.summary)
+                comment_data.doc_plain_english_title = new_title
 
             topic_model = TopicModel()
             comment_data = topic_comment_analysis(
