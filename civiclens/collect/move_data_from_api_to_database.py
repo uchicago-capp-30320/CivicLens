@@ -199,6 +199,31 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     return most_recent_date
 
 
+def qa_docket_data(docket_data: json) -> None:
+    """
+    Run assert statements to check docket data looks right
+
+    Input: docket_data (json object): the docket data from the API
+
+    Returns: (bool) whether data is in the expected format
+    """
+
+    attributes = docket_data["attributes"]
+
+    try:
+        assert len(docket_data["id"]) < 255
+        assert attributes["docketType"] in ["Rulemaking", "Nonrulemaking"]
+        assert type(attributes["lastModifiedDate"]) is datetime
+        assert attributes["agencyId"].isalpha()
+        assert type(attributes["title"]) is str
+        assert attributes["objectId"][:2] == "0b"
+        # attributes["highlightedContent"]
+
+        return True
+    except:
+        return False
+
+
 def insert_docket_into_db(docket_data: json) -> dict:
     """
     Insert the info on a docket into the dockets table
@@ -296,6 +321,11 @@ def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> No
                 "dockets",
                 params={"filter[searchTerm]": docket_id},
             )
+            if not qa_docket_data(docket_data):
+                print(
+                    f"docket {docket_data} appears to have data in the wrong format; not added"
+                )
+                continue
             # add docket_data to docket table in the database
             insert_response = insert_docket_into_db(docket_data)
             if insert_response["error"]:
@@ -356,6 +386,64 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
         doc.update(blank_xml_fields)  # merge the json objects
 
     return doc
+
+
+def validate_fr_doc_num(field_value):
+    if field_value == "Not Found":
+        return True
+
+    if all(char.isdigit() or char == "-" for char in field_value):
+        return True
+
+    # else
+    return False
+
+
+def qa_document_data(document_data: json) -> True:
+    """
+    Run assert statements to check document data looks right
+
+    Input: document_data (json object): the document data from the API
+
+    Returns: (bool) whether data is in the expected format
+    """
+
+    attributes = document_data["attributes"]
+
+    try:
+        assert len(document_data["id"]) < 255
+        assert attributes["documentType"] in [
+            "Proposed Rule",
+            "Other",
+            "Notice",
+            "Not Found",
+            "Rule",
+        ]
+        # attributes["lastModifiedDate"]
+        assert validate_fr_doc_num(attributes["frDocNum"])
+        assert attributes["withdrawn"] is False
+        # attributes["agencyId"]
+        assert type(attributes["commentEndDate"]) is datetime
+        assert type(attributes["postedDate"]) is datetime
+        # attributes["docketId"]
+        # attributes["subtype"]
+        assert type(attributes["commentStartDate"]) is datetime
+        assert attributes["openForComment"] is True
+        # attributes["objectId"]
+        assert "https" in document_data["links"]["self"]
+        assert ".gov" in document_data["links"]["self"]
+        # document_data["agencyType"]
+        assert document_data["CFR"].isalpha()
+        # document_data["RIN"]
+        assert type(attributes["title"]) is str
+        assert type(document_data["summary"]) is str
+        # document_data["dates"]
+        # document_data["furtherInformation"]
+        assert type(document_data["supplementaryInformation"]) is str
+
+        return True
+    except:
+        return False
 
 
 def insert_document_into_db(document_data: json) -> dict:
@@ -463,6 +551,12 @@ def add_documents_to_db(doc_list: list[dict], print_statements: bool = True) -> 
         ):
             # add this doc to the documents table in the database
             full_doc_info = query_register_API_and_merge_document_data(doc)
+            # qa step
+            if not qa_document_data(full_doc_info):
+                print(
+                    f"document {document_id} appears to have data in the wrong format; not added"
+                )
+                continue
             insert_response = insert_document_into_db(full_doc_info)
             if insert_response["error"]:
                 print(insert_response["description"])
@@ -511,6 +605,58 @@ def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
 
     all_comment_data = {**comment_data, **comment_text_data}
     return all_comment_data
+
+
+def qa_comment_data(comment_data: json) -> None:
+    """
+    Run assert statements to check comment data looks right
+
+    Input: comment_data (json object): the document data from the API
+
+    Returns: (bool) whether data is in the expected format
+    """
+
+    attributes = comment_data["attributes"]
+    try:
+        assert len(comment_data["id"]) < 255
+
+        assert attributes["objectId"][:2] == "09"
+        assert attributes["commentOn"][:2] == "09"
+        # comment_data["commentOnDocumentId"]
+        assert attributes["duplicateComments"] == 0
+        # assert comment_data["stateProvinceRegion"]
+        assert attributes["subtype"] in ["Public Comment", "Comment(s)"]
+        assert type(attributes["comment"]) is str
+        # comment_data["firstName"]
+        # comment_data["lastName"]
+        # comment_data["address1"]
+        # comment_data["address2"]
+        # comment_data["city"]
+        # comment_data["category"]
+        # comment_data["country"]
+        # comment_data["email"]
+        # comment_data["phone"]
+        # comment_data["govAgency"]
+        # comment_data["govAgencyType"]
+        # comment_data["organization"]
+        # comment_data["originalDocumentId"]
+        assert type(attributes["modifyDate"]) is datetime
+        # comment_data["pageCount"]
+        assert type(attributes["postedDate"]) is datetime
+        assert type(attributes["receiveDate"]) is datetime
+        # comment_data["trackingNbr"]
+        assert attributes["withdrawn"] is False
+        # comment_data["reasonWithdrawn"]
+        # comment_data["zip"]
+        # comment_data["restrictReason"]
+        # comment_data["restrictReasonType"]
+        # comment_data["submitterRep"]
+        # comment_data["submitterRepAddress"]
+        # comment_data["submitterRepCityState"]
+
+        return True
+    except:
+        return False
 
 
 def insert_comment_into_db(comment_data: json) -> dict:
@@ -699,6 +845,12 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
         all_comment_data = merge_comment_text_and_data(
             constants.REG_GOV_API_KEY, comment
         )
+        if not qa_comment_data(all_comment_data):
+            print(
+                f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
+            )
+            continue
+
         insert_response = insert_comment_into_db(all_comment_data)
 
         if insert_response["error"]:
@@ -743,6 +895,11 @@ def add_comments_to_db_for_existing_doc(
         all_comment_data = merge_comment_text_and_data(
             constants.REG_GOV_API_KEY, comment
         )
+        if not qa_comment_data(all_comment_data):
+            print(
+                f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
+            )
+            continue
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
             print(insert_response["description"])
