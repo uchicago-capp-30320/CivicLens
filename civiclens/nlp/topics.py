@@ -76,7 +76,7 @@ class TopicModel:
 
         try:
             numeric_topics, probs = self.model.fit_transform(input)
-        except (ValueError, TypeError) as e:
+        except Exception as e:
             print(f"Hugging Face error: {e}")
             return {}
 

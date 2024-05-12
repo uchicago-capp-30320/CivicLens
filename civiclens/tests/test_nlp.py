@@ -68,7 +68,7 @@ def test_cluster_assignment():
 
 
 def test_agg_comments():
-    sentences = {"The dog ran": 0, "The cat ate": 0, "A big fish": 1}
+    sentences = {"The dog ran": [0], "The cat ate": [0], "A big fish": [1]}
     inputs = ["The dog ran", "The cat ate", "A big fish"]
     probs = np.array([0.3, 0.8, 0.5])
     topics = [0, 1, 0]
@@ -80,7 +80,7 @@ def test_agg_comments():
 
 
 def test_agg_comments_equal_probs():
-    sentences = {"The dog ran": 0, "The cat ate": 0, "A big fish": 1}
+    sentences = {"The dog ran": [0], "The cat ate": [0], "A big fish": [1]}
     inputs = ["The dog ran", "The cat ate", "A big fish"]
     probs = np.array([0.3, 0.3, 0.5])
     topics = [0, 1, 0]
@@ -124,16 +124,16 @@ def test_process_sentences():
         Comment(text="This is a comment with one sentence", id="1"),
     ]
     correct = {
-        "This is a comment.": "0",
-        "It has two sentences.": "0",
-        "This is a comment with one sentence.": "1",
+        "This is a comment.": ["0"],
+        "It has two sentences.": ["0"],
+        "This is a comment with one sentence.": ["1"],
     }
 
     assert correct == topic_model._process_sentences(docs)
 
 
 def test_catch_bertopic_errors():
-    comments = RepComments(document_id="test", doc_comments=sample_df.sample(2))
+    comments = RepComments(document_id="test", doc_comments=sample_df[:2])
     docs = comments.get_all_comments()
     out = live_model.run_model(docs)
 
