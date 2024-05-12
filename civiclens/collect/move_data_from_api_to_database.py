@@ -7,7 +7,14 @@ import datetime as dt
 from datetime import datetime
 
 from civiclens.collect.access_api_data import pull_reg_gov_data
-from civiclens.utils import constants
+from civiclens.utils.constants import (
+    REG_GOV_API_KEY,
+    DATABASE_NAME,
+    DATABASE_USER,
+    DATABASE_PASSWORD,
+    DATABASE_HOST,
+    DATABASE_PORT,
+)
 
 
 def fetch_fr_document_details(fr_doc_num: str) -> str:
@@ -135,11 +142,11 @@ def connect_db_and_get_cursor() -> (
     Connect to the CivicLens database and return the objects
     """
     connection = psycopg2.connect(
-        database=constants.DATABASE_NAME,
-        user=constants.DATABASE_USER,
-        password=constants.DATABASE_PASSWORD,
-        host=constants.DATABASE_HOST,
-        port=constants.DATABASE_PORT,
+        database=DATABASE_NAME,
+        user=DATABASE_USER,
+        password=DATABASE_PASSWORD,
+        host=DATABASE_HOST,
+        port=DATABASE_PORT,
     )
     cursor = connection.cursor()
     return connection, cursor
@@ -317,7 +324,7 @@ def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> No
             not verify_database_existence("regulations_docket", docket_id)
         ):
             docket_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY,
+                REG_GOV_API_KEY,
                 "dockets",
                 params={"filter[searchTerm]": docket_id},
             )
@@ -836,15 +843,13 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
     Returns: nothing; adds comments, if available, to the db
     """
     comment_data = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY,
+        REG_GOV_API_KEY,
         "comments",
         params={"filter[commentOnId]": document_object_id},
     )
     # add comment data to comments table in the database
     for comment in comment_data:
-        all_comment_data = merge_comment_text_and_data(
-            constants.REG_GOV_API_KEY, comment
-        )
+        all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
         if not qa_comment_data(all_comment_data):
             print(
                 f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
@@ -883,7 +888,7 @@ def add_comments_to_db_for_existing_doc(
         )
 
     comment_data = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY,
+        REG_GOV_API_KEY,
         "comments",
         params={
             "filter[commentOnId]": document_object_id,
@@ -892,9 +897,7 @@ def add_comments_to_db_for_existing_doc(
     )
 
     for comment in comment_data:
-        all_comment_data = merge_comment_text_and_data(
-            constants.REG_GOV_API_KEY, comment
-        )
+        all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
         if not qa_comment_data(all_comment_data):
             print(
                 f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
@@ -959,7 +962,7 @@ def pull_all_api_data_for_date_range(
     # get documents
     print("getting list of documents within date range")
     doc_list = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY,
+        REG_GOV_API_KEY,
         "documents",
         start_date=start_date,
         end_date=end_date,
