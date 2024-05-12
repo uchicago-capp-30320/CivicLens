@@ -256,7 +256,7 @@ def topic_comment_analysis(
     return RepComments(
         document_id=comment_data.document_id,
         doc_comments=comment_data.doc_comments,
-        rep_comments=comments,
+        rep_comments=[comment.to_dict() for comment in comments],
         doc_plain_english_title=comment_data.doc_plain_english_title,
         num_total_comments=comment_data.num_total_comments,
         num_unique_comments=comment_data.num_unique_comments,

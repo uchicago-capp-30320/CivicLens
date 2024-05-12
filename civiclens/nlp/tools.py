@@ -78,6 +78,20 @@ class Comment:
     form_letter: bool = False
     sentiment: str = ""
 
+    def to_dict(self):
+        """
+        Converts comment object to dictionary.
+        """
+        return {
+            "text": self.text,
+            "num_represented": self.num_represented,
+            "id": self.id,
+            "topic_label": self.topic_label,
+            "topic": self.topic,
+            "form_letter": self.form_letter,
+            "sentiment": self.sentiment,
+        }
+
 
 # order topics by number of total comments represented
 
