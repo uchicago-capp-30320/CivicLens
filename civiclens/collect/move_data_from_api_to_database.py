@@ -208,6 +208,7 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
 
 
 def clean_docket_data(docket_data: json) -> None:
+    # docket_data[0]
     pass
 
 
@@ -220,7 +221,7 @@ def qa_docket_data(docket_data: json) -> None:
     Returns: (bool) whether data is in the expected format
     """
 
-    attributes = docket_data["attributes"]
+    attributes = docket_data[0]["attributes"]
 
     try:
         # need to check that docket_data is in the right format
@@ -231,7 +232,7 @@ def qa_docket_data(docket_data: json) -> None:
         assert "attributes" in data_for_db, "'attributes' not in docket_data"
 
         # check the fields
-        assert len(docket_data["id"]) < 255, "id field longer than 255 characters"
+        assert len(docket_data[0]["id"]) < 255, "id field longer than 255 characters"
         assert attributes["docketType"] in [
             "Rulemaking",
             "Nonrulemaking",
