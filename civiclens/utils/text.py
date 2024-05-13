@@ -1,0 +1,60 @@
+import re
+from typing import Optional
+
+
+def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
+    """
+    String cleaning function for comments.
+
+    Inputs:
+        text (str): comment text
+        patterns (list[str]): optional list of regular expression patterns
+            to pass in (eg. [(r'\w+', "-")])
+
+    Returns:
+        Cleaned verison of text
+    """
+    text = re.sub(r"<\s*br\s*/>", " ", text)
+    text = re.sub(r"[^a-zA-Z0-9.'\"\?\: -]", "", text)
+    text = re.sub(r"\w*ndash\w*", "", text)
+
+    if patterns:
+        for pattern, replacement in patterns:
+            text = re.sub(pattern, replacement, text)
+
+    # remove extra whitespace
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def truncate(text: str, num_words: int) -> str:
+    """
+    Truncates commments:
+
+    Inputs:
+        text (str): Text of the comment
+        num_words (int): Number of words to keep
+
+    Returns:
+        Truncated commented
+    """
+    words = text.split(" ")
+
+    return " ".join(words[:num_words])
+
+
+def sentence_splitter(text: str, sep: str = ".") -> list[str]:
+    """
+    Splits string into sentences.
+
+    Inputs:
+        text: string to process
+        sep: value to seperate string on, defaults to '.'
+
+    Returns:
+        List of strings split on the seperator valur
+    """
+    # remove periods not at the end of sentences
+    clean = re.sub(r"\.(?!\s)", " ", text)
+    sentences = clean.split(sep)
+
+    return [sentence.strip() + "." for sentence in sentences if sentence]
