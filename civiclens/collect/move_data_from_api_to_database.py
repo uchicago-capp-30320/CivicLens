@@ -664,7 +664,9 @@ def clean_comment_data(comment_data: json) -> None:
 
     for date_field in ["modifyDate", "postedDate", "receiveDate"]:
         comment_text_attributes[date_field] = (
-            datetime.strptime(date_field, "%Y-%m-%dT%H:%M:%SZ") if date_field else None
+            datetime.strptime(comment_text_attributes[date_field], "%Y-%m-%dT%H:%M:%SZ")
+            if comment_text_attributes[date_field]
+            else None
         )
 
 
@@ -678,19 +680,26 @@ def qa_comment_data(comment_data: json) -> None:
     """
 
     attributes = comment_data["attributes"]
+    comment_text_attributes = comment_data["data"]["attributes"]
     try:
         assert len(comment_data["id"]) < 255, "id is more than 255 characters"
 
         assert attributes["objectId"][:2] == "09", "objectId does not start with '09'"
-        assert attributes["commentOn"][:2] == "09", "commentOn does not start with '09'"
+        assert (
+            comment_text_attributes["commentOn"][:2] == "09"
+        ), "commentOn does not start with '09'"
         # comment_data["commentOnDocumentId"]
-        assert attributes["duplicateComments"] == 0, "duplicateComments != 0"
+        assert (
+            comment_text_attributes["duplicateComments"] == 0
+        ), "duplicateComments != 0"
         # assert comment_data["stateProvinceRegion"]
-        assert attributes["subtype"] in [
+        assert comment_text_attributes["subtype"] in [
             "Public Comment",
             "Comment(s)",
         ], "subtype is not an expected value"
-        assert type(attributes["comment"]) is str, "comment is not string"
+        assert isinstance(
+            comment_text_attributes["comment"], str
+        ), "comment is not string"
         # comment_data["firstName"]
         # comment_data["lastName"]
         # comment_data["address1"]
@@ -705,17 +714,17 @@ def qa_comment_data(comment_data: json) -> None:
         # comment_data["organization"]
         # comment_data["originalDocumentId"]
         assert isinstance(
-            attributes["modifyDate"], datetime
+            comment_text_attributes["modifyDate"], datetime
         ), "modifyDate is not datetime"
         # comment_data["pageCount"]
         assert isinstance(
-            attributes["postedDate"], datetime
+            comment_text_attributes["postedDate"], datetime
         ), "postedDate is not datetime"
         assert isinstance(
-            attributes["receiveDate"], datetime
+            comment_text_attributes["receiveDate"], datetime
         ), "receiveDate is not datetime"
         # comment_data["trackingNbr"]
-        assert attributes["withdrawn"] is False, "withdrawn is not False"
+        assert comment_text_attributes["withdrawn"] is False, "withdrawn is not False"
         # comment_data["reasonWithdrawn"]
         # comment_data["zip"]
         # comment_data["restrictReason"]
