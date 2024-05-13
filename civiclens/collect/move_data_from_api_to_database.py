@@ -225,13 +225,14 @@ def qa_docket_data(docket_data: json) -> None:
     """
 
     attributes = docket_data[0]["attributes"]
+    data_for_db = docket_data[0]
 
     try:
         # need to check that docket_data is in the right format
         assert (
             isinstance(docket_data, list) or len(docket_data) < 1
         ), "docket data in wrong format"
-        data_for_db = docket_data[0]
+
         assert "attributes" in data_for_db, "'attributes' not in docket_data"
 
         # check the fields
@@ -382,10 +383,10 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
             doc.update(parsed_xml_content)  # merge the json objects
         except Exception:
             # if there's an error, that means we can't use the xml_url to get the doc text, so we enter None for those fields
-            error_message = f"Error accessing federal register xml data for frDocNum {fr_doc_num},\
+            print(
+                f"Error accessing federal register xml data for frDocNum {fr_doc_num},\
                   document id {document_id}"
-            print(error_message)
-            # raise Exception(error_message)
+            )
             blank_xml_fields = {
                 "agencyType": None,
                 "CFR": None,
