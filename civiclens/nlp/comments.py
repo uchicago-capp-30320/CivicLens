@@ -251,10 +251,10 @@ def rep_comment_analysis(id: str, model: SentenceTransformer) -> RepComments:
 
     if df_rep_form.is_empty():
         comment_data.rep_comments = df_rep_paraphrase.to_dicts()
-        comment_data.num_representative_comment = len(comment_data.rep_comments)
+        comment_data.num_representative_comment = df_rep_paraphrase.shape[0]
     elif df_rep_paraphrase.is_empty():
         comment_data.rep_comments = df_rep_form.to_dicts()
-        comment_data.num_representative_comment = len(comment_data.rep_comments)
+        comment_data.num_representative_comment = df_rep_form.shape[0]
     else:
         combined_data = pl.concat([df_rep_form, df_rep_paraphrase]).to_dicts()
         comment_data.rep_comments = combined_data
