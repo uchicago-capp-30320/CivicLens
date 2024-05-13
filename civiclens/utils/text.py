@@ -3,7 +3,7 @@ from typing import Optional
 
 
 def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
-    """
+    r"""
     String cleaning function for comments.
 
     Inputs:

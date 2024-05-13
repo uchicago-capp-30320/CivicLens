@@ -1,5 +1,6 @@
 import time
 from datetime import datetime, timedelta, timezone
+
 import requests
 from requests.adapters import HTTPAdapter
 
@@ -27,7 +28,9 @@ def _is_duplicated_on_server(response_json):
     return (
         ("errors" in response_json.keys())
         and (response_json["errors"][0]["status"] == "500")
-        and (response_json["errors"][0]["detail"][:21] == "Incorrect result size")
+        and (
+            response_json["errors"][0]["detail"][:21] == "Incorrect result size"
+        )
     )
 
 
@@ -51,7 +54,9 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
                 {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
             )
         if end_date:
-            date_param.update({"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"})
+            date_param.update(
+                {"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"}
+            )
     else:
         if start_date:
             date_param.update({"filter[postedDate][ge]": start_date})
@@ -167,7 +172,10 @@ def pull_reg_gov_data(
 
             return [True, r.json()]
         else:
-            if r.status_code == STATUS_CODE_OVER_RATE_LIMIT and wait_for_rate_reset:
+            if (
+                r.status_code == STATUS_CODE_OVER_RATE_LIMIT
+                and wait_for_rate_reset
+            ):
                 the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 retry_after = r.headers.get("Retry-After", None)
                 wait_time = (
@@ -205,7 +213,9 @@ def pull_reg_gov_data(
         continue_fetching = True
 
         while continue_fetching:
-            success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
+            success, r_json = poll_for_response(
+                api_key, wait_for_rate_reset=True
+            )
             if success:
                 all_comments.extend(r_json["data"])
                 print(
@@ -248,9 +258,13 @@ def pull_reg_gov_data(
         for i in range(1, 21):  # Fetch up to 20 pages
             params["page[number]"] = str(i)  # Add page number to the params
 
-            success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
+            success, r_json = poll_for_response(
+                api_key, wait_for_rate_reset=True
+            )
 
-            if success or (_is_duplicated_on_server(r_json) and skip_duplicates):
+            if success or (
+                _is_duplicated_on_server(r_json) and skip_duplicates
+            ):
                 if doc_data is not None:
                     doc_data += r_json["data"]
                 else:

@@ -1,14 +1,15 @@
-import pytest
-from unittest.mock import patch, MagicMock
 import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from civiclens.collect.move_data_from_api_to_database import (
+    extract_xml_text_from_doc,
     fetch_fr_document_details,
     fetch_xml_content,
-    parse_xml_content,
-    extract_xml_text_from_doc,
-    verify_database_existence,
     get_most_recent_doc_comment_date,
+    parse_xml_content,
+    verify_database_existence,
 )
 
 
@@ -17,7 +18,9 @@ def test_fetch_fr_document_details_success():
     Check we get a url back from fetch_fr_document_details
     """
     url = "mock_url"
-    mock_response = {"full_text_xml_url": "https://example.com/your_xml_file.xml"}
+    mock_response = {
+        "full_text_xml_url": "https://example.com/your_xml_file.xml"
+    }
 
     api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{url}.json?fields[]=full_text_xml_url"
 
@@ -131,18 +134,24 @@ def test_verify_database_existence():
         api_field_val = "example_value"
 
         # Mock the cursor.execute method
-        mock_cursor.fetchall.return_value = [("result_row",)]  # Simulate a found row
+        mock_cursor.fetchall.return_value = [
+            ("result_row",)
+        ]  # Simulate a found row
 
         result = verify_database_existence(table, api_field_val)
 
         # Need to do a lot of stripping of spaces in order for assert statements to function
         expected_query = (
-            (f"SELECT * FROM {table} WHERE id = %s;").replace(" ", "").replace("\n", "")
+            (f"SELECT * FROM {table} WHERE id = %s;")
+            .replace(" ", "")
+            .replace("\n", "")
         )
         expected_params = (api_field_val.strip(),)
 
         actual_call_args = mock_cursor.execute.call_args_list[0]
-        actual_query = actual_call_args[0][0].strip().replace(" ", "").replace("\n", "")
+        actual_query = (
+            actual_call_args[0][0].strip().replace(" ", "").replace("\n", "")
+        )
         actual_params = actual_call_args[0][1]
 
         # Assert that the cursor.execute was called with the correct query
@@ -176,12 +185,16 @@ def test_verify_database_existence_not_found():
 
         # Need to do a lot of stripping of spaces in order for assert statements to function
         expected_query = (
-            (f"SELECT * FROM {table} WHERE id = %s;").replace(" ", "").replace("\n", "")
+            (f"SELECT * FROM {table} WHERE id = %s;")
+            .replace(" ", "")
+            .replace("\n", "")
         )
         expected_params = (api_field_val.strip(),)
 
         actual_call_args = mock_cursor.execute.call_args_list[0]
-        actual_query = actual_call_args[0][0].strip().replace(" ", "").replace("\n", "")
+        actual_query = (
+            actual_call_args[0][0].strip().replace(" ", "").replace("\n", "")
+        )
         actual_params = actual_call_args[0][1]
 
         assert actual_query == expected_query
@@ -223,13 +236,19 @@ def test_get_most_recent_doc_comment_date():
 
         # Need to do a lot of stripping of spaces in order for assert statements to function
         actual_call_args = mock_cursor.execute.call_args
-        actual_query = actual_call_args[0][0].strip().replace(" ", "").replace("\n", "")
-        actual_params = actual_call_args[0][1] if len(actual_call_args[0]) > 1 else ()
+        actual_query = (
+            actual_call_args[0][0].strip().replace(" ", "").replace("\n", "")
+        )
+        actual_params = (
+            actual_call_args[0][1] if len(actual_call_args[0]) > 1 else ()
+        )
 
         # Assert that the cursor.execute was called with the correct query and params
         assert actual_query == expected_query
         assert actual_params == ()
 
         # Assert the return value is as expected
-        expected_date = "2024-02-23 04:00:00"  # One hour prior to comment posted date
+        expected_date = (
+            "2024-02-23 04:00:00"  # One hour prior to comment posted date
+        )
         assert result == expected_date

@@ -1,6 +1,8 @@
-import pytest
 from unittest.mock import patch
+
 import polars as pl
+import pytest
+
 from civiclens.collect import upload_bulk_csvs_to_db
 
 
@@ -117,7 +119,9 @@ def test_extract_fields_from_row_no_data():
     Check that extracting a field from a blank row returns an error
     """
     try:
-        upload_bulk_csvs_to_db.extract_fields_from_row(pl.DataFrame({}), "test_id")
+        upload_bulk_csvs_to_db.extract_fields_from_row(
+            pl.DataFrame({}), "test_id"
+        )
     except Exception as e:
         assert type(e) is TypeError
 
@@ -226,7 +230,10 @@ def test_extract_fields_from_row_good_data():
                 "submitterRepCityState": None,
             }
         },
-        "attributes": {"objectId": "test_id", "title": "Comment from Nowicki, Ava"},
+        "attributes": {
+            "objectId": "test_id",
+            "title": "Comment from Nowicki, Ava",
+        },
         "type": "comments",
         "id": "FWS-HQ-NWRS-2022-0106-35393",
     }

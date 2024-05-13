@@ -1,19 +1,20 @@
-import requests
-import xml.etree.ElementTree as ET
-import psycopg2
-import json
 import argparse
 import datetime as dt
+import json
+import xml.etree.ElementTree as ET
 from datetime import datetime
+
+import psycopg2
+import requests
 
 from civiclens.collect.access_api_data import pull_reg_gov_data
 from civiclens.utils.constants import (
-    REG_GOV_API_KEY,
-    DATABASE_NAME,
-    DATABASE_USER,
-    DATABASE_PASSWORD,
     DATABASE_HOST,
+    DATABASE_NAME,
+    DATABASE_PASSWORD,
     DATABASE_PORT,
+    DATABASE_USER,
+    REG_GOV_API_KEY,
 )
 
 
@@ -47,7 +48,9 @@ def fetch_xml_content(url: str) -> str:
     if response.status_code == 200:
         return response.text
     else:
-        error_message = f"Error fetching XML content from {url}: {response.status_code}"
+        error_message = (
+            f"Error fetching XML content from {url}: {response.status_code}"
+        )
         raise Exception(error_message)
 
 
@@ -85,7 +88,9 @@ def parse_xml_content(xml_content: str) -> dict:
 
     # Extract Summary
     summary = root.find(".//SUM/P")
-    extracted_data["summary"] = summary.text if summary is not None else "Not Found"
+    extracted_data["summary"] = (
+        summary.text if summary is not None else "Not Found"
+    )
 
     # Extract DATES
     dates = root.find(".//DATES/P")
@@ -133,7 +138,9 @@ def extract_xml_text_from_doc(doc: json) -> json:
         xml_content = fetch_xml_content(xml_url)
         if xml_content:
             extracted_data = parse_xml_content(xml_content)
-            processed_data.append({**doc, **extracted_data})  # merge the json objects
+            processed_data.append(
+                {**doc, **extracted_data}
+            )  # merge the json objects
 
     return processed_data
 
@@ -237,7 +244,6 @@ def insert_docket_into_db(docket_data: json) -> dict:
     data_for_db = docket_data[0]
     attributes = data_for_db["attributes"]
     try:
-
         connection, cursor = connect_db_and_get_cursor()
 
         with connection:
@@ -268,9 +274,7 @@ def insert_docket_into_db(docket_data: json) -> dict:
                     ),
                 )
     except Exception as e:
-        error_message = (
-            f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
-        )
+        error_message = f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
         # print(error_message)
         return {
             "error": True,
@@ -285,7 +289,9 @@ def insert_docket_into_db(docket_data: json) -> dict:
     }
 
 
-def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
+def add_dockets_to_db(
+    doc_list: list[dict], print_statements: bool = True
+) -> None:
     """
     Add the dockets connected to a list of documents into the database
 
@@ -439,9 +445,7 @@ def insert_document_into_db(document_data: json) -> dict:
                 )
 
     except Exception as e:
-        error_message = (
-            f"Error inserting document {document_data['id']} into dockets table: {e}"
-        )
+        error_message = f"Error inserting document {document_data['id']} into dockets table: {e}"
         # print(error_message)
         return {
             "error": True,
@@ -456,7 +460,9 @@ def insert_document_into_db(document_data: json) -> dict:
     }
 
 
-def add_documents_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
+def add_documents_to_db(
+    doc_list: list[dict], print_statements: bool = True
+) -> None:
     """
     Add a list of document json objects into the database
 
@@ -499,7 +505,9 @@ def get_comment_text(api_key: str, comment_id: str) -> json:
     if response.status_code == 200:
         return response.json()
     else:
-        print(f"Failed to retrieve comment data. Status code: {response.status_code}")
+        print(
+            f"Failed to retrieve comment data. Status code: {response.status_code}"
+        )
         return None
 
 
@@ -560,16 +568,22 @@ def insert_comment_into_db(comment_data: json) -> dict:
     originalDocumentId = comment_text_attributes.get("originalDocumentId", "")
     modifyDate = comment_text_attributes.get("modifyDate", "")
     modifyDate = (
-        datetime.strptime(modifyDate, "%Y-%m-%dT%H:%M:%SZ") if modifyDate else None
+        datetime.strptime(modifyDate, "%Y-%m-%dT%H:%M:%SZ")
+        if modifyDate
+        else None
     )
     pageCount = comment_text_attributes.get("pageCount", 0)
     postedDate = comment_text_attributes.get("postedDate", "")
     postedDate = (
-        datetime.strptime(postedDate, "%Y-%m-%dT%H:%M:%SZ") if postedDate else None
+        datetime.strptime(postedDate, "%Y-%m-%dT%H:%M:%SZ")
+        if postedDate
+        else None
     )
     receiveDate = comment_text_attributes.get("receiveDate", "")
     receiveDate = (
-        datetime.strptime(receiveDate, "%Y-%m-%dT%H:%M:%SZ") if receiveDate else None
+        datetime.strptime(receiveDate, "%Y-%m-%dT%H:%M:%SZ")
+        if receiveDate
+        else None
     )
     title = attributes.get("title", "")
     trackingNbr = comment_text_attributes.get("trackingNbr", "")
@@ -580,7 +594,9 @@ def insert_comment_into_db(comment_data: json) -> dict:
     restrictReasonType = comment_text_attributes.get("restrictReasonType", "")
     submitterRep = comment_text_attributes.get("submitterRep", "")
     submitterRepAddress = comment_text_attributes.get("submitterRepAddress", "")
-    submitterRepCityState = comment_text_attributes.get("submitterRepCityState", "")
+    submitterRepCityState = comment_text_attributes.get(
+        "submitterRepCityState", ""
+    )
 
     # SQL INSERT statement
     query = """
@@ -672,9 +688,7 @@ def insert_comment_into_db(comment_data: json) -> dict:
             connection.commit()
 
     except Exception as e:
-        error_message = (
-            f"Error inserting comment {comment_data['id']} into comment table: {e}"
-        )
+        error_message = f"Error inserting comment {comment_data['id']} into comment table: {e}"
         # print(error_message)
         return {
             "error": True,
@@ -755,7 +769,9 @@ def add_comments_to_db_for_existing_doc(
             # would want to add logging here
 
 
-def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
+def add_comments_to_db(
+    doc_list: list[dict], print_statements: bool = True
+) -> None:
     """
     Add comments on a list of documents to the database
 
@@ -774,12 +790,16 @@ def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> N
                 "regulations_comment", document_id, "document_id"
             ):  # doc doesn't exist in the db; it's new
                 if print_statements:
-                    print(f"no comments found in database for document {document_id}")
+                    print(
+                        f"no comments found in database for document {document_id}"
+                    )
 
                 add_comments_to_db_for_new_doc(document_object_id)
 
                 if print_statements:
-                    print(f"tried to add comments on document {document_id} to the db")
+                    print(
+                        f"tried to add comments on document {document_id} to the db"
+                    )
 
             else:  # doc exists in db; only need to add new comments
                 add_comments_to_db_for_existing_doc(
@@ -846,7 +866,9 @@ def pull_all_api_data_for_date_range(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Pull info for a date range from API")
+    parser = argparse.ArgumentParser(
+        description="Pull info for a date range from API"
+    )
     parser.add_argument(
         "start_date",
         type=str,
