@@ -7,7 +7,14 @@ import datetime as dt
 from datetime import datetime
 
 from civiclens.collect.access_api_data import pull_reg_gov_data
-from civiclens.utils import constants
+from civiclens.utils.constants import (
+    REG_GOV_API_KEY,
+    DATABASE_NAME,
+    DATABASE_USER,
+    DATABASE_PASSWORD,
+    DATABASE_HOST,
+    DATABASE_PORT,
+)
 
 
 def fetch_fr_document_details(fr_doc_num: str) -> str:
@@ -117,6 +124,9 @@ def extract_xml_text_from_doc(doc: json) -> json:
     """
     processed_data = []
 
+    if not doc:
+        return processed_data
+
     fr_doc_num = doc["attributes"]["frDocNum"]
     if fr_doc_num:
         xml_url = fetch_fr_document_details(fr_doc_num)
@@ -135,11 +145,11 @@ def connect_db_and_get_cursor() -> (
     Connect to the CivicLens database and return the objects
     """
     connection = psycopg2.connect(
-        database=constants.DATABASE_NAME,
-        user=constants.DATABASE_USER,
-        password=constants.DATABASE_PASSWORD,
-        host=constants.DATABASE_HOST,
-        port=constants.DATABASE_PORT,
+        database=DATABASE_NAME,
+        user=DATABASE_USER,
+        password=DATABASE_PASSWORD,
+        host=DATABASE_HOST,
+        port=DATABASE_PORT,
     )
     cursor = connection.cursor()
     return connection, cursor
@@ -149,7 +159,7 @@ def verify_database_existence(
     table: str, api_field_val: str, db_field: str = "id"
 ) -> bool:
     """
-    Use regulations.gov API to confirm a row exists in a db table
+    Confirm a row exists in a db table for a given id
 
     Inputs:
         table (str): one of the tables in the CivicLens db
@@ -167,7 +177,7 @@ def verify_database_existence(
             cursor.execute(query, (api_field_val,))
             response = cursor.fetchall()
 
-    return response != []
+    return bool(response)
 
 
 def get_most_recent_doc_comment_date(doc_id: str) -> str:
@@ -292,7 +302,7 @@ def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> No
             not verify_database_existence("regulations_docket", docket_id)
         ):
             docket_data = pull_reg_gov_data(
-                constants.REG_GOV_API_KEY,
+                REG_GOV_API_KEY,
                 "dockets",
                 params={"filter[searchTerm]": docket_id},
             )
@@ -690,15 +700,13 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
     Returns: nothing; adds comments, if available, to the db
     """
     comment_data = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY,
+        REG_GOV_API_KEY,
         "comments",
         params={"filter[commentOnId]": document_object_id},
     )
     # add comment data to comments table in the database
     for comment in comment_data:
-        all_comment_data = merge_comment_text_and_data(
-            constants.REG_GOV_API_KEY, comment
-        )
+        all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
         insert_response = insert_comment_into_db(all_comment_data)
 
         if insert_response["error"]:
@@ -731,7 +739,7 @@ def add_comments_to_db_for_existing_doc(
         )
 
     comment_data = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY,
+        REG_GOV_API_KEY,
         "comments",
         params={
             "filter[commentOnId]": document_object_id,
@@ -740,9 +748,7 @@ def add_comments_to_db_for_existing_doc(
     )
 
     for comment in comment_data:
-        all_comment_data = merge_comment_text_and_data(
-            constants.REG_GOV_API_KEY, comment
-        )
+        all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
             print(insert_response["description"])
@@ -802,7 +808,7 @@ def pull_all_api_data_for_date_range(
     # get documents
     print("getting list of documents within date range")
     doc_list = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY,
+        REG_GOV_API_KEY,
         "documents",
         start_date=start_date,
         end_date=end_date,
