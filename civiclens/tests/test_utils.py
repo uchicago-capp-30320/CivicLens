@@ -5,6 +5,7 @@ import polars as pl
 import pytest
 
 from civiclens.utils.database_access import pull_data
+from civiclens.utils.text import clean_text
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -44,3 +45,15 @@ def test_bad_query():
     conn = sqlite3.connect(BASE_DIR / "test.db")
     with pytest.raises(RuntimeError):
         pull_data(conn, "SELECT data FROM not_a_table", return_type="list")
+
+
+def test_clean_string():
+    dirty = "<br/> Here's some text. ndash Also more text"
+    clean = "Here's some text. Also more text"
+    assert clean_text(dirty) == clean
+
+
+def test_clean_user_regex():
+    dirty = "The cat is home"
+    clean = "The dog is home"
+    assert clean_text(dirty, patterns=[(r"cat", "dog")]) == clean
