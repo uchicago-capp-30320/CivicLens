@@ -125,6 +125,9 @@ def extract_xml_text_from_doc(doc: json) -> json:
     """
     processed_data = []
 
+    if not doc:
+        return processed_data
+
     fr_doc_num = doc["attributes"]["frDocNum"]
     if fr_doc_num:
         xml_url = fetch_fr_document_details(fr_doc_num)
@@ -157,7 +160,7 @@ def verify_database_existence(
     table: str, api_field_val: str, db_field: str = "id"
 ) -> bool:
     """
-    Use regulations.gov API to confirm a row exists in a db table
+    Confirm a row exists in a db table for a given id
 
     Inputs:
         table (str): one of the tables in the CivicLens db
@@ -175,7 +178,7 @@ def verify_database_existence(
             cursor.execute(query, (api_field_val,))
             response = cursor.fetchall()
 
-    return response != []
+    return bool(response)
 
 
 def get_most_recent_doc_comment_date(doc_id: str) -> str:
@@ -999,6 +1002,7 @@ def add_comments_to_db_for_existing_doc(
                 f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
             )
             continue
+
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
             print(insert_response["description"])

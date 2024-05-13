@@ -60,11 +60,6 @@ def format_date(datetime_str: str) -> str:
         raise e
 
 
-# Test the function
-formatted_date = format_date("2024-03-06T05:00Z")
-print(formatted_date)
-
-
 def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict:
     """
     Takes a polars row and outputs it in properly formatted dict
