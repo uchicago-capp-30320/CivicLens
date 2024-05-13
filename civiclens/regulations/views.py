@@ -29,24 +29,11 @@ def search_page(request):
 #require method decorqator to only allow GET requests
 def search_results(request):
     today = timezone.now().date()
-    today = timezone.now().date()
     context = {}
     
     
     if request.method == "GET":
         query = request.GET.get("q", "")
-        sort_by = request.GET.get("sort_by", "most_relevant")
-        selected_agencies = request.GET.getlist("selected_agencies", "") 
-        search_results = request.GET.get("source", False)
-        if search_results:
-            comments_any = request.GET.get("comments_any")
-            comments_over_hundred = request.GET.get("comments_over_hundred")
-            category_rule = request.GET.get("rule")
-            category_proprosed_rule = request.GET.get("proposed_rule")
-            category_notice = request.GET.get("notice")
-            category_other = request.GET.get("other")
-            category_lst = [category_rule, category_proprosed_rule, category_notice, category_other]
-            
         sort_by = request.GET.get("sort_by", "most_relevant")
         selected_agencies = request.GET.getlist("selected_agencies", "") 
         search_results = request.GET.get("source", False)
@@ -78,9 +65,7 @@ def search_results(request):
                 .filter(comment_end_date__gte=today)
                 .order_by("-rank")
             )
-                .filter(comment_end_date__gte=today)
-                .order_by("-rank")
-            )
+
             if not documents.exists():
                 documents = (
                     Document.objects.annotate(
@@ -113,7 +98,6 @@ def search_results(request):
                     documents = documents.filter(comment_count__gte=1) 
                 if comments_over_hundred:
                     documents = documents.filter(comment_count__gte=100)
-                ) 
             if sort_by == 'most_recent':
                 documents = documents.order_by("-posted_date")
             elif sort_by == 'most_comments':
@@ -137,9 +121,6 @@ def search_results(request):
     
     context["search"] = query
 
-    return render(request, "search_results.html", 
-            {"context": context, "agencies": AgencyReference.objects.all().order_by("id")}
-    )
     return render(request, "search_results.html", 
             {"context": context, "agencies": AgencyReference.objects.all().order_by("id")}
     )
