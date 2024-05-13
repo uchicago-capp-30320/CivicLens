@@ -27,16 +27,22 @@ class RepComments:
     search_vector: list = Field(default=[])
     summary: str = ""
 
-    def get_all_comments(self):
+    # test this!
+    def get_nonrepresentative_comments(self):
         """
-        Converts dataframe to list of Comment objects.
+        Converts nonrepresentative comments to list of Comment objects.
         """
-        if self.doc_comments.is_empty():
-            return []
+        rep_ids = set()
+        for comment in self.rep_comments:
+            if isinstance(comment, Comment):
+                rep_ids.add(comment.id)
+            else:
+                rep_ids.add(comment["comment_id"])
 
         return [
             Comment(id=comment["id"], text=comment["comment"])
             for comment in self.doc_comments.to_dicts()
+            if comment["id"] not in rep_ids
         ]
 
     def to_list(self):
@@ -52,6 +58,7 @@ class RepComments:
                 num_represented=comment["comments_represented"],
                 id=comment["comment_id"],
                 form_letter=comment["form_letter"],
+                representative=True,
             )
             for comment in self.rep_comments
         ]
@@ -67,6 +74,7 @@ class Comment:
     form_letter: bool = False
     sentiment: str = ""
     source: str = "Comment"
+    representative: bool = False
 
     def to_dict(self):
         """
@@ -80,6 +88,7 @@ class Comment:
             "topic": self.topic,
             "form_letter": self.form_letter,
             "sentiment": self.sentiment,
+            "source": self.source,
         }
 
 

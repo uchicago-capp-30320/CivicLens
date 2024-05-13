@@ -181,7 +181,7 @@ class LabelChain:
             "fabiochiu/t5-base-tag-generation"
         )
 
-    def generate_label(self, terms: list[str]) -> str:
+    def generate_label(self, terms: list[str]) -> tuple:
         """
         Create better topic terms.
         """
@@ -197,9 +197,8 @@ class LabelChain:
         decoded_output = self.tokenizer.batch_decode(
             output, skip_special_tokens=True
         )[0]
-        tags = tuple(set(decoded_output.strip().split(", ")))
 
-        return tags
+        return tuple(set(decoded_output.strip().split(", ")))
 
 
 def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
@@ -229,36 +228,43 @@ def topic_comment_analysis(
     """
     Run topic and sentiment analysis.
     """
+    comments: list[Comment] = []
+
+    if comment_data.summary:
+        comments += [
+            Comment(text=comment_data.summary, id="Summary", source="Summary")
+        ]
     try:
-        comments = comment_data.to_list()
-        # append summary to the document list
-        if comment_data.summary:
-            comments += [
-                Comment(
-                    text=comment_data.summary, id="Summary", source="Summary"
-                )
-            ]
+        comments += comment_data.to_list()
         comment_topics = model.run_model(comments)
     except TooFewTopics:
+        comments += comment_data.get_nonrepresentative_comments()
+        comment_topics = model.run_model(comments)
+    except Exception:
+        # log error
         return comment_data
-    # add logic for re-doing analysis here, try and except for too few topics
+
     topic_terms = model.get_terms()
     topic_labels = label_topics(topic_terms, labeler)
 
-    # handle failure to create topics
+    # filter out non_rep comments
+    rep_comments: list[Comment] = []
+
     for comment in comments:
         comment.topic_label = topic_labels[comment_topics[comment.id]]
         comment.topic = comment_topics[comment.id]
         comment.sentiment = sentiment_analyzer(comment)
+        if comment.representative:
+            rep_comments.append(comment)
 
-    comments = sorted(
-        comments, key=lambda comment: comment.num_represented, reverse=True
+    rep_comments = sorted(
+        rep_comments, key=lambda comment: comment.num_represented, reverse=True
     )
 
     return RepComments(
         document_id=comment_data.document_id,
         doc_comments=comment_data.doc_comments,
-        rep_comments=[comment.to_dict() for comment in comments],
+        rep_comments=[comment.to_dict() for comment in rep_comments],
         doc_plain_english_title=comment_data.doc_plain_english_title,
         num_total_comments=comment_data.num_total_comments,
         num_unique_comments=comment_data.num_unique_comments,
