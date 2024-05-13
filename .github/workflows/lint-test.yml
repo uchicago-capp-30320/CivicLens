@@ -42,11 +42,18 @@ jobs:
 
     - run: poetry install
 
-    - name: lint with ruff
-      run: poetry run ruff check --output-format=github .
-
     - name: run tests with pytest
       run: poetry run pytest
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - uses: pre-commit/action@v3.0.0
+
 
     # - name: Install modules
     #  run: yarn
