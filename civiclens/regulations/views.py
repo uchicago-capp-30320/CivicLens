@@ -176,7 +176,7 @@ def document(request, doc_id):
         "last_updated": "May 6, 2024",
         "document_id": "ED-2023-OPE-0123-26398"
     }
-    # comments_nlp = {} 
+    comments_nlp = {} 
     return render(request, "document.html", {"doc": doc, "comments_nlp": comments_nlp, "comments_api": comments_api, "unique_comments": unique_comments, "comments_last_updated": comments_last_updated})
 
 
