@@ -1103,9 +1103,9 @@ def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> N
                 )
 
 
-def add_comments_to_date_range(start_date: str, end_date: str) -> None:
+def add_comments_based_on_comment_date_range(start_date: str, end_date: str) -> None:
     """
-    Add comments to the comments table for a date range
+    Add comments to the comments table based on a date range of when the comments were posted
 
     Inputs:
         start_date (str): the date in YYYY-MM-DD format to pull data from (inclusive)
@@ -1114,22 +1114,22 @@ def add_comments_to_date_range(start_date: str, end_date: str) -> None:
     Returns: nothing; adds comments, if available, to the db
     """
     comment_data = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY,
+        REG_GOV_API_KEY,
         "comments",
         start_date=start_date,
         end_date=end_date,
     )
     for comment in comment_data:
-        all_comment_data = merge_comment_text_and_data(
-            constants.REG_GOV_API_KEY, comment
-        )
+        all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
+        # clean
+        clean_comment_data(all_comment_data)
+
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
             print(insert_response["description"])
             # would want to add logging here
 
     # add comment data to comments table in the database
-
 
 
 def pull_all_api_data_for_date_range(
@@ -1184,7 +1184,7 @@ def pull_all_api_data_for_date_range(
 
     if pull_comments:
         print("adding comments to the db")
-        add_comments_to_date_range(start_date, end_date)
+        add_comments_based_on_comment_date_range(start_date, end_date)
         print("no more comments to add to db")
 
     print("process finished")
@@ -1206,19 +1206,19 @@ if __name__ == "__main__":
         "-k",
         "--pull_dockets",
         action="store_true",
-        help="Pull dockets for date range and add to db if not there",
+        help="Pull dockets that were posted during date range and add to db if not there",
     )
     parser.add_argument(
         "-d",
         "--pull_documents",
         action="store_true",
-        help="Pull documents for date range and add to db if not there",
+        help="Pull documents that were posted during date range and add to db if not there",
     )
     parser.add_argument(
         "-c",
         "--pull_comments",
         action="store_true",
-        help="Pull comments for date range and add to db if not there",
+        help="Pull comments that were posted during date range and add to db if not there",
     )
 
     args = parser.parse_args()
