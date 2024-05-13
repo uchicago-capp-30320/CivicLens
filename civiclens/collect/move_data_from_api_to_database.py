@@ -232,13 +232,14 @@ def qa_docket_data(docket_data: json) -> None:
         assert "attributes" in data_for_db, "'attributes' not in docket_data"
 
         # check the fields
-        assert len(docket_data[0]["id"]) < 255, "id field longer than 255 characters"
+        assert len(data_for_db["id"]) < 255, "id field longer than 255 characters"
         assert attributes["docketType"] in [
             "Rulemaking",
             "Nonrulemaking",
         ], "docketType unexpected value"
         assert (
             len(attributes["lastModifiedDate"]) == 20
+            and "202" in attributes["lastModifiedDate"]
         ), "lastModifiedDate is unexpected length"
         assert attributes["agencyId"].isalpha(), "agencyId is not just letter"
         assert isinstance(attributes["title"], str), "title is not string"
@@ -423,8 +424,27 @@ def validate_fr_doc_num(field_value):
 
 
 def clean_document_data(document_data: json) -> None:
+    """
+    Clean document data in place; run cleaning code on summary
+    """
     if document_data["summary"] is not None:
         document_data["summary"] = clean_text(document_data["summary"])
+
+
+def check_CFR_data(document_data: json) -> bool:
+    """
+    Check that the CFR field looks right
+    """
+    try:
+        assert (
+            document_data["CFR"] is None
+            or document_data["CFR"] == "Not Found"
+            or "CFR" in document_data["CFR"]
+            or document_data["CFR"].isalpha()
+        )
+        return True
+    except AssertionError:
+        return False
 
 
 def qa_document_data(document_data: json) -> True:
@@ -455,12 +475,14 @@ def qa_document_data(document_data: json) -> True:
         # attributes["agencyId"]
         assert (
             len((attributes["commentEndDate"])) == 20
+            and "202" in attributes["commentEndDate"]
         ), "commentEndDate is unexpected length"
         assert len(attributes["postedDate"]) == 20, "postedDate is unexpected length"
         # attributes["docketId"]
         # attributes["subtype"]
         assert (
             len(attributes["commentStartDate"]) == 20
+            and "202" in attributes["commentStartDate"]
         ), "commentStartDate is expected length"
         assert attributes["openForComment"] is True, "openForComment is False"
         # attributes["objectId"]
@@ -471,19 +493,16 @@ def qa_document_data(document_data: json) -> True:
             ".gov" in document_data["links"]["self"]
         ), "'.gov' is not in document_data['links']['self']"
         # document_data["agencyType"]
-        assert (
-            document_data["CFR"] == "Not Found" or document_data["CFR"].isalpha()
-        ), "CFR is not alpha characters"
+        assert check_CFR_data(document_data), "CFR is not alpha characters"
         # document_data["RIN"]
-        assert type(attributes["title"]) is str, "title is not string"
-        assert (
-            document_data["summary"] is None or type(document_data["summary"]) is str
+        assert isinstance(attributes["title"], str), "title is not string"
+        assert document_data["summary"] is None or isinstance(
+            document_data["summary"], str
         ), "summary is not string"
         # document_data["dates"]
         # document_data["furtherInformation"]
-        assert (
-            document_data["supplementaryInformation"] is None
-            or type(document_data["supplementaryInformation"]) is str
+        assert document_data["supplementaryInformation"] is None or isinstance(
+            document_data["supplementaryInformation"], str
         ), "supplementaryInformation is not string"
 
         return True
@@ -659,6 +678,9 @@ def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
 
 
 def clean_comment_data(comment_data: json) -> None:
+    """
+    Clean comment text -- make sure dates are formatted correctly
+    """
 
     comment_text_attributes = comment_data["data"]["attributes"]
 
@@ -693,7 +715,9 @@ def qa_comment_data(comment_data: json) -> None:
             comment_text_attributes["duplicateComments"] == 0
         ), "duplicateComments != 0"
         # assert comment_data["stateProvinceRegion"]
-        assert comment_text_attributes["subtype"] in [
+        assert comment_text_attributes["subtype"] is None or comment_text_attributes[
+            "subtype"
+        ] in [
             "Public Comment",
             "Comment(s)",
         ], "subtype is not an expected value"
