@@ -143,10 +143,7 @@
             </div>
             {% load static %}
             <p></p>
-            <script type="module">
-              import { drawOneHorizonalStackedBarGraph } from "{% static '/js/graph.js' %}";
-              drawGraph();
-            </script>
+            <script type="text/javascript" src="{% static '/js/graph.js' %}"></script>
           </div>
           <p class="text-right text-muted small">
             <a class="font-italic">topics last updated:</a> {{ comments_nlp.last_updated }}
