@@ -255,8 +255,14 @@ def insert_docket_into_db(docket_data: json) -> dict:
                     ) VALUES (
                         %s, %s, %s, %s, %s, %s, %s
                     )
-                    ON CONFLICT (id) DO NOTHING;
-                """,
+                    ON CONFLICT (id) DO UPDATE SET
+                        docket_type = EXCLUDED.docket_type,
+                        last_modified_date = EXCLUDED.last_modified_date,
+                        agency_id = EXCLUDED.agency_id,
+                        title = EXCLUDED.title,
+                        object_id = EXCLUDED.object_id,
+                        highlighted_content = EXCLUDED.highlighted_content;
+                    """,
                     (
                         data_for_db["id"],
                         attributes["docketType"],
@@ -337,7 +343,8 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
             doc.update(parsed_xml_content)  # merge the json objects
         except Exception:
             # if there's an error, that means we can't use the xml_url to get the doc text, so we enter None for those fields
-            error_message = f"Error accessing federal register xml data for frDocNum {fr_doc_num}, document id {document_id}"
+            error_message = f"Error accessing federal register xml data for frDocNum {fr_doc_num},\
+                  document id {document_id}"
             print(error_message)
             # raise Exception(error_message)
             blank_xml_fields = {
@@ -428,7 +435,28 @@ def insert_document_into_db(document_data: json) -> dict:
                             "supplementary_information") \
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (id) DO NOTHING;"""
+                    ON CONFLICT (id) DO UPDATE SET
+                        document_type = EXCLUDED.document_type,
+                        last_modified_date = EXCLUDED.last_modified_date,
+                        fr_doc_num = EXCLUDED.fr_doc_num,
+                        withdrawn = EXCLUDED.withdrawn,
+                        agency_id = EXCLUDED.agency_id,
+                        comment_end_date = EXCLUDED.comment_end_date,
+                        posted_date = EXCLUDED.posted_date,
+                        docket_id = EXCLUDED.docket_id,
+                        subtype = EXCLUDED.subtype,
+                        comment_start_date = EXCLUDED.comment_start_date,
+                        open_for_comment = EXCLUDED.open_for_comment,
+                        object_id = EXCLUDED.object_id,
+                        full_text_xml_url = EXCLUDED.full_text_xml_url,
+                        agency_type = EXCLUDED.agency_type,
+                        cfr = EXCLUDED.cfr,
+                        rin = EXCLUDED.rin,
+                        title = EXCLUDED.title,
+                        summary = EXCLUDED.summary,
+                        dates = EXCLUDED.dates,
+                        further_information = EXCLUDED.further_information,
+                        supplementary_information = EXCLUDED.supplementary_information;"""
     try:
         connection, cursor = connect_db_and_get_cursor()
         with connection:
@@ -623,7 +651,41 @@ def insert_comment_into_db(comment_data: json) -> dict:
     ) VALUES (
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     )
-    ON CONFLICT (id) DO NOTHING;
+    ON CONFLICT (id) DO UPDATE SET
+        object_id = EXCLUDED.object_id,
+        comment_on = EXCLUDED.comment_on,
+        document_id = EXCLUDED.document_id,
+        duplicate_comments = EXCLUDED.duplicate_comments,
+        state_province_region = EXCLUDED.state_province_region,
+        subtype = EXCLUDED.subtype,
+        comment = EXCLUDED.comment,
+        first_name = EXCLUDED.first_name,
+        last_name = EXCLUDED.last_name,
+        address1 = EXCLUDED.address1,
+        address2 = EXCLUDED.address2,
+        city = EXCLUDED.city,
+        category = EXCLUDED.category,
+        country = EXCLUDED.country,
+        email = EXCLUDED.email,
+        phone = EXCLUDED.phone,
+        gov_agency = EXCLUDED.gov_agency,
+        gov_agency_type = EXCLUDED.gov_agency_type,
+        organization = EXCLUDED.organization,
+        original_document_id = EXCLUDED.original_document_id,
+        modify_date = EXCLUDED.modify_date,
+        page_count = EXCLUDED.page_count,
+        posted_date = EXCLUDED.posted_date,
+        receive_date = EXCLUDED.receive_date,
+        title = EXCLUDED.title,
+        tracking_nbr = EXCLUDED.tracking_nbr,
+        withdrawn = EXCLUDED.withdrawn,
+        reason_withdrawn = EXCLUDED.reason_withdrawn,
+        zip = EXCLUDED.zip,
+        restrict_reason = EXCLUDED.restrict_reason,
+        restrict_reason_type = EXCLUDED.restrict_reason_type,
+        submitter_rep = EXCLUDED.submitter_rep,
+        submitter_rep_address = EXCLUDED.submitter_rep_address,
+        submitter_rep_city_state = EXCLUDED.submitter_rep_city_state;
     """
 
     # Execute the SQL statement
@@ -787,6 +849,35 @@ def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> N
                 )
 
 
+def add_comments_to_date_range(start_date: str, end_date: str) -> None:
+    """
+    Add comments to the comments table for a date range
+
+    Inputs:
+        start_date (str): the date in YYYY-MM-DD format to pull data from (inclusive)
+        end_date (str): the date in YYYY-MM-DD format to stop the data pull (inclusive)
+
+    Returns: nothing; adds comments, if available, to the db
+    """
+    comment_data = pull_reg_gov_data(
+        constants.REG_GOV_API_KEY,
+        "comments",
+        start_date=start_date,
+        end_date=end_date,
+    )
+    for comment in comment_data:
+        all_comment_data = merge_comment_text_and_data(
+            constants.REG_GOV_API_KEY, comment
+        )
+        insert_response = insert_comment_into_db(all_comment_data)
+        if insert_response["error"]:
+            print(insert_response["description"])
+            # would want to add logging here
+
+    # add comment data to comments table in the database
+
+
+
 def pull_all_api_data_for_date_range(
     start_date: str,
     end_date: str,
@@ -839,7 +930,7 @@ def pull_all_api_data_for_date_range(
 
     if pull_comments:
         print("adding comments to the db")
-        add_comments_to_db(commentable_docs)
+        add_comments_to_date_range(start_date, end_date)
         print("no more comments to add to db")
 
     print("process finished")
