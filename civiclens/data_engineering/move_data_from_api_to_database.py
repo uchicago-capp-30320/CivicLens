@@ -160,9 +160,13 @@ methods:
 """
 
 
-class APItoDB(ABC):
+class RegGovData(ABC):
     def __init__(self):
-        self.api_key = constants.REG_GOV_API_KEY
+        self.id = None
+
+    @abstractmethod
+    def convert_json_to_data_class(json_object: json):
+        pass
 
     @abstractmethod
     def verify_database_existence(
@@ -177,18 +181,6 @@ class APItoDB(ABC):
                 response = cursor.fetchall()
 
         return bool(response)
-
-    @abstractmethod
-    def pull_API_data(self, type_of_data: str, data_id: str) -> dict:
-        """Abstract method to pull data from an external API."""
-        API_data = pull_reg_gov_data(
-            self.api_key, type_of_data, params={"filter[searchTerm]": data_id}
-        )
-        return API_data
-
-    @abstractmethod
-    def pull_other_data():
-        pass
 
     @abstractmethod
     def insert_data_into_db(
@@ -224,6 +216,32 @@ class APItoDB(ABC):
             "description": None,
         }
 
+    @abstractmethod
+    def pull_other_data():
+        pass
+
+    @abstractmethod
+    def clean_data():
+        pass
+
+    @abstractmethod
+    def qa_data():
+        pass
+
+
+class APItoDB(ABC):
+    def __init__(self):
+        self.api_key = constants.REG_GOV_API_KEY
+
+    @abstractmethod
+    def pull_API_data(self, type_of_data: str, data_id: str) -> dict:
+        """Abstract method to pull data from an external API."""
+        API_data = pull_reg_gov_data(
+            self.api_key, type_of_data, params={"filter[searchTerm]": data_id}
+        )
+        return API_data
+
+    @abstractmethod
     def run(
         self, data_list: list[dict], table: str, print_statements: bool = True
     ) -> None:
@@ -233,21 +251,28 @@ class APItoDB(ABC):
                     api_data = self.pull_API_data(
                         type_of_data=table, data_id=data["id"]
                     )
-                    insert_response = self._insert_data_into_db(
-                        API_data=api_data,
-                        table=table,
-                        table_cols=tuple(api_data.keys()),
-                        data_formats=tuple("%s" for _ in range(len(api_data))),
-                        json_fields=tuple(
-                            api_data.values()
-                        ),  # Example: passing all values as json_fields
-                    )
-                    if insert_response["error"]:
-                        print(insert_response["description"])
-                        # Add logging here if needed
-                    else:
-                        if print_statements:
-                            print(f"Added {data['id']} to the {table} table.")
+
+                    for data_row in api_data:
+                        self.pull_other_data()
+                        self.clean_data()
+                        self.qa_data()
+
+                        insert_response = self._insert_data_into_db(
+                            API_data=data_row,
+                            table=table,
+                            table_cols=tuple(data_row.keys()),
+                            data_formats=tuple("%s" for _ in range(len(data_row))),
+                            json_fields=tuple(
+                                data_row.values()
+                            ),  # Example: passing all values as json_fields
+                        )
+                        if insert_response["error"]:
+                            print(insert_response["description"])
+                            # Add logging here if needed
+                        else:
+                            if print_statements:
+                                print(f"Added {data['id']} to the {table} table.")
+
                 except Exception as e:
                     print(f"Error processing {data['id']} to the {table} table: {e}")
 
