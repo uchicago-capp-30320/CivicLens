@@ -186,9 +186,9 @@ def pull_reg_gov_data(
 
         return [False, r.json()]
 
-    if data_type == "comments":
-        all_comments = []
-        unique_comments = {}
+    if data_type == "comments" or "documents":
+        all_objects = []
+        unique_objects = {}
 
         params.update(
             {
@@ -203,9 +203,9 @@ def pull_reg_gov_data(
         while continue_fetching:
             success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
             if success:
-                all_comments.extend(r_json["data"])
+                all_objects.extend(r_json["data"])
                 print(
-                    f"Fetched {len(r_json['data'])} comments, total: {len(all_comments)}"
+                    f"Fetched {len(r_json['data'])} objects, total: {len(all_objects)}"
                 )
 
                 # Check and handle the pagination
@@ -214,7 +214,7 @@ def pull_reg_gov_data(
 
                 if len(r_json["data"]) < 250 or not has_next_page:
                     print(
-                        "No more pages or fewer than 250 comments fetched, stopping..."
+                        "No more pages or fewer than 250 objects fetched, stopping..."
                     )
                     continue_fetching = False
                 else:
@@ -236,9 +236,9 @@ def pull_reg_gov_data(
                 continue_fetching = False
 
         # Remove Duplicates
-        for comment in all_comments:
-            unique_comments[comment["id"]] = comment
-        return list(unique_comments.values())
+        for obj in all_objects:
+            unique_objects[obj["id"]] = obj
+        return list(unique_objects.values())
 
     else:
         doc_data = None  # Initialize doc_data to None
