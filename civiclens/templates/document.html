@@ -11,7 +11,7 @@
 <section class="slice py-3" style="background-color:#FDFFF7" id="core-block">
   <!-- title section -->
   <div class="container p-4 py-0" style="background-color: rgba(180, 47, 55, 0.15); border: 15px solid #FDFFF7;">
-    <h5>doc.ai_title</h5>
+    <h5>{{comments.doc_plain_english_title}}</h5>
     <h6 class="font-italic font-weight-normal">Original title: {{doc.title}}</h6>
   </div>
     
@@ -127,8 +127,18 @@
         <span class="p">[methods here...]</span>
         <span class="p">[methods here...]</span>
 
-        <div class="container p-10" style="background-color: red;">
-          <p  style="text-align:center;">graph container</p>
+        <div class="container p-1 h-25" style="background-color: #FDFFF7;" id="chart">
+          <!-- hacky way to get comments.topics into the script -->
+          <!-- this is where we might be able to do alt text -->
+          <div id="topics" style="display: none;">
+            {{comments.topics}}
+          </div>
+          {% load static %}
+          <p></p>
+          <script type="module">
+            import { drawGraph } from "{% static '/js/graph.js' %}";
+            drawGraph();
+          </script>
         </div>
         <p class="text-right text-muted small">
           <a class="font-italic">topics last updated:</a> doc.topics_last_updated
