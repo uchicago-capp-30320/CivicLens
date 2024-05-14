@@ -134,7 +134,7 @@ def test_process_sentences():
 
 def test_catch_bertopic_errors():
     comments = RepComments(document_id="test", doc_comments=sample_df[:2])
-    docs = comments.get_all_comments()
+    docs = comments.get_nonrepresentative_comments()
     out = live_model.run_model(docs)
 
     assert out == {}
