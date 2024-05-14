@@ -42,6 +42,14 @@ def add_comments_for_existing_docs(df):
 
 
 def main():
+    """
+    This is a quick and dirty (hopefully one-time function) to add comments for
+    docs that show fewer comments in the regulations_comment table than the API
+    reports.
+
+    Takes the output of qa_doc_comment_num.py, gets docs that have fewer comments
+    in the table than in the API, iterates through those docs and add the comments
+    """
     df = pl.read_csv("comment_num_api_and_db.csv")
     filtered_df = df.filter(df["db_count"] < df["api_count"])
     add_comments_for_existing_docs(filtered_df)
