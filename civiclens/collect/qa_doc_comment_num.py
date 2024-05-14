@@ -1,12 +1,7 @@
 import requests
 import time
 import polars as pl
-from civiclens.collect.move_data_from_api_to_database import (
-    connect_db_and_get_cursor,
-    verify_database_existence,
-    add_comments_to_db_for_new_doc,
-    add_comments_to_db_for_existing_doc,
-)
+from civiclens.collect.move_data_from_api_to_database import connect_db_and_get_cursor
 
 from civiclens.utils.constants import (
     REG_GOV_API_KEY,
@@ -17,7 +12,7 @@ def pull_list_of_doc_info() -> list[tuple[str]]:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"SELECT id, object_id, rin \
+            query = "SELECT id, object_id, rin \
                     FROM regulations_document \
                     WHERE open_for_comment = True;"
             cursor.execute(query)
@@ -36,7 +31,7 @@ def find_object_id(object_id, rin):
 
 
 def get_doc_api_comment_count(object_id: str) -> int:
-    base_url = f"https://api.regulations.gov/v4/comments"
+    base_url = "https://api.regulations.gov/v4/comments"
 
     params = {"filter[commentOnId]": object_id}
     headers = {"X-Api-Key": REG_GOV_API_KEY, "Content-Type": "application/json"}
@@ -70,7 +65,7 @@ def get_doc_db_comment_count(document_id: str) -> int:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"SELECT COUNT(*) \
+            query = "SELECT COUNT(*) \
                     FROM regulations_comment \
                     WHERE document_id= %s;"
             cursor.execute(query, (document_id,))
