@@ -120,23 +120,6 @@ def fetch_comment_count_for_docs_in_db():
     return results_df
 
 
-def add_comments_for_existing_docs():
-    doc_tup_list = pull_list_of_doc_info()
-    print(f"{len(doc_tup_list)} documents in the database")
-
-    for document_id, object_id, rin in doc_tup_list:
-        real_object_id = find_object_id(object_id, rin)
-        if real_object_id is not None:
-            if not verify_database_existence(
-                "regulations_comment", document_id, "document_id"
-            ):  # doc doesn't exist in the db; it's new
-                print(f"no comments found in database for document {document_id}")
-
-                add_comments_to_db_for_new_doc(real_object_id)
-
-                print(f"tried to add comments on document {document_id} to the db")
-
-            else:  # doc exists in db; only need to add new comments
-                add_comments_to_db_for_existing_doc(document_id, real_object_id)
-        else:
-            print(f"no usable object id found for doc {document_id}")
+def main():
+    df = fetch_comment_count_for_docs_in_db()
+    df.write_csv("comment_num_api_and_db.csv")
