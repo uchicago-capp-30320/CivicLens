@@ -2,9 +2,10 @@ import polars as pl
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
-from transformers import T5ForConditionalGeneration, T5Tokenizer, pipeline
+from transformers import pipeline
 
 from ..utils.database_access import Database, pull_data
+from .models import title_model, title_tokenizer
 
 
 def get_doc_summary(id: str) -> pl.DataFrame:
@@ -40,9 +41,8 @@ class TitleChain:
 
             Answer:"""
         self.prompt = PromptTemplate.from_template(self.template)
-        self.model_id = "google/flan-t5-base"
-        self.model = T5ForConditionalGeneration.from_pretrained(self.model_id)
-        self.tokenizer = T5Tokenizer.from_pretrained(self.model_id)
+        self.model = title_model
+        self.tokenizer = title_tokenizer
         self.pipe = pipeline(
             "text2text-generation",
             model=self.model,

@@ -5,8 +5,15 @@ from sklearn.feature_extraction.text import CountVectorizer
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
+    T5ForConditionalGeneration,
+    T5Tokenizer,
     pipeline,
 )
+
+
+# title models
+title_model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base")
+title_tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base")
 
 
 # topic models
