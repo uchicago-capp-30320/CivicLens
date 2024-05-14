@@ -21,4 +21,4 @@ else
 fi
 
 # crontab command to run the nlp update at midnight on wednesday every week
-# 0 0 * * 3 /home/CivicLens/civiclens/utils/run_civiclens_nlp.sh
+# 0 0 * * 3 /home/CivicLens/civiclens/utils/run_civiclens_nlp.sh (fix with linux server path)
