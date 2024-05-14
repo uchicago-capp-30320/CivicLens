@@ -96,7 +96,6 @@ def pull_reg_gov_data(
     print_remaining_requests=False,
     wait_for_rate_reset=True,
     skip_duplicates=False,
-    comment_on_id=None,
 ):
     """
     Returns the JSON associated with a request to the API; max length of 24000
@@ -116,8 +115,6 @@ def pull_reg_gov_data(
             requests in a given hour. Defaults to False.
         skip_duplicates (bool, optional): If a request returns multiple items when only 1 was expected,
             should we skip that request? Defaults to False.
-        comment_on_id (str, optional): For documents containing > 5k objects, specify 'commentOnId'. Used
-            in chaining API requests. Defaults to None
 
     Returns:
         dict: JSON-ified request response
@@ -195,7 +192,6 @@ def pull_reg_gov_data(
 
         params.update(
             {
-                "filter[commentOnId]": comment_on_id,
                 "page[size]": 250,
                 "sort": "lastModifiedDate,documentId",
             }
@@ -225,9 +221,10 @@ def pull_reg_gov_data(
                     last_modified_date = format_datetime_for_api(
                         r_json["data"][-1]["attributes"]["lastModifiedDate"]
                     )
+                    
                     params = {
-                        "filter[commentOnId]": comment_on_id,
                         "filter[lastModifiedDate][ge]": last_modified_date,
+                        "filter[lastModifiedDate][le]": f"{end_date} 23:59:59",
                         "page[size]": 250,
                         "sort": "lastModifiedDate,documentId",
                         "page[number]": 1,
