@@ -1,6 +1,13 @@
 import requests
 import time
-from civiclens.collect.move_data_from_api_to_database import connect_db_and_get_cursor
+import polars as pl
+from civiclens.collect.move_data_from_api_to_database import (
+    connect_db_and_get_cursor,
+    verify_database_existence,
+    add_comments_to_db_for_new_doc,
+    add_comments_to_db_for_existing_doc,
+)
+
 from civiclens.utils.constants import (
     REG_GOV_API_KEY,
 )
@@ -10,81 +17,126 @@ def pull_list_of_doc_info() -> list[tuple[str]]:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"SELECT id, object_id \
-                    FROM regulations_document;"
+            query = f"SELECT id, object_id, rin \
+                    FROM regulations_document \
+                    WHERE open_for_comment = True;"
             cursor.execute(query)
             response = cursor.fetchall()
 
     return response
 
 
+def find_object_id(object_id, rin):
+    if object_id is not None and object_id[:2] == "09":
+        return object_id
+    elif rin is not None and rin[:2] == "09":
+        return rin
+    else:
+        return None
+
+
 def get_doc_api_comment_count(object_id: str) -> int:
     base_url = f"https://api.regulations.gov/v4/comments"
 
     params = {"filter[commentOnId]": object_id}
-    headers = {
-            'X-Api-Key': REG_GOV_API_KEY,
-            'Content-Type': 'application/json'
-        }
+    headers = {"X-Api-Key": REG_GOV_API_KEY, "Content-Type": "application/json"}
 
-    response = requests.get(base_url, headers=headers, params=params)
-    if response.status_code == 200:
-        data = response.json()
-        total_elements = data["meta"]["totalElements"]
-        return total_elements
+    continue_fetching = True
+    while continue_fetching:
+        response = requests.get(base_url, headers=headers, params=params)
 
-    elif response.status_code == 429:  # Rate limit exceeded
-        retry_after = response.headers.get("Retry-After", None)
-        wait_time = (
-            int(retry_after) if retry_after and retry_after.isdigit() else 3600
-        )
-        print(f"Rate limit exceeded. Waiting {wait_time} seconds to retry.")
-        time.sleep(wait_time)
-    
-    else:
-        print('other error -- process failed')
+        if response.status_code == 200:
+            data = response.json()
+            total_elements = data["meta"]["totalElements"]
+            return total_elements
+
+        elif response.status_code == 429:  # Rate limit exceeded
+            retry_after = response.headers.get("Retry-After", None)
+            wait_time = (
+                int(retry_after) if retry_after and retry_after.isdigit() else 3600
+            )
+            print(f"Rate limit exceeded. Waiting {wait_time} seconds to retry.")
+            time.sleep(wait_time)
+
+        else:
+            print(f"API request failed with status code: {response.status_code}")
+            continue_fetching = False
+
+    # Return a default value
+    return 0
+
 
 def get_doc_db_comment_count(document_id: str) -> int:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
             query = f"SELECT COUNT(*) \
-                    FROM regulations_comment
+                    FROM regulations_comment \
                     WHERE document_id= %s;"
             cursor.execute(query, (document_id,))
-            response = cursor.fetchall()
+            response = cursor.fetchone()
 
-    return response
+    db_count = response[0]
+    return db_count
 
-def diff_api_to_db_comment_count(document_id: str, object_id: str) -> int:
+
+def diff_api_to_db_comment_count(document_id: str, object_id: str, rin: str) -> dict:
     db_count = get_doc_db_comment_count(document_id)
-    api_count = get_doc_api_comment_count(object_id)
 
-    return api_count - db_count
+    real_object_id = find_object_id(object_id, rin)
+    if real_object_id is None:
+        diff = None
+    else:
+        api_count = get_doc_api_comment_count(real_object_id)
+        diff = api_count - db_count
+
+    return {"db_count": db_count, "api_count": api_count, "diff": diff}
 
 
-def fetch_comment_count_for_doc_list(doc_list):
-    """
-    Fetches comments count for each document ID that is open for comments.
+def fetch_comment_count_for_docs_in_db():
+    ret_lst = []
+    doc_tup_list = pull_list_of_doc_info()
+    print(f"{len(doc_tup_list)} documents in the database")
+    counter = 0
 
-    Args:
-        document_ids (DataFrame): DataFrame containing document IDs under the column 'Object_ID'.
-                                  This can be obtained from the output of fetch_documents_by_date_ranges()
-        file_output_path (str): Path to save the output csv file.
+    for document_id, object_id, rin in doc_tup_list:
+        count_dict = diff_api_to_db_comment_count(document_id, object_id, rin)
+        count_dict.update(
+            {"document_id": document_id, "object_id": object_id, "rin": rin}
+        )
+        ret_lst.append(count_dict)
 
-    Returns:
-        None: Results are saved directly to a csv file specified by file_output_path.
-    """
+        # END EARLY FOR TESTING
+        # if counter == 100:
+        #     results_df = pl.DataFrame(ret_lst)
+        #     return results_df
 
-    results = []
+        if counter % 100 == 0:
+            print(f"{counter} docs checked")
+        counter += 1
 
-    for commentId in document_ids["Object_ID"]:
-        continue_fetching = True
-        while continue_fetching:
-            
-            else:
-                results.append({"id": commentId, "total_elements": "Failed to fetch"})
-                continue_fetching = False
+    results_df = pl.DataFrame(ret_lst)
 
-    results_df = pd.DataFrame(results)
-    results_df.to_csv(file_output_path)
+    return results_df
+
+
+def add_comments_for_existing_docs():
+    doc_tup_list = pull_list_of_doc_info()
+    print(f"{len(doc_tup_list)} documents in the database")
+
+    for document_id, object_id, rin in doc_tup_list:
+        real_object_id = find_object_id(object_id, rin)
+        if real_object_id is not None:
+            if not verify_database_existence(
+                "regulations_comment", document_id, "document_id"
+            ):  # doc doesn't exist in the db; it's new
+                print(f"no comments found in database for document {document_id}")
+
+                add_comments_to_db_for_new_doc(real_object_id)
+
+                print(f"tried to add comments on document {document_id} to the db")
+
+            else:  # doc exists in db; only need to add new comments
+                add_comments_to_db_for_existing_doc(document_id, real_object_id)
+        else:
+            print(f"no usable object id found for doc {document_id}")
