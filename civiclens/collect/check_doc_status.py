@@ -19,7 +19,7 @@ def get_open_docs() -> list:
     """
     conn, cur = connect_db_and_get_cursor()
     with conn:
-        cur.execute(f"SELECT id, comment_end_date \
+        cur.execute("SELECT id, comment_end_date \
                     FROM regulations_document WHERE open_for_comment = %s", ('true',))
         open_docs = cur.fetchall()
     conn.close()
@@ -34,7 +34,7 @@ def close_doc_comment(doc_id: str) -> None:
     """
     conn, cur = connect_db_and_get_cursor()
     with conn:
-        cur.execute(f"UPDATE regulations_document \
+        cur.execute("UPDATE regulations_document \
                     SET open_for_comment = %s \
                     WHERE id = %s", ('false', doc_id))
     conn.close()
