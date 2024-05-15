@@ -868,9 +868,8 @@ def add_comments_to_date_range(start_date: str, end_date: str) -> None:
         end_date=end_date,
     )
     for comment in comment_data:
-        all_comment_data = merge_comment_text_and_data(
-            REG_GOV_API_KEY, comment
-        )
+        all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
+
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
             print(insert_response["description"])
