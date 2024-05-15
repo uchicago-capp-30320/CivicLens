@@ -143,10 +143,6 @@ def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
     Returns:
         Sentiment label as string (e.g 'postive', 'negative', 'neutral')
     """
-    try:
-        out = pipeline(comment.text)[0]
-    except Exception as e:
-        print(e)
-        return ""
 
+    out = pipeline(comment.text)[0]
     return out["label"]
