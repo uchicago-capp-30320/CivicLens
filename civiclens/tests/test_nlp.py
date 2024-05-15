@@ -176,6 +176,6 @@ def test_sim_clusters():
 def test_empty_form_df():
     df = pl.DataFrame()
     mock_sbert = MagicMock(spec=SentenceTransformer)
-    out_lst, num_comments = comments.find_form_letters(df, mock_sbert)
+    out_lst, num_comments = comments.find_form_letters(df, mock_sbert, form_threshold=10)
     assert out_lst == []
     assert num_comments == 0

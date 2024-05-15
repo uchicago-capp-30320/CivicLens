@@ -247,7 +247,7 @@ def find_form_letters(
     Inputs:
         df: dataframe of comments to extract form letters from
         model: vectorize model for text embeddings
-        form_threshold: threshold to consider a comment a form letter 
+        form_threshold: threshold to consider a comment a form letter
 
     Returns:
         List of form letters, number of unique comments
@@ -282,7 +282,7 @@ def find_form_letters(
             .select("comment_id")
             .item()
         )
-        
+
         form_letter = True
         if num_rep <= form_threshold:
             form_letter = False
@@ -339,7 +339,7 @@ def rep_comment_analysis(
 
     # fill out comment class
     comment_data = RepComments(document_id=id, doc_comments=df)
-    form_letters, num_form_letters = find_form_letters(df_rep_form, model)
+    form_letters, num_form_letters = find_form_letters(df_rep_form, model, form_threshold=10)
 
     if df_rep_form.is_empty():
         comment_data.rep_comments = df_rep_paraphrase.to_dicts()
@@ -348,7 +348,6 @@ def rep_comment_analysis(
         comment_data.rep_comments = form_letters
         comment_data.num_representative_comment = num_form_letters
     else:
-        form_letters, num_form_letters = find_form_letters(df_rep_form, model)
         comment_data.rep_comments = form_letters + df_rep_paraphrase.to_dicts()
         comment_data.num_representative_comment = len(comment_data.rep_comments)
 
