@@ -31,13 +31,12 @@ def _is_duplicated_on_server(response_json):
     )
 
 
-def api_date_format_params(data_type, start_date=None, end_date=None):
+def api_date_format_params(start_date=None, end_date=None):
     """
     Formats dates to be passed to API call. Assumes we want whole days, and
     aren't filtering by time.
 
     Inputs:
-        data_type (str): 'dockets', 'documents', or 'comments' -- what kind of data we want back from the API
         start_date (str in YYYY-MM-DD format, optional): the inclusive start date of our data pull
         end_date (str in YYYY-MM-DD format, optional): the inclusive end date of our data pull
 
@@ -45,18 +44,14 @@ def api_date_format_params(data_type, start_date=None, end_date=None):
         date_param (dict): dict containing the right formatted date calls
     """
     date_param = {}
-    if data_type == "dockets":
-        if start_date:
-            date_param.update(
-                {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
-            )
-        if end_date:
-            date_param.update({"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"})
-    else:
-        if start_date:
-            date_param.update({"filter[postedDate][ge]": start_date})
-        if end_date:
-            date_param.update({"filter[postedDate][le]": end_date})
+    if start_date:
+        date_param.update(
+            {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
+        )
+    if end_date:
+        date_param.update(
+            {"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"}
+        )
 
     return date_param
 
@@ -134,7 +129,7 @@ def pull_reg_gov_data(
 
     # if any dates are specified, format those and add to the params
     if start_date or end_date:
-        param_dates = api_date_format_params(data_type, start_date, end_date)
+        param_dates = api_date_format_params(start_date, end_date)
         params.update(param_dates)
 
     # whether we are querying the search endpoint (e.g., /documents) or the "details" endpoint
@@ -186,7 +181,8 @@ def pull_reg_gov_data(
 
         return [False, r.json()]
 
-    if data_type == "comments" or "documents":
+    if data_type == "comments" or data_type == "documents":
+        print("A")
         all_objects = []
         unique_objects = {}
 
@@ -221,15 +217,16 @@ def pull_reg_gov_data(
                     last_modified_date = format_datetime_for_api(
                         r_json["data"][-1]["attributes"]["lastModifiedDate"]
                     )
-                    
-                    params = {
-                        "filter[lastModifiedDate][ge]": last_modified_date,
-                        "filter[lastModifiedDate][le]": f"{end_date} 23:59:59",
-                        "page[size]": 250,
-                        "sort": "lastModifiedDate,documentId",
-                        "page[number]": 1,
-                        "api_key": api_key,
-                    }
+                    params.update(
+                        {
+                            "filter[lastModifiedDate][ge]": last_modified_date,
+                            "filter[lastModifiedDate][le]": f"{end_date} 23:59:59",
+                            "page[size]": 250,
+                            "sort": "lastModifiedDate,documentId",
+                            "page[number]": 1,
+                            "api_key": api_key,
+                        }
+                    )
                     print(f"Fetching more data from {last_modified_date}")
             else:
                 print("Failed to fetch data")
@@ -241,9 +238,15 @@ def pull_reg_gov_data(
         return list(unique_objects.values())
 
     else:
+        print("B")
         doc_data = None  # Initialize doc_data to None
         for i in range(1, 21):  # Fetch up to 20 pages
-            params["page[number]"] = str(i)  # Add page number to the params
+            params.update({
+            "page[size]": 250,
+            "sort": "lastModifiedDate",  # Ensure that only lastModifiedDate is considered, dockets cant take in documentID
+            "page[number]": str(i),
+            "api_key": api_key,
+        })
 
             success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
 
