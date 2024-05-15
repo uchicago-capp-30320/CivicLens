@@ -1,7 +1,9 @@
 import networkx as nx
+import numpy as np
 import polars as pl
 from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
+from sklearn.cluster import AgglomerativeClustering
 
 from ..utils.database_access import Database, pull_data
 from .tools import RepComments
@@ -209,6 +211,40 @@ def representative_comments(
         return output_df.unique(subset=["comment_text"])
     else:
         return output_df
+
+
+def compute_clusters(embeds: np.ndarray, sim_threshold: float) -> np.ndarray:
+    """
+    Extract form letters from corpus of comments.
+    """
+    kmeans = AgglomerativeClustering(
+        n_clusters=None,
+        metric="cosine",
+        linkage="average",
+        distance_threshold=sim_threshold,
+    )
+    kmeans.fit(embeds.toarray())
+
+    return kmeans.labels_
+
+
+def find_form_letters(df: pl.DataFrame, model: SentenceTransformer) -> list:
+    """
+    Finds and extracts from letters by clustering
+    """
+    # clean strings?
+    docs = df["comment_text"].to_numpy()
+    embeds = model.encode(docs, convert_to_numpy=True)
+    clusters = compute_clusters(embeds, sim_threshold=0.05)
+
+    num_form_letters = clusters.max()
+    form_letters = {}
+    for cluster in range(num_form_letters + 1):
+        cluster_docs = tuple(docs[np.where(clusters == cluster)])
+        form_letters[cluster_docs] = len(cluster_docs)
+
+    # TODO select sample letter, build in threshold for number of form letters
+    # Convert to list of Comment objects
 
 
 def rep_comment_analysis(
