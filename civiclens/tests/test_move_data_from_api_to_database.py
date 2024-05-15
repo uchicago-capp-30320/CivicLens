@@ -22,7 +22,10 @@ def test_fetch_fr_document_details_success():
         "full_text_xml_url": "https://example.com/your_xml_file.xml"
     }
 
-    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{url}.json?fields[]=full_text_xml_url"
+    api_endpoint = (
+        "https://www.federalregister.gov/api/v1/documents/"
+        f"{url}.json?fields[]=full_text_xml_url"
+    )
 
     with patch("requests.get") as mock_api_hit:
         mock_api_hit.return_value.json.return_value = mock_response
@@ -41,7 +44,10 @@ def test_fetch_fr_document_details_error():
     """
     blank_fr_num = ""
 
-    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{blank_fr_num}.json?fields[]=full_text_xml_url"
+    api_endpoint = (
+        "https://www.federalregister.gov/api/v1/documents/"
+        f"{blank_fr_num}.json?fields[]=full_text_xml_url"
+    )
 
     with patch("requests.get") as mock_api_hit:
         mock_api_hit.return_value.status_code = 404
@@ -100,9 +106,9 @@ def test_parse_xml_content_failure():
     with pytest.raises(Exception) as e:
         parse_xml_content(xml_content)
 
-    assert (
-        str(e)
-        == "<ExceptionInfo ParseError('no element found: line 1, column 0') tblen=3>"
+    assert str(e) == (
+        "<ExceptionInfo ParseError('no element found: line 1,"
+        "column 0') tblen=3>"
     )
 
 
@@ -122,7 +128,10 @@ def test_verify_database_existence():
     Check that verify_database_existence works and runs the right query
     """
     with patch(
-        "civiclens.collect.move_data_from_api_to_database.connect_db_and_get_cursor"
+        (
+            "civiclens.collect.move_data_from_api_to_database.connect_"
+            "db_and_get_cursor"
+        )
     ) as mock_connect_db:
         mock_cursor = MagicMock()
         mock_connect_db.return_value = (
@@ -140,7 +149,8 @@ def test_verify_database_existence():
 
         result = verify_database_existence(table, api_field_val)
 
-        # Need to do a lot of stripping of spaces in order for assert statements to function
+        # Need to do a lot of stripping of spaces in order for assert
+        # statements to function
         expected_query = (
             (f"SELECT * FROM {table} WHERE id = %s;")
             .replace(" ", "")
@@ -164,10 +174,14 @@ def test_verify_database_existence():
 
 def test_verify_database_existence_not_found():
     """
-    Check that verify_database_existence returns false when no row found and runs the right query
+    Check that verify_database_existence returns false when no row found and
+    runs the right query
     """
     with patch(
-        "civiclens.collect.move_data_from_api_to_database.connect_db_and_get_cursor"
+        (
+            "civiclens.collect.move_data_from_api_to_database."
+            "connect_db_and_get_cursor"
+        )
     ) as mock_connect_db:
         mock_cursor = MagicMock()
         mock_connect_db.return_value = (
@@ -183,7 +197,8 @@ def test_verify_database_existence_not_found():
 
         result = verify_database_existence(table, api_field_val)
 
-        # Need to do a lot of stripping of spaces in order for assert statements to function
+        # Need to do a lot of stripping of spaces in order for assert
+        # statements to function
         expected_query = (
             (f"SELECT * FROM {table} WHERE id = %s;")
             .replace(" ", "")
@@ -206,10 +221,14 @@ def test_verify_database_existence_not_found():
 
 def test_get_most_recent_doc_comment_date():
     """
-    Check that get_most_recent_doc_comment_date returns one hour earlier than max comment posted data
+    Check that get_most_recent_doc_comment_date returns one hour earlier than
+    max comment posted data
     """
     with patch(
-        "civiclens.collect.move_data_from_api_to_database.connect_db_and_get_cursor"
+        (
+            "civiclens.collect.move_data_from_api_to_database."
+            "connect_db_and_get_cursor"
+        )
     ) as mock_connect_db:
         mock_cursor = MagicMock()
         mock_connection = MagicMock()
@@ -226,7 +245,8 @@ def test_get_most_recent_doc_comment_date():
 
         expected_query = (
             (
-                f"""SELECT MAX("posted_date") FROM regulations_comment WHERE "document_id" = '{doc_id}';"""
+                f"""SELECT MAX("posted_date") FROM regulations_comment WHERE
+                "document_id" = '{doc_id}';"""
             )
             .replace(" ", "")
             .replace("\n", "")
@@ -234,7 +254,8 @@ def test_get_most_recent_doc_comment_date():
 
         mock_cursor.execute.assert_called_once()
 
-        # Need to do a lot of stripping of spaces in order for assert statements to function
+        # Need to do a lot of stripping of spaces in order for assert
+        # statements to function
         actual_call_args = mock_cursor.execute.call_args
         actual_query = (
             actual_call_args[0][0].strip().replace(" ", "").replace("\n", "")
@@ -243,7 +264,8 @@ def test_get_most_recent_doc_comment_date():
             actual_call_args[0][1] if len(actual_call_args[0]) > 1 else ()
         )
 
-        # Assert that the cursor.execute was called with the correct query and params
+        # Assert that the cursor.execute was called with the correct query and
+        # params
         assert actual_query == expected_query
         assert actual_params == ()
 

@@ -2,7 +2,7 @@ import re
 from typing import Optional
 
 
-def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
+def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
     r"""
     String cleaning function for comments.
 
@@ -14,6 +14,9 @@ def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
     Returns:
         Cleaned verison of text
     """
+    if patterns is None:
+        patterns = []
+
     text = re.sub(r"<\s*br\s*/>", " ", text)
     text = re.sub(r"[^a-zA-Z0-9.'\"\?\: -]", "", text)
     text = re.sub(r"\w*ndash\w*", "", text)

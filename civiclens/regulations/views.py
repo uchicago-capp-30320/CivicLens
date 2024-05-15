@@ -20,7 +20,7 @@ def search_page(request):
     return render(request, "search_page.html")
 
 
-def search_results(request):
+def search_results(request):  # noqa: C901
     today = timezone.now().date()
     context = {}
 
@@ -123,20 +123,31 @@ def document(request, doc_id):
         "rep_comments": [
             {
                 "id": "ED-2023-OPE-0123-28272",
-                "text": "The more student loan debt that can be forgiven the better. Over the years , I have had yo pause my student l9ans because of financial hardships I was facing.The period of time that loans were in repayment I had made my payments on time.My loans are currently in repayment, and if that burden could be lifted it would be life-changing for me. Right now. I find it very difficult to pay off my student loan debt. It has been following me for quite some time. Loan forgiveness would be good if I can qualify for it. ",
+                "text": """The more student loan debt that can be forgiven the
+                better. Over the years , I have had yo pause my student l9ans
+                because of financial hardships I was facing.The period of time
+                that loans were in repayment I had made my payments on time.
+                My loans are currently in repayment, and if that burden could
+                be lifted it would be life-changing for me. Right now. I find
+                it very difficult to pay off my student loan debt. It has been
+                following me for quite some time. Loan forgiveness would be
+                good if I can qualify for it. """,
                 "num_represented": 450,
                 "topic": "Debt Forgiveness",
                 "form_letter": True,
             },
             {
                 "id": "ED-2023-OPE-0123-28250",
-                "text": "Hello I am a current student who would greatly appreciate the privilege of having my student loans forgiven. Thank you so much in advance!",
+                "text": """Hello I am a current student who would greatly
+                appreciate the privilege of having my student loans forgiven.
+                Thank you so much in advance!""",
                 "num_represented": 231,
                 "topic": "Student Loans",
                 "form_letter": False,
             },
         ],
-        "doc_plain_english_title": "Student Loan Debt Waiver: Department Of Education",
+        "doc_plain_english_title": """Student Loan Debt Waiver: Department Of
+        Education""",
         "num_total_comments": 980,
         "num_unique_comments": 762,
         "num_rep_comments": 2,

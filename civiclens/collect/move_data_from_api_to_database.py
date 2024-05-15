@@ -26,13 +26,17 @@ def fetch_fr_document_details(fr_doc_num: str) -> str:
 
     Returns: xml url (str)
     """
-    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{fr_doc_num}.json?fields[]=full_text_xml_url"
+    api_endpoint = (
+        "https://www.federalregister.gov/api/v1/documents/"
+        f"{fr_doc_num}.json?fields[]=full_text_xml_url"
+    )
     response = requests.get(api_endpoint)
     if response.status_code == 200:
         data = response.json()
         return data.get("full_text_xml_url")
     else:
-        error_message = f"Error fetching FR document details for {fr_doc_num}: {response.status_code}"
+        error_message = f"""Error fetching FR document details for
+        {fr_doc_num}: {response.status_code}"""
         raise Exception(error_message)
 
 
@@ -56,7 +60,8 @@ def fetch_xml_content(url: str) -> str:
 
 def parse_xml_content(xml_content: str) -> dict:
     """
-    Parses XML content and extracts relevant data such as agency type, CFR, RIN, title, summary, etc.
+    Parses XML content and extracts relevant data such as agency type, CFR,
+    RIN, title, summary, etc.
 
     Input: xml_content (str): xml formatted text
 
@@ -106,7 +111,8 @@ def parse_xml_content(xml_content: str) -> dict:
     supl_info_texts = []
     supl_info_elements = root.findall(".//SUPLINF/*")
     for element in supl_info_elements:
-        # Assuming we want to gather all text from children tags within <SUPLINF>
+        # Assuming we want to gather all text from children tags within
+        # <SUPLINF>
         if element.text is not None:
             supl_info_texts.append(element.text.strip())
         for sub_element in element:
@@ -121,7 +127,8 @@ def parse_xml_content(xml_content: str) -> dict:
 
 def extract_xml_text_from_doc(doc: json) -> json:
     """
-    Take a document's json object, pull the xml text, add the text to the object
+    Take a document's json object, pull the xml text, add the text to the
+    object
 
     Input: doc (json): the object from regulations.gov API
 
@@ -171,7 +178,8 @@ def verify_database_existence(
     Inputs:
         table (str): one of the tables in the CivicLens db
         api_field_val (str): the value we're looking for in the table
-        db_field (str): the field in the table where we're looking for the value
+        db_field (str): the field in the table where we're looking for the
+        value
 
     Returns: boolean indicating the value was found
     """
@@ -205,8 +213,10 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
             response = cursor.fetchall()
 
     # format the text
-    # it seems that the regulations.gov API returns postedDate rounded to the hour
-    # if we used that naively as the most recent date, we might miss some comments
+    # it seems that the regulations.gov API returns postedDate rounded to the
+    # hour
+    # if we used that naively as the most recent date, we might miss some
+    # comments
     # when we pull comments again. By backing up one hour, we trade off some
     # unnecessary API calls for ensuring we don't miss anything
     date_dt = response[0][0]
@@ -230,7 +240,8 @@ def insert_docket_into_db(docket_data: json) -> dict:
         return {
             "error": True,
             "message": "wrong data format",
-            "description": "Invalid docket data format - not a list or an empty list",
+            "description": """Invalid docket data format -
+            not a list or an empty list""",
         }
 
     data_for_db = docket_data[0]
@@ -238,7 +249,8 @@ def insert_docket_into_db(docket_data: json) -> dict:
         return {
             "error": True,
             "message": "wrong data format",
-            "description": "Invalid docket data format - no attributes json object",
+            "description": """Invalid docket data format - no attributes json
+            object""",
         }
 
     data_for_db = docket_data[0]
@@ -281,7 +293,8 @@ def insert_docket_into_db(docket_data: json) -> dict:
                 )
                 connection.commit()
     except Exception as e:
-        error_message = f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
+        error_message = f"""Error inserting docket {attributes['objectId']}
+        into dockets table: {e}"""
         # print(error_message)
         return {
             "error": True,
@@ -303,7 +316,8 @@ def add_dockets_to_db(
     Add the dockets connected to a list of documents into the database
 
     Inputs:
-        doc_list (list of json objects): what is returned from an API call for documents
+        doc_list (list of json objects): what is returned from an API call
+        for documents
         print_statements (boolean): whether to print info on progress
 
     """
@@ -331,12 +345,14 @@ def add_dockets_to_db(
 
 def query_register_API_and_merge_document_data(doc: json) -> json:
     """
-    Attempts to pull document text via federal register API and merge with reg gov API data
+    Attempts to pull document text via federal register API and merge with reg
+    gov API data
 
     Input: doc (json): the raw json for a document from regulations.gov API
 
     Returns:
-        merged_doc (json): the json with fields for text from federal register API
+        merged_doc (json): the json with fields for text from federal register
+        API
     """
 
     # extract the document text using the general register API
@@ -349,9 +365,11 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
             parsed_xml_content = parse_xml_content(xml_content)
             doc.update(parsed_xml_content)  # merge the json objects
         except Exception:
-            # if there's an error, that means we can't use the xml_url to get the doc text, so we enter None for those fields
-            error_message = f"Error accessing federal register xml data for frDocNum {fr_doc_num},\
-                  document id {document_id}"
+            # if there's an error, that means we can't use the xml_url to get
+            # the doc text, so we enter None for those fields
+            error_message = f"""Error accessing federal register xml data for
+            frDocNum {fr_doc_num},\
+                  document id {document_id}"""
             print(error_message)
             # raise Exception(error_message)
             blank_xml_fields = {
@@ -417,7 +435,9 @@ def insert_document_into_db(document_data: json) -> dict:
         document_data["supplementaryInformation"],
     )
 
-    # annoying quirk: https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-column-of-relation-does-not-exist
+    # annoying quirk:
+    # https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-
+    # column-of-relation-does-not-exist
     query = """INSERT INTO regulations_document ("id",
                             "document_type",
                             "last_modified_date",
@@ -463,7 +483,8 @@ def insert_document_into_db(document_data: json) -> dict:
                         summary = EXCLUDED.summary,
                         dates = EXCLUDED.dates,
                         further_information = EXCLUDED.further_information,
-                        supplementary_information = EXCLUDED.supplementary_information;"""
+                        supplementary_information =
+                        EXCLUDED.supplementary_information;"""
     try:
         connection, cursor = connect_db_and_get_cursor()
         with connection:
@@ -475,7 +496,8 @@ def insert_document_into_db(document_data: json) -> dict:
                 connection.commit()
 
     except Exception as e:
-        error_message = f"Error inserting document {document_data['id']} into dockets table: {e}"
+        error_message = f"""Error inserting document
+        {document_data['id']} into dockets table: {e}"""
         # print(error_message)
         return {
             "error": True,
@@ -497,7 +519,8 @@ def add_documents_to_db(
     Add a list of document json objects into the database
 
     Inputs:
-        doc_list (list of json objects): what is returned from an API call for documents
+        doc_list (list of json objects): what is returned from an API call for
+        documents
         print_statements (boolean): whether to print info on progress
 
     """
@@ -536,7 +559,8 @@ def get_comment_text(api_key: str, comment_id: str) -> json:
         return response.json()
     else:
         print(
-            f"Failed to retrieve comment data. Status code: {response.status_code}"
+            f"""Failed to retrieve comment data.
+            Status code: {response.status_code}"""
         )
         return None
 
@@ -667,7 +691,8 @@ def insert_comment_into_db(comment_data: json) -> dict:
         "submitter_rep_address",
         "submitter_rep_city_state"
     ) VALUES (
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     )
     ON CONFLICT (id) DO UPDATE SET
         object_id = EXCLUDED.object_id,
@@ -752,7 +777,8 @@ def insert_comment_into_db(comment_data: json) -> dict:
             connection.commit()
 
     except Exception as e:
-        error_message = f"Error inserting comment {comment_data['id']} into comment table: {e}"
+        error_message = f"""Error inserting comment {comment_data['id']} into
+        comment table: {e}"""
         # print(error_message)
         return {
             "error": True,
@@ -813,7 +839,8 @@ def add_comments_to_db_for_existing_doc(
     most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
     if print_statements:
         print(
-            f"comments found for document {document_id}, most recent was {most_recent_comment_date}"
+            f"""comments found for document {document_id}, most recent was
+            {most_recent_comment_date}"""
         )
 
     comment_data = pull_reg_gov_data(
@@ -840,7 +867,8 @@ def add_comments_to_db(
     Add comments on a list of documents to the database
 
     Inputs:
-        doc_list (list of json objects): what is returned from an API call for documents
+        doc_list (list of json objects): what is returned from an API call for
+        documents
         print_statements (boolean): whether to print info on progress
 
     """
@@ -855,14 +883,16 @@ def add_comments_to_db(
             ):  # doc doesn't exist in the db; it's new
                 if print_statements:
                     print(
-                        f"no comments found in database for document {document_id}"
+                        f"""no comments found in database for document
+                        {document_id}"""
                     )
 
                 add_comments_to_db_for_new_doc(document_object_id)
 
                 if print_statements:
                     print(
-                        f"tried to add comments on document {document_id} to the db"
+                        f"""tried to add comments on document
+                        {document_id} to the db"""
                     )
 
             else:  # doc exists in db; only need to add new comments
@@ -876,8 +906,10 @@ def add_comments_to_date_range(start_date: str, end_date: str) -> None:
     Add comments to the comments table for a date range
 
     Inputs:
-        start_date (str): the date in YYYY-MM-DD format to pull data from (inclusive)
-        end_date (str): the date in YYYY-MM-DD format to stop the data pull (inclusive)
+        start_date (str): the date in YYYY-MM-DD format to pull data from
+        (inclusive)
+        end_date (str): the date in YYYY-MM-DD format to stop the data pull
+        (inclusive)
 
     Returns: nothing; adds comments, if available, to the db
     """
@@ -907,8 +939,10 @@ def pull_all_api_data_for_date_range(
     Pull different types of data from regulations.gov API based on date range
 
     Inputs:
-        start_date (str): the date in YYYY-MM-DD format to pull data from (inclusive)
-        end_date (str): the date in YYYY-MM-DD format to stop the data pull (inclusive)
+        start_date (str): the date in YYYY-MM-DD format to pull data from
+        (inclusive)
+        end_date (str): the date in YYYY-MM-DD format to stop the data pull
+        (inclusive)
         pull_dockets (boolean):
 
     Returns: nothing; adds data to the db
@@ -931,7 +965,8 @@ def pull_all_api_data_for_date_range(
         docket_id = doc["attributes"]["docketId"]
         if docket_id and doc["attributes"]["openForComment"]:
             commentable_docs.append(doc)
-            # can't add this doc to the db right now because docket needs to be added first
+            # can't add this doc to the db right now because docket needs to be
+            # added first
             # the db needs the docket primary key first
 
     print(f"{len(commentable_docs)} documents open for comment")

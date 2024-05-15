@@ -4,8 +4,8 @@ from django.test import Client
 
 # from regulations.forms import Search
 
-## run tests by the following line of code:
-## python civiclens/manage.py test --keepdb
+# run tests by the following line of code:
+# python civiclens/manage.py test --keepdb
 
 client = Client()
 

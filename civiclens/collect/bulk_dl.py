@@ -11,14 +11,16 @@ class BulkDl:
         Initializes the BulkDl class.
 
         Args:
-            api_key (str): API key for authenticating requests to the regulations.gov API.
+            api_key (str): API key for authenticating requests to the
+            regulations.gov API.
 
         Attributes:
             api_key (str): Stored API key for requests.
             base_url (str): Base URL for the API endpoint.
-            headers (dict): Headers to include in API requests, containing API key and content type.
-            agencies (list[str]): List of agency identifiers (aggregated from https://www.regulations.gov/agencies)
-                                  to be used in API calls.
+            headers (dict): Headers to include in API requests, containing API
+            key and content type.
+            agencies (list[str]): List of agency identifiers (aggregated from
+            https://www.regulations.gov/agencies) to be used in API calls.
         """
         self.api_key = api_key
         self.base_url = "https://api.regulations.gov/v4"
@@ -272,18 +274,20 @@ class BulkDl:
 
     def fetch_all_pages(self, endpoint, params, max_items_per_page=250):
         """
-        Iterates through all the pages of API data for a given endpoint until there
-        are no more pages to fetch (occurs at 20 pages, or 5000 items).
+        Iterates through all the pages of API data for a given endpoint
+        until there are no more pages to fetch (occurs at 20 pages, or
+        5000 items).
 
         Args:
             endpoint (str): The API endpoint to fetch data from.
                             ['dockets', 'documents', 'comments']
             params (dict): Dictionary of parameters to send in the API request.
-            max_items_per_page (int): Maximum number of items per page to request.
-                                      Max (default) = 250.
+            max_items_per_page (int): Maximum number of items per page to
+            request. Max (default) = 250.
 
         Returns:
-            list: A list of items (dictionaries) fetched from all pages of the API endpoint.
+            list: A list of items (dictionaries) fetched from all pages of the
+            API endpoint.
         """
         items = []
         page = 1
@@ -318,7 +322,8 @@ class BulkDl:
                     else 3600
                 )  # Default to 1 hour if no wait time provided
                 print(
-                    f"Rate limit exceeded. Waiting to {wait_time} seconds to retry."
+                    f"""Rate limit exceeded.
+                    Waiting to {wait_time} seconds to retry."""
                 )
                 time.sleep(wait_time)
                 continue
@@ -329,7 +334,8 @@ class BulkDl:
 
     def get_all_dockets_by_agency(self):
         """
-        Retrieves all docket IDs by looping through predefined agencies and stores them in a CSV file.
+        Retrieves all docket IDs by looping through predefined agencies and
+        stores them in a CSV file.
         """
         all_dockets = []
 
@@ -365,7 +371,8 @@ class BulkDl:
 
     def fetch_documents_by_date_ranges(self, start_date, end_date):
         """
-        Fetches documents posted within specified date ranges and saves them to a CSV file.
+        Fetches documents posted within specified date ranges and saves them
+        to a CSV file.
 
         Args:
             start_date (datetime.date): Start date for fetching documents.
@@ -428,7 +435,8 @@ class BulkDl:
             end_date (datetime.date): The end date of the range.
 
         Yields:
-            tuple: A tuple of (start_date, end_date) for each week within the specified range.
+            tuple: A tuple of (start_date, end_date) for each week within the
+            specified range.
         """
         current_date = start_date
         while current_date < end_date:
@@ -441,12 +449,15 @@ class BulkDl:
         Fetches comments count for each document ID that is open for comments.
 
         Args:
-            document_ids (DataFrame): DataFrame containing document IDs under the column 'Object_ID'.
-                                      This can be obtained from the output of fetch_documents_by_date_ranges()
+            document_ids (DataFrame): DataFrame containing document IDs under
+            the column 'Object_ID'.
+            This can be obtained from the output of
+            fetch_documents_by_date_ranges()
             file_output_path (str): Path to save the output csv file.
 
         Returns:
-            None: Results are saved directly to a csv file specified by file_output_path.
+            None: Results are saved directly to a csv file specified by
+            file_output_path.
         """
         base_url = f"{self.base_url}/comments"
         results = []
@@ -474,7 +485,8 @@ class BulkDl:
                         else 3600
                     )
                     print(
-                        f"Rate limit exceeded. Waiting {wait_time} seconds to retry."
+                        f"""Rate limit exceeded.
+                        Waiting {wait_time} seconds to retry."""
                     )
                     time.sleep(wait_time)
                 else:
