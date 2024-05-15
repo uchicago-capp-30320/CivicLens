@@ -262,6 +262,12 @@ def find_form_letters(
         cluster_docs = docs[np.where(clusters == cluster)]
         if cluster_docs.size == 0:
             continue
+        num_rep = (
+            df.filter(pl.col("comment_text").is_in(cluster_docs))
+            .select("comments_represented")
+            .sum()
+            .item()
+        )
         letter_text = np.random.choice(cluster_docs, size=1).item()
         letter_id = (
             df.filter(pl.col("comment_text") == letter_text)
@@ -275,7 +281,7 @@ def find_form_letters(
                 text=letter_text,
                 form_letter=True,
                 id=letter_id,
-                num_represented=cluster_docs.size,
+                num_represented=num_rep,
             )
         )
 
