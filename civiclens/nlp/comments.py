@@ -238,9 +238,18 @@ def find_form_letters(df: pl.DataFrame, model: SentenceTransformer) -> list:
     clusters = compute_clusters(embeds, sim_threshold=0.05)
 
     num_form_letters = clusters.max()
-    form_letters = {}
+    form_letters = []
     for cluster in range(num_form_letters + 1):
-        cluster_docs = tuple(docs[np.where(clusters == cluster)])
+        cluster_docs = docs[np.where(clusters == cluster)]
+        if not cluster_docs:
+            continue
+        letter_text = np.random.choice(cluster_docs, size=1)
+        letter_id = (
+            df.filter(pl.col("comment_text") == letter_text)
+            .select(pl.col("comment_id"))
+            .item()
+        )
+
         form_letters[cluster_docs] = len(cluster_docs)
 
     # TODO select sample letter, build in threshold for number of form letters
