@@ -1,6 +1,4 @@
-// graph.js
-
-export function drawGraph() {
+const drawOneHorizonalStackedBarGraph = function(){
     // set up
     const margin = { top: 10, right: 100, bottom: 20, left: 150 };
 
@@ -116,4 +114,5 @@ export function drawGraph() {
         .text("Total comments")
         .attr("font-size", 14)
         .attr("font-weight", "bold");
-}
+}()
+;
