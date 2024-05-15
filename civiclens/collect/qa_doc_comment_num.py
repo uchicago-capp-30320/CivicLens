@@ -118,3 +118,7 @@ def fetch_comment_count_for_docs_in_db():
 def main():
     df = fetch_comment_count_for_docs_in_db()
     df.write_csv("comment_num_api_and_db.csv")
+
+
+if __name__ == "__main__":
+    main()

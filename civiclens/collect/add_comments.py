@@ -73,8 +73,9 @@ if __name__ == "__main__":
         description="Input doc in the table that we left off on"
     )
     parser.add_argument(
-        "doc_to_start",
+        "--doc_to_start",
         type=str,
+        default=None,
         help="document we left off on",
     )
     args = parser.parse_args()
