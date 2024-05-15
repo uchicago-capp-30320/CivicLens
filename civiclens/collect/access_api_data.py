@@ -97,7 +97,7 @@ def format_datetime_for_api(dt_str):
     return eastern_dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def pull_reg_gov_data(
+def pull_reg_gov_data(  # noqa: C901
     api_key,
     data_type,
     start_date=None,
@@ -107,7 +107,7 @@ def pull_reg_gov_data(
     wait_for_rate_reset=True,
     skip_duplicates=False,
     comment_on_id=None,
-): # noqa: C901
+):
     """
     Returns the JSON associated with a request to the API; max length of 24000
 
