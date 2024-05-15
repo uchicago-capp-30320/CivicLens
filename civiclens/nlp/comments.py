@@ -339,7 +339,9 @@ def rep_comment_analysis(
 
     # fill out comment class
     comment_data = RepComments(document_id=id, doc_comments=df)
-    form_letters, num_form_letters = find_form_letters(df_rep_form, model, form_threshold=10)
+    form_letters, num_form_letters = find_form_letters(
+        df_rep_form, model, form_threshold=10
+    )
 
     if df_rep_form.is_empty():
         comment_data.rep_comments = df_rep_paraphrase.to_dicts()
