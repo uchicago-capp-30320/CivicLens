@@ -23,7 +23,6 @@ class RepComments:
     num_representative_comment: int = 0
     topics: list = Field(default=[])
     last_updated: datetime = datetime.now()
-    uuid: int = uuid4().int
     search_vector: list = Field(default=[])
     summary: str = ""
 

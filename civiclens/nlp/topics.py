@@ -234,13 +234,13 @@ def topic_comment_analysis(
         comments += [
             Comment(text=comment_data.summary, id="Summary", source="Summary")
         ]
-    try:
+    try:  # try with representative comments
         comments += comment_data.to_list()
         comment_topics = model.run_model(comments)
-    except TooFewTopics:
+    except TooFewTopics:  # try with all comments
         comments += comment_data.get_nonrepresentative_comments()
         comment_topics = model.run_model(comments)
-    except Exception:
+    except Exception:  # return if unable to run topic analysis
         # log error
         return comment_data
 
