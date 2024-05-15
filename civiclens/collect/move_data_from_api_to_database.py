@@ -862,22 +862,18 @@ def add_comments_to_date_range(start_date: str, end_date: str) -> None:
     Returns: nothing; adds comments, if available, to the db
     """
     comment_data = pull_reg_gov_data(
-        constants.REG_GOV_API_KEY,
+        REG_GOV_API_KEY,
         "comments",
         start_date=start_date,
         end_date=end_date,
     )
     for comment in comment_data:
-        all_comment_data = merge_comment_text_and_data(
-            constants.REG_GOV_API_KEY, comment
-        )
+        all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
+
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
             print(insert_response["description"])
             # would want to add logging here
-
-    # add comment data to comments table in the database
-
 
 
 def pull_all_api_data_for_date_range(
