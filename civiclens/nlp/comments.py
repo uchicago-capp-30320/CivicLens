@@ -213,9 +213,18 @@ def representative_comments(
         return output_df
 
 
-def compute_clusters(embeds: np.ndarray, sim_threshold: float) -> np.ndarray:
+def compute_similiarity_clusters(
+    embeds: np.ndarray, sim_threshold: float
+) -> np.ndarray:
     """
     Extract form letters from corpus of comments.
+
+    Inputs:
+        embeds: array of embeddings representing the documents
+        sim_threshold: distance thresholds to divide clusters
+
+    Returns:
+        Array of docs by cluster
     """
     kmeans = AgglomerativeClustering(
         n_clusters=None,
@@ -232,12 +241,20 @@ def find_form_letters(
     df: pl.DataFrame, model: SentenceTransformer
 ) -> tuple[list, int]:
     """
-    Finds and extracts from letters by clustering
+    Finds and extracts from letters by clustering, counts number of unique
+    comments.
+
+    Inputs:
+        df: dataframe of comments to extract form letters from
+        model: vectorize model for text embeddings
+
+    Returns:
+        List of form letters, number of unique comments
     """
-    # clean strings?
+    # TODO clean strings
     docs = df["comment_text"].to_numpy()
     embeds = model.encode(docs, convert_to_numpy=True)
-    clusters = compute_clusters(embeds, sim_threshold=0.05)
+    clusters = compute_similiarity_clusters(embeds, sim_threshold=0.05)
 
     num_form_letters = clusters.max()
     form_letters = []

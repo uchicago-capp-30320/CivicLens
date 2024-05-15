@@ -1,3 +1,4 @@
+import pickle
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -159,3 +160,13 @@ def test_mmr_sort():
     out = mmr_sort(docs, query, lam=0.7)
 
     assert out[0] == "apple"
+
+
+def test_sim_clusters():
+    with open(BASE_DIR / "nlp_test_data/test_embeddings.pkl", "rb") as f:
+        test_data = pickle.load(f)
+        mock_embeddings = test_data["embeddings"]
+        out = comments.compute_similiarity_clusters(
+            mock_embeddings, sim_threshold=0.05
+        )
+        assert out.size == 3
