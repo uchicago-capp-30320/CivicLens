@@ -269,6 +269,7 @@ def find_form_letters(
             .item()
         )
         # TODO compute threshold for being considered a form letter
+        # TODO make sure num_represented is correct
         form_letters.append(
             Comment(
                 text=letter_text,
@@ -333,9 +334,9 @@ def rep_comment_analysis(
         comment_data.num_representative_comment = len(comment_data.rep_comments)
 
     # find form letters
-    if not df_form_letter.is_empty():
+    if not df_rep_form.is_empty():
         # TODO where to store form_letters
-        _, num_form_letters = find_form_letters(df_form_letter, model)
+        _, num_form_letters = find_form_letters(df_rep_form, model)
 
     comment_data.num_total_comments = df.shape[0]
     comment_data.num_unique_comments = len(df_rep_paraphrase) + num_form_letters
