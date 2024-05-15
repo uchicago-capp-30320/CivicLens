@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer, util
 from sklearn.cluster import AgglomerativeClustering
 
 from ..utils.database_access import Database, pull_data
-from .tools import RepComments
+from .tools import Comment, RepComments
 
 
 def get_doc_comments(id: str) -> pl.DataFrame:
@@ -223,12 +223,14 @@ def compute_clusters(embeds: np.ndarray, sim_threshold: float) -> np.ndarray:
         linkage="average",
         distance_threshold=sim_threshold,
     )
-    kmeans.fit(embeds.toarray())
+    kmeans.fit(embeds)
 
     return kmeans.labels_
 
 
-def find_form_letters(df: pl.DataFrame, model: SentenceTransformer) -> list:
+def find_form_letters(
+    df: pl.DataFrame, model: SentenceTransformer
+) -> tuple[list, int]:
     """
     Finds and extracts from letters by clustering
     """
@@ -241,19 +243,25 @@ def find_form_letters(df: pl.DataFrame, model: SentenceTransformer) -> list:
     form_letters = []
     for cluster in range(num_form_letters + 1):
         cluster_docs = docs[np.where(clusters == cluster)]
-        if not cluster_docs:
+        if cluster_docs.size == 0:
             continue
-        letter_text = np.random.choice(cluster_docs, size=1)
+        letter_text = np.random.choice(cluster_docs, size=1).item()
         letter_id = (
             df.filter(pl.col("comment_text") == letter_text)
-            .select(pl.col("comment_id"))
+            .select("comment_id")
             .item()
         )
+        # TODO compute threshold for being considered a form letter
+        form_letters.append(
+            Comment(
+                text=letter_text,
+                form_letter=True,
+                id=letter_id,
+                num_represented=cluster_docs.size,
+            )
+        )
 
-        form_letters[cluster_docs] = len(cluster_docs)
-
-    # TODO select sample letter, build in threshold for number of form letters
-    # Convert to list of Comment objects
+    return form_letters, num_form_letters
 
 
 def rep_comment_analysis(
