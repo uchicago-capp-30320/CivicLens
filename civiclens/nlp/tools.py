@@ -11,7 +11,7 @@ from transformers import pipeline
 class RepComments:
     # clustered df for topics
     document_id: str
-    doc_comments: pl.DataFrame = Field(default=pl.DataFrame)
+    doc_comments: pl.DataFrame = Field(default=pl.DataFrame())
 
     # fields for nlp table
     rep_comments: list = Field(default=[])
@@ -90,15 +90,17 @@ class Comment:
         }
 
 
-# look into using a fixture for the pipeline
 def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
     """
     Analyze sentiment of a comment.
-    """
-    try:
-        out = pipeline(comment.text)[0]
-    except Exception as e:
-        print(e)
-        return ""
 
+    Inputs:
+        comment: Comment object
+        pipeline: Hugging Face pipeline for conducting sentiment analysis
+
+    Returns:
+        Sentiment label as string (e.g 'postive', 'negative', 'neutral')
+    """
+
+    out = pipeline(comment.text)[0]
     return out["label"]

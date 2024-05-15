@@ -7,7 +7,12 @@ from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from ..utils.ml_utils import TooFewTopics, clean_comments, sentence_splitter
+from ..utils.ml_utils import (
+    TooFewTopics,
+    TopicModelFailure,
+    clean_comments,
+    sentence_splitter,
+)
 from .tools import Comment, RepComments
 
 
@@ -73,9 +78,8 @@ class TopicModel:
 
         try:
             numeric_topics, probs = self.model.fit_transform(input)
-        except Exception as e:
-            print(f"Hugging Face error: {e}")
-            return {}
+        except Exception as error:
+            raise TopicModelFailure(error) from error
 
         num_topics = max(numeric_topics)
 
@@ -234,14 +238,21 @@ def topic_comment_analysis(
         comments += [
             Comment(text=comment_data.summary, id="Summary", source="Summary")
         ]
-    try:
-        comments += comment_data.to_list()
-        comment_topics = model.run_model(comments)
-    except TooFewTopics:
-        comments += comment_data.get_nonrepresentative_comments()
-        comment_topics = model.run_model(comments)
-    except Exception:
-        # log error
+
+    comments += comment_data.to_list()
+    for analysis in (
+        "representative",
+        "all",
+    ):  # try with representative comments
+        if analysis == "all":  # if failure, try with all comments
+            comments += comment_data.get_nonrepresentative_comments()
+        try:
+            comment_topics = model.run_model(comments)
+            break
+        except (TooFewTopics, TopicModelFailure) as e:
+            # log error
+            print(e)
+    else:  # return input if unable to generate comments
         return comment_data
 
     topic_terms = model.get_terms()

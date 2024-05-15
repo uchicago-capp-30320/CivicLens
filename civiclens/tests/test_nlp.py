@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import polars as pl
+import pytest
 from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
 
@@ -11,6 +12,7 @@ from civiclens.nlp import comments
 from civiclens.nlp.models import BertModel
 from civiclens.nlp.tools import Comment, RepComments
 from civiclens.nlp.topics import TopicModel, mmr_sort
+from civiclens.utils.ml_utils import TopicModelFailure
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -136,9 +138,8 @@ def test_process_sentences():
 def test_catch_bertopic_errors():
     comments = RepComments(document_id="test", doc_comments=sample_df[:2])
     docs = comments.get_nonrepresentative_comments()
-    out = live_model.run_model(docs)
-
-    assert out == {}
+    with pytest.raises(TopicModelFailure):
+        live_model.run_model(docs)
 
 
 def test_find_2_terms():

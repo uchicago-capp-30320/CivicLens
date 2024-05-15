@@ -82,7 +82,6 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
         comments: comments to be uploaded
     """
     query = """INSERT INTO regulations_nlpoutput (
-                    "id",
                     "rep_comments",
                     "doc_plain_english_title",
                     "num_total_comments",
@@ -90,14 +89,14 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
                     "num_representative_comment",
                     "topics",
                     "num_topics",
-                    "last_updated",
-                    "document_id"
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (id) DO NOTHING;
-                    """
+                    "created_at",
+                    "search_topics",
+                    "document_id")
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (document_id) DO NOTHING;
+                """
 
     values = (
-        comments.uuid,
         json.dumps(comments.rep_comments),
         comments.doc_plain_english_title,
         comments.num_total_comments,
@@ -106,6 +105,7 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
         json.dumps(comments.topics),
         len(comments.topics),
         comments.last_updated.strftime("%m/%d/%Y, %H:%M:%S"),
+        ", ".join(comments.search_vector),
         comments.document_id,
     )
 
@@ -115,7 +115,7 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
         connection.commit()
 
     except Exception as e:
-        return f"Upload failed, error: {e}"
+        print(e)
 
     if connection:
         cursor.close()

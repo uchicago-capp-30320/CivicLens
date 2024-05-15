@@ -5,6 +5,8 @@ import json
 import argparse
 import datetime as dt
 from datetime import datetime
+from requests.adapters import HTTPAdapter
+import time
 
 from civiclens.collect.access_api_data import pull_reg_gov_data
 from civiclens.utils.constants import (
@@ -512,9 +514,9 @@ def add_documents_to_db(doc_list: list[dict], print_statements: bool = True) -> 
                     print(f"added document {document_id} to the db")
 
 
-def get_comment_text(api_key: str, comment_id: str) -> json:
+def get_comment_text(api_key: str, comment_id: str) -> dict:
     """
-    Get the text of a comment
+    Get the text of a comment, with retry logic to handle rate limits.
 
     Inputs:
         api_key (str): key for the regulations.gov API
@@ -523,14 +525,37 @@ def get_comment_text(api_key: str, comment_id: str) -> json:
     Returns: the json object for the comment text
     """
     api_url = "https://api.regulations.gov/v4/comments/"
-    endpoint = f"{api_url}{comment_id}?include=attachments&api_key={api_key}"
-    response = requests.get(endpoint)
+    endpoint = f"{api_url}{comment_id}?include=attachments"
 
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Failed to retrieve comment data. Status code: {response.status_code}")
-        return None
+    STATUS_CODE_OVER_RATE_LIMIT = 429
+    WAIT_SECONDS = 3600  # Default to 1 hour
+
+    session = requests.Session()
+    session.mount("https", HTTPAdapter(max_retries=4))
+
+    while True:
+        response = session.get(endpoint, headers={"X-Api-Key": api_key}, verify=True)
+
+        if response.status_code == 200:
+            # SUCCESS! Return the JSON of the request
+            return response.json()
+        elif response.status_code == STATUS_CODE_OVER_RATE_LIMIT:
+            retry_after = response.headers.get("Retry-After", None)
+            wait_time = (
+                int(retry_after)
+                if retry_after and retry_after.isdigit()
+                else WAIT_SECONDS
+            )
+            the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(
+                f"Rate limit exceeded at {the_time}. Waiting {wait_time} seconds to retry."
+            )
+            time.sleep(wait_time)
+        else:
+            print(
+                f"Failed to retrieve comment data. Status code: {response.status_code}"
+            )
+            return None
 
 
 def merge_comment_text_and_data(api_key: str, comment_data: json) -> json:
