@@ -273,6 +273,7 @@ def insert_docket_into_db(docket_data: json) -> dict:
                         attributes["highlightedContent"],
                     ),
                 )
+                connection.commit()
     except Exception as e:
         error_message = (
             f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
@@ -465,6 +466,7 @@ def insert_document_into_db(document_data: json) -> dict:
                     query,
                     fields_to_insert,
                 )
+                connection.commit()
 
     except Exception as e:
         error_message = (
@@ -867,12 +869,11 @@ def add_comments_to_date_range(start_date: str, end_date: str) -> None:
     )
     for comment in comment_data:
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
+
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
             print(insert_response["description"])
             # would want to add logging here
-
-    # add comment data to comments table in the database
 
 
 def pull_all_api_data_for_date_range(

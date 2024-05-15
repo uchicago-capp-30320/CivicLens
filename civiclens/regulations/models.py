@@ -88,12 +88,13 @@ class AgencyReference(models.Model):
 class NLPoutput(models.Model):
     "Model representing NLP output at the document level."
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
-    rep_comments = models.TextField(null=True)
+    rep_comments = models.JSONField(null=True)
     doc_plain_english_title = models.CharField(max_length=255, blank=True, null=True)
     num_total_comments = models.IntegerField(default=0)
     num_unique_comments = models.IntegerField(default=0)
     num_representative_comment = models.IntegerField(default=0)
-    topics = models.TextField(null=True)
+    topics = models.JSONField(null=True)
     num_topics = models.IntegerField(default=0)
     last_updated = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    search_topics = models.TextField(null=True)
