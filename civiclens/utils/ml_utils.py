@@ -28,22 +28,6 @@ def clean_comments(text: str) -> str:
     return text
 
 
-def truncate(text: str, num_words: int) -> str:
-    """
-    Truncates commments:
-
-    Inputs:
-        text (str): Text of the comment
-        num_words (int): Number of words to keep
-
-    Returns:
-        Truncated commented
-    """
-    words = text.split(" ")
-
-    return " ".join(words[:num_words])
-
-
 def sentence_splitter(text: str, sep: str = ".") -> list[str]:
     """
     Splits string into sentences.

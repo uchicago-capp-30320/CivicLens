@@ -315,7 +315,12 @@ def rep_comment_analysis(
         comment_data.rep_comments = combined_data
         comment_data.num_representative_comment = len(comment_data.rep_comments)
 
+    # find form letters
+    if not df_form_letter.is_empty():
+        # TODO where to store form_letters
+        _, num_form_letters = find_form_letters(df_form_letter, model)
+
     comment_data.num_total_comments = df.shape[0]
-    comment_data.num_unique_comments = df_paraphrases.shape[0]
+    comment_data.num_unique_comments = len(df_rep_paraphrase) + num_form_letters
 
     return comment_data
