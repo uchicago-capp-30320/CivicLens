@@ -182,7 +182,6 @@ def pull_reg_gov_data(
         return [False, r.json()]
 
     if data_type == "comments" or data_type == "documents":
-        print("A")
         all_objects = []
         unique_objects = {}
 
@@ -238,7 +237,6 @@ def pull_reg_gov_data(
         return list(unique_objects.values())
 
     else:
-        print("B")
         doc_data = None  # Initialize doc_data to None
         for i in range(1, 21):  # Fetch up to 20 pages
             params.update({
