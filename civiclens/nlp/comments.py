@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer, util
 from sklearn.cluster import AgglomerativeClustering
 
 from ..utils.database_access import Database, pull_data
-from .tools import Comment, RepComments
+from .tools import RepComments
 
 
 def get_doc_comments(id: str) -> pl.DataFrame:
@@ -238,8 +238,8 @@ def compute_similiarity_clusters(
 
 
 def find_form_letters(
-    df: pl.DataFrame, model: SentenceTransformer
-) -> tuple[list, int]:
+    df: pl.DataFrame, model: SentenceTransformer, form_threshold: int
+) -> tuple[list[dict], int]:
     """
     Finds and extracts from letters by clustering, counts number of unique
     comments.
@@ -247,21 +247,29 @@ def find_form_letters(
     Inputs:
         df: dataframe of comments to extract form letters from
         model: vectorize model for text embeddings
+        form_threshold: threshold to consider a comment a form letter 
 
     Returns:
         List of form letters, number of unique comments
     """
     # TODO clean strings
+    num_form_letters = 0
+    form_letters = []
+
+    if df.is_empty():
+        return form_letters, num_form_letters
+
     docs = df["comment_text"].to_numpy()
     embeds = model.encode(docs, convert_to_numpy=True)
     clusters = compute_similiarity_clusters(embeds, sim_threshold=0.05)
+    document_id = df.unique(subset="document_id").select("document_id").item()
 
-    num_form_letters = clusters.max()
-    form_letters = []
-    for cluster in range(num_form_letters + 1):
+    num_form_letters += clusters.max() + 1
+    for cluster in range(num_form_letters):
         cluster_docs = docs[np.where(clusters == cluster)]
         if cluster_docs.size == 0:
             continue
+
         num_rep = (
             df.filter(pl.col("comment_text").is_in(cluster_docs))
             .select("comments_represented")
@@ -274,15 +282,19 @@ def find_form_letters(
             .select("comment_id")
             .item()
         )
-        # TODO compute threshold for being considered a form letter
-        # TODO make sure num_represented is correct
+        
+        form_letter = True
+        if num_rep <= form_threshold:
+            form_letter = False
+
         form_letters.append(
-            Comment(
-                text=letter_text,
-                form_letter=True,
-                id=letter_id,
-                num_represented=num_rep,
-            )
+            {
+                "comments_represented": num_rep,
+                "comment_id": letter_id,
+                "document_id": document_id,
+                "comment_text": letter_text,
+                "form_letter": form_letter,
+            }
         )
 
     return form_letters, num_form_letters
@@ -327,22 +339,18 @@ def rep_comment_analysis(
 
     # fill out comment class
     comment_data = RepComments(document_id=id, doc_comments=df)
+    form_letters, num_form_letters = find_form_letters(df_rep_form, model)
 
     if df_rep_form.is_empty():
         comment_data.rep_comments = df_rep_paraphrase.to_dicts()
         comment_data.num_representative_comment = df_rep_paraphrase.shape[0]
     elif df_rep_paraphrase.is_empty():
-        comment_data.rep_comments = df_rep_form.to_dicts()
-        comment_data.num_representative_comment = df_rep_form.shape[0]
+        comment_data.rep_comments = form_letters
+        comment_data.num_representative_comment = num_form_letters
     else:
-        combined_data = pl.concat([df_rep_form, df_rep_paraphrase]).to_dicts()
-        comment_data.rep_comments = combined_data
+        form_letters, num_form_letters = find_form_letters(df_rep_form, model)
+        comment_data.rep_comments = form_letters + df_rep_paraphrase.to_dicts()
         comment_data.num_representative_comment = len(comment_data.rep_comments)
-
-    # find form letters
-    if not df_rep_form.is_empty():
-        # TODO where to store form_letters
-        _, num_form_letters = find_form_letters(df_rep_form, model)
 
     comment_data.num_total_comments = df.shape[0]
     comment_data.num_unique_comments = len(df_rep_paraphrase) + num_form_letters

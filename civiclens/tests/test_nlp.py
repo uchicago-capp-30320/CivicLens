@@ -171,3 +171,11 @@ def test_sim_clusters():
             mock_embeddings, sim_threshold=0.05
         )
         assert out.size == 3
+
+
+def test_empty_form_df():
+    df = pl.DataFrame()
+    mock_sbert = MagicMock(spec=SentenceTransformer)
+    out_lst, num_comments = comments.find_form_letters(df, mock_sbert)
+    assert out_lst == []
+    assert num_comments == 0
