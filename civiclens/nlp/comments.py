@@ -255,11 +255,11 @@ def find_form_letters(
     # TODO clean strings
     num_form_letters = 0
     form_letters = []
+    docs = df["comment_text"].to_numpy()
 
-    if df.is_empty():
+    if len(docs) <= 1:  # cannot cluster with less than 2 documents
         return form_letters, num_form_letters
 
-    docs = df["comment_text"].to_numpy()
     embeds = model.encode(docs, convert_to_numpy=True)
     clusters = compute_similiarity_clusters(embeds, sim_threshold=0.05)
     document_id = df.unique(subset="document_id").select("document_id").item()
@@ -300,9 +300,7 @@ def find_form_letters(
     return form_letters, num_form_letters
 
 
-def rep_comment_analysis(
-    id: str, model: SentenceTransformer
-) -> tuple[pl.DataFrame]:
+def rep_comment_analysis(id: str, model: SentenceTransformer) -> RepComments:
     """Runs all representative comment code for a document
 
     Args:
