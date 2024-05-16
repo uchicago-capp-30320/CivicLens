@@ -13,7 +13,7 @@ from civiclens.collect.move_data_from_api_to_database import (
 )
 
 
-def test_fetch_fr_document_details_success():
+def test_fetch_fr_document_details_success():  # no
     """
     Check we get a url back from fetch_fr_document_details
     """
@@ -22,10 +22,7 @@ def test_fetch_fr_document_details_success():
         "full_text_xml_url": "https://example.com/your_xml_file.xml"
     }
 
-    api_endpoint = (
-        "https://www.federalregister.gov/api/v1/documents/"
-        f"{url}.json?fields[]=full_text_xml_url"
-    )
+    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{url}.json?fields[]=full_text_xml_url"
 
     with patch("requests.get") as mock_api_hit:
         mock_api_hit.return_value.json.return_value = mock_response
