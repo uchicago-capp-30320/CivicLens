@@ -29,17 +29,13 @@ def fetch_fr_document_details(fr_doc_num: str) -> str:
 
     Returns: xml url (str)
     """
-    api_endpoint = (
-        "https://www.federalregister.gov/api/v1/documents/"
-        f"{fr_doc_num}.json?fields[]=full_text_xml_url"
-    )
+    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{fr_doc_num}.json?fields[]=full_text_xml_url"
     response = requests.get(api_endpoint)
     if response.status_code == 200:
         data = response.json()
         return data.get("full_text_xml_url")
     else:
-        error_message = f"""Error fetching FR document details for
-        {fr_doc_num}: {response.status_code}"""
+        error_message = f"Error fetching FR document details for {fr_doc_num}: {response.status_code}"
         raise Exception(error_message)
 
 
