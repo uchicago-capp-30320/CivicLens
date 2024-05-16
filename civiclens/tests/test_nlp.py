@@ -5,12 +5,13 @@ import numpy as np
 import polars as pl
 import pytest
 from bertopic import BERTopic
+from nltk.tokenize import RegexpTokenizer
 from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments
 from civiclens.nlp.models import BertModel
 from civiclens.nlp.tools import Comment, RepComments
-from civiclens.nlp.topics import TopicModel, mmr_sort
+from civiclens.nlp.topics import HDAModel, TopicModel, mmr_sort
 from civiclens.utils.errors import TopicModelFailure
 
 
@@ -106,6 +107,20 @@ def test_gen_search_vector():
         "blue",
         "orange",
     }
+
+
+def test_hda_remove_num():
+    topic_model = HDAModel(tokenizer=RegexpTokenizer(r"\w+"))
+    test_comment = [Comment(text="twelve 12", id="123")]
+    words, _ = topic_model._process_text(test_comment)
+    assert words == [["twelve"]]
+
+
+def test_hda_stop_words():
+    topic_model = HDAModel(tokenizer=RegexpTokenizer(r"\w+"))
+    test_comment = [Comment(text="the dog is black", id="123")]
+    words, _ = topic_model._process_text(test_comment)
+    assert words == [["dog", "black"]]
 
 
 def test_gen_search_unique():

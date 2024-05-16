@@ -1,9 +1,15 @@
 from collections import defaultdict
 from typing import Callable
 
+import gensim.corpora as corpora
 import numpy as np
 from bertopic import BERTopic
+from gensim.corpora import Dictionary
+from gensim.models import HdpModel
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
+from nltk.corpus import stopwords
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.tokenize import RegexpTokenizer
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
@@ -34,6 +40,94 @@ def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
     sorted_terms = np.array(terms)[indices]
 
     return sorted_terms.tolist()
+
+
+class HDAModel:
+    """
+    Peforms LDA topic modeling
+    """
+
+    def __init__(self, tokenizer: RegexpTokenizer = None):
+        self.model = None
+        self.tokenizer = tokenizer
+        self.stop_words = stopwords.words("english")
+        self.lemmatizer = WordNetLemmatizer()
+
+    def _process_text(
+        self, comments: list[Comment]
+    ) -> tuple[list[list[str]], dict[int, str]]:
+        """
+        Clean text and convert to tokens
+        """
+        docs = []
+        document_ids = {}
+        for idx, comment in enumerate(comments):
+            docs.append(
+                self.tokenizer.tokenize(clean_text(comment.text).lower())
+            )
+            document_ids[idx] = comment.id
+
+        # remove numbers, tokens of length one, and stop words, lemmatize
+        docs = [
+            [
+                self.lemmatizer.lemmatize(token)
+                for token in doc
+                if not token.isnumeric()
+                and len(token) > 1
+                and token not in self.stop_words
+            ]
+            for doc in docs
+        ]
+
+        return docs, document_ids
+
+    def _create_corpus(
+        self, docs: list[list[str]]
+    ) -> tuple[Dictionary, list[tuple]]:
+        """
+        Converts tokens to corpus and corresponding dictionary
+        """
+        token_dict = corpora.Dictionary(docs)
+        corpus = [token_dict.doc2bow(doc) for doc in docs]
+
+        return token_dict, corpus
+
+    def run_model(self, comments: list[Comment]):
+        """
+        Runs HDA topic analysis.
+        """
+        docs, document_id = self._process_text(comments)
+        token_dict, corpus = self._create_corpus(docs)
+
+        hdp_model = HdpModel(corpus, token_dict)
+        numeric_topics = self._find_best_topic(hdp_model, corpus)
+
+        # assign list of terms for
+        comment_topics = {}
+        for doc_id, topic in numeric_topics.items():
+            comment_id = document_id[doc_id]
+            topic_terms = [word for word, _ in hdp_model.show_topic(topic)]
+            comment_topics[comment_id] = topic_terms
+
+        return comment_topics
+
+    def _find_best_topic(
+        self, model: HdpModel, corpus: list[tuple]
+    ) -> dict[int, int]:
+        """
+        Computes most probable topic per document
+        """
+        best_topic = {}
+        for doc_id, doc in enumerate(corpus):
+            max_prob = float("-inf")
+            topic_id = -1
+            for topic_num, prob in model[doc]:
+                if prob > max_prob:
+                    max_prob = prob
+                    topic_id = topic_num
+            best_topic[doc_id] = topic_id
+
+        return best_topic
 
 
 class TopicModel:
