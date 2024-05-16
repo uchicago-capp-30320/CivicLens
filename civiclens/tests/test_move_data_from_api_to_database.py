@@ -41,10 +41,7 @@ def test_fetch_fr_document_details_error():
     """
     blank_fr_num = ""
 
-    api_endpoint = (
-        "https://www.federalregister.gov/api/v1/documents/"
-        f"{blank_fr_num}.json?fields[]=full_text_xml_url"
-    )
+    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{blank_fr_num}.json?fields[]=full_text_xml_url"
 
     with patch("requests.get") as mock_api_hit:
         mock_api_hit.return_value.status_code = 404
