@@ -1,10 +1,13 @@
-import datetime
+from functools import partial
 
 import polars as pl
 from sentence_transformers import SentenceTransformer
 
-from ..utils.database_access import Database, pull_data
+from ..utils.database_access import Database, pull_data, upload_comments
 from . import comments, titles
+from .models import sentiment_pipeline
+from .tools import sentiment_analysis
+from .topics import LabelChain, TopicModel, topic_comment_analysis
 
 
 def doc_generator(df: pl.DataFrame):
@@ -61,8 +64,7 @@ if __name__ == "__main__":
             FROM regulations_comment rc2
             WHERE rc2.document_id = rc1.document_id
             GROUP BY document_id
-            HAVING COUNT(*) > 20
-        )
+            HAVING COUNT(*) > 20 )
         """
     else:
         docs_to_update = """SELECT document_id
@@ -78,7 +80,11 @@ if __name__ == "__main__":
     doc_gen = doc_generator(df_docs_to_update)
 
     title_creator = titles.TitleChain()
+    labeler = LabelChain()
     sbert_model = SentenceTransformer("all-mpnet-base-v2")
+    sentiment_analyzer = partial(
+        sentiment_analysis, pipeline=sentiment_pipeline
+    )
 
     for _ in range(len(docs_to_update)):
         try:
@@ -87,18 +93,25 @@ if __name__ == "__main__":
             comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
 
             # generate title if there is not already one
-            if doc_id not in docs_with_titles:
-                doc_summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
-                if doc_summary is not None:
-                    new_title = title_creator.invoke(paragraph=doc_summary)
-                    comment_data.doc_plain_english_title = new_title
+            comment_data.summary = titles.get_doc_summary(id=doc_id)[
+                0, "summary"
+            ]
+            if doc_id not in docs_with_titles and comment_data.summary:
+                new_title = title_creator.invoke(paragraph=comment_data.summary)
+                comment_data.doc_plain_english_title = new_title
 
-            # TODO call topic code
-            # Get the current timestamp of nlp update
-            updated = datetime.datetime.now()
-            # TODO update nlp table with comment_data, updated time, and topic
-            # code
-            # TODO update document table with topic search terms
+            topic_model = TopicModel()
+            comment_data = topic_comment_analysis(
+                comment_data,
+                model=topic_model,
+                labeler=labeler,
+                sentiment_analyzer=sentiment_analyzer,
+            )
+
+            # TODO update upload function to search column
+            # TODO logging for upload errors
+            upload_comments(Database(), comment_data)
+
         except StopIteration:
             print("NLP Update Completed")
             break
