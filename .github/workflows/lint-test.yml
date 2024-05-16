@@ -45,8 +45,11 @@ jobs:
     - name: run tests with pytest
       run: poetry run pytest
 
-    - name: run django tests
-      run: poetry run python civiclens/manage.py test --keepdb
+    - name: Django Test CI
+      uses: UKnowWhoIm/django-test-action@v0.6.1
+      with: 
+        settings-dir-path: civiclens.website.settings
+        requirements-file: pyproject.toml
 
   pre-commit:
     runs-on: ubuntu-latest
