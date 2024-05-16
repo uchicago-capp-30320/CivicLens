@@ -1,5 +1,6 @@
 import pickle
 from collections import defaultdict
+from functools import partial
 from pathlib import Path
 from typing import Callable
 
@@ -10,13 +11,12 @@ from gensim.corpora import Dictionary
 from gensim.models import HdpModel
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from nltk.stem.wordnet import WordNetLemmatizer
-from nltk.tokenize import RegexpTokenizer
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from civiclens.nlp.tools import Comment, RepComments
 from civiclens.utils.errors import TooFewTopics, TopicModelFailure
-from civiclens.utils.text import clean_text, sentence_splitter
+from civiclens.utils.text import clean_text, regex_tokenize, sentence_splitter
 
 
 def stopwords(model_path: Path):
@@ -58,9 +58,9 @@ class HDAModel:
     Peforms LDA topic modeling
     """
 
-    def __init__(self, tokenizer: RegexpTokenizer = None):
+    def __init__(self):
         self.model = None
-        self.tokenizer = tokenizer
+        self.tokenizer = partial(regex_tokenize, pattern=r"\W+")
         self.stop_words = stopwords(
             Path(__file__).resolve().parent / "saved_models/stop_words.pickle"
         )
@@ -75,18 +75,16 @@ class HDAModel:
         docs = []
         document_ids = {}
         for idx, comment in enumerate(comments):
-            docs.append(
-                self.tokenizer.tokenize(clean_text(comment.text).lower())
-            )
+            docs.append(self.tokenizer(clean_text(comment.text).lower()))
             document_ids[idx] = comment.id
 
-        # remove numbers, tokens of length one, and stop words, lemmatize
+        # remove numbers, tokens 2 character tokens, and stop words, lemmatize
         docs = [
             [
                 self.lemmatizer.lemmatize(token)
                 for token in doc
                 if not token.isnumeric()
-                and len(token) > 1
+                and len(token) > 2
                 and token not in self.stop_words
             ]
             for doc in docs
@@ -405,9 +403,9 @@ def create_topics(comments: list[Comment]) -> dict:
 
     topics = []
     # create output dictionary
-    for topic_label, partial in temp.items():
-        partial["topic"] = topic_label
-        topics.append(partial)
+    for topic_label, part in temp.items():
+        part["topic"] = topic_label
+        topics.append(part)
 
     # sort topics by "total"
     return sorted(topics, key=lambda topic: topic["total"], reverse=True)

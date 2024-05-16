@@ -2,8 +2,15 @@ import re
 from typing import Optional
 
 
-def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
+def regex_tokenize(text: str, pattern: str = r"\W+"):
     """
+    Splits strings into tokens base on regular expression.
+    """
+    return re.split(text, pattern)
+
+
+def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
+    r"""
     String cleaning function for comments.
 
     Inputs:
