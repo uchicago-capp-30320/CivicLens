@@ -45,6 +45,7 @@ nav:
   - "models.md"
   - "architecture.md"
   - "collect.md"
+  - "nlp.md"
   - Endpoints:
     - "endpoints/regulations.md"
     - "endpoints/search.md"
