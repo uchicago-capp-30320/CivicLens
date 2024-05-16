@@ -1,5 +1,6 @@
 from civiclens.collect import access_api_data
 
+
 api_key = "DEMO_KEY"
 
 
@@ -8,7 +9,7 @@ def test_is_duplicated_on_server():
     500 status should get flagged as something duplicated
     """
     test_json = {
-        "errors": [{"status": "500", "detail": "Incorrect result size"}],
+        "errors": [{"status": "500", "detail": "Wrong result size"}],
     }
     assert access_api_data._is_duplicated_on_server(test_json)
 
