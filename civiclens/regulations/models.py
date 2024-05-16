@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Docket(models.Model):
     "Model representing a docket."
     id = models.CharField(max_length=255, primary_key=True)
@@ -8,7 +9,10 @@ class Docket(models.Model):
     agency_id = models.CharField(max_length=100, blank=True, null=True)
     title = models.TextField(null=True)
     object_id = models.CharField(max_length=255, blank=True, null=True)
-    highlighted_content = models.CharField(max_length=255, blank=True, null=True)
+    highlighted_content = models.CharField(
+        max_length=255, blank=True, null=True
+    )
+
 
 class Document(models.Model):
     "Model representing a document."
@@ -37,6 +41,7 @@ class Document(models.Model):
     further_information = models.TextField(blank=True, null=True)
     supplementary_information = models.TextField(blank=True, null=True)
 
+
 class Comment(models.Model):
     "Model representing a public comment."
     id = models.CharField(max_length=255, primary_key=True)
@@ -44,7 +49,9 @@ class Comment(models.Model):
     comment_on = models.CharField(max_length=255, blank=True, null=True)
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     duplicate_comments = models.IntegerField(default=0)
-    state_province_region = models.CharField(max_length=100, blank=True, null=True)
+    state_province_region = models.CharField(
+        max_length=100, blank=True, null=True
+    )
     subtype = models.CharField(max_length=100, blank=True, null=True)
     comment = models.TextField(null=True)
     first_name = models.CharField(max_length=255, blank=True, null=True)
@@ -59,7 +66,9 @@ class Comment(models.Model):
     gov_agency = models.CharField(max_length=100, blank=True, null=True)
     gov_agency_type = models.CharField(max_length=100, blank=True, null=True)
     organization = models.CharField(max_length=255, blank=True, null=True)
-    original_document_id = models.CharField(max_length=100, blank=True, null=True)
+    original_document_id = models.CharField(
+        max_length=100, blank=True, null=True
+    )
     modify_date = models.DateTimeField(null=True)
     page_count = models.IntegerField(null=True)
     posted_date = models.DateTimeField(null=True)
@@ -70,12 +79,36 @@ class Comment(models.Model):
     reason_withdrawn = models.CharField(max_length=255, blank=True, null=True)
     zip = models.CharField(max_length=50, blank=True, null=True)
     restrict_reason = models.CharField(max_length=100, blank=True, null=True)
-    restrict_reason_type = models.CharField(max_length=100, blank=True, null=True)
+    restrict_reason_type = models.CharField(
+        max_length=100, blank=True, null=True
+    )
     submitter_rep = models.CharField(max_length=100, blank=True, null=True)
-    submitter_rep_address = models.CharField(max_length=255, blank=True, null=True)
-    submitter_rep_city_state = models.CharField(max_length=100, blank=True, null=True)
+    submitter_rep_address = models.CharField(
+        max_length=255, blank=True, null=True
+    )
+    submitter_rep_city_state = models.CharField(
+        max_length=100, blank=True, null=True
+    )
+
 
 class AgencyReference(models.Model):
     "Model representing a reference to an agency."
     id = models.CharField(max_length=10, primary_key=True)
     name = models.CharField(max_length=255, blank=True, null=True)
+
+
+class NLPoutput(models.Model):
+    "Model representing NLP output at the document level."
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    rep_comments = models.TextField(null=True)
+    doc_plain_english_title = models.CharField(
+        max_length=255, blank=True, null=True
+    )
+    num_total_comments = models.IntegerField(default=0)
+    num_unique_comments = models.IntegerField(default=0)
+    num_representative_comment = models.IntegerField(default=0)
+    topics = models.JSONField(null=True)
+    num_topics = models.IntegerField(default=0)
+    last_updated = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    search_topics = models.TextField(null=True)

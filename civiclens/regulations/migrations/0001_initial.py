@@ -15,14 +15,19 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.CharField(max_length=255, primary_key=True, serialize=False),
+                    models.CharField(
+                        max_length=255, primary_key=True, serialize=False
+                    ),
                 ),
                 ("docketType", models.CharField(blank=True, max_length=255)),
                 ("lastModifiedDate", models.DateTimeField()),
                 ("agencyId", models.CharField(blank=True, max_length=100)),
                 ("title", models.TextField()),
                 ("objectId", models.CharField(blank=True, max_length=255)),
-                ("highlightedContent", models.CharField(blank=True, max_length=255)),
+                (
+                    "highlightedContent",
+                    models.CharField(blank=True, max_length=255),
+                ),
             ],
         ),
         migrations.CreateModel(
@@ -30,7 +35,9 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.CharField(max_length=255, primary_key=True, serialize=False),
+                    models.CharField(
+                        max_length=255, primary_key=True, serialize=False
+                    ),
                 ),
                 ("documentType", models.CharField(blank=True, max_length=255)),
                 ("lastModifiedDate", models.DateTimeField()),
@@ -43,7 +50,10 @@ class Migration(migrations.Migration):
                 ("commentStartDate", models.DateField(blank=True, null=True)),
                 ("openForComment", models.BooleanField(default=False)),
                 ("objectId", models.CharField(blank=True, max_length=100)),
-                ("fullTextXmlUrl", models.CharField(blank=True, max_length=255)),
+                (
+                    "fullTextXmlUrl",
+                    models.CharField(blank=True, max_length=255),
+                ),
                 ("subAgy", models.CharField(blank=True, max_length=255)),
                 ("agencyType", models.CharField(blank=True, max_length=100)),
                 ("CFR", models.CharField(blank=True, max_length=100)),
@@ -67,12 +77,17 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.CharField(max_length=255, primary_key=True, serialize=False),
+                    models.CharField(
+                        max_length=255, primary_key=True, serialize=False
+                    ),
                 ),
                 ("objectId", models.CharField(max_length=255)),
                 ("commentOn", models.CharField(blank=True, max_length=255)),
                 ("duplicateComments", models.IntegerField(default=0)),
-                ("stateProvinceRegion", models.CharField(blank=True, max_length=100)),
+                (
+                    "stateProvinceRegion",
+                    models.CharField(blank=True, max_length=100),
+                ),
                 ("subtype", models.CharField(blank=True, max_length=100)),
                 ("comment", models.TextField()),
                 ("firstName", models.CharField(blank=True, max_length=255)),
@@ -87,7 +102,10 @@ class Migration(migrations.Migration):
                 ("govAgency", models.CharField(blank=True, max_length=100)),
                 ("govAgencyType", models.CharField(blank=True, max_length=100)),
                 ("organization", models.CharField(blank=True, max_length=255)),
-                ("originalDocumentId", models.CharField(blank=True, max_length=100)),
+                (
+                    "originalDocumentId",
+                    models.CharField(blank=True, max_length=100),
+                ),
                 ("modifyDate", models.DateTimeField()),
                 ("pageCount", models.IntegerField()),
                 ("postedDate", models.DateField()),
@@ -95,13 +113,28 @@ class Migration(migrations.Migration):
                 ("title", models.TextField()),
                 ("trackingNbr", models.CharField(blank=True, max_length=255)),
                 ("withdrawn", models.BooleanField(default=False)),
-                ("reasonWithdrawn", models.CharField(blank=True, max_length=255)),
+                (
+                    "reasonWithdrawn",
+                    models.CharField(blank=True, max_length=255),
+                ),
                 ("zip", models.CharField(blank=True, max_length=50)),
-                ("restrictReason", models.CharField(blank=True, max_length=100)),
-                ("restrictReasonType", models.CharField(blank=True, max_length=100)),
+                (
+                    "restrictReason",
+                    models.CharField(blank=True, max_length=100),
+                ),
+                (
+                    "restrictReasonType",
+                    models.CharField(blank=True, max_length=100),
+                ),
                 ("submitterRep", models.CharField(blank=True, max_length=100)),
-                ("submitterRepAddress", models.CharField(blank=True, max_length=255)),
-                ("submitterRepCityState", models.CharField(blank=True, max_length=100)),
+                (
+                    "submitterRepAddress",
+                    models.CharField(blank=True, max_length=255),
+                ),
+                (
+                    "submitterRepCityState",
+                    models.CharField(blank=True, max_length=100),
+                ),
                 (
                     "document",
                     models.ForeignKey(

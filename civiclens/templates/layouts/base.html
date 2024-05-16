@@ -3,11 +3,14 @@
   <head>
     <meta http-equiv="content-language" content="en-us">
     <meta charset="utf-8">
+    <script src="https://d3js.org/d3.v7.js"></script>
+    {% load static %}
+    <script src="{% static '/js/graph.js' %}" type="module"></script>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description"
       content="An application to allow easy, accessible public commenting.">
-    <title> 
+    <title>
       CivicLens | {% block title %} {% endblock title %}
     </title>
     <!-- non-custom version -->
@@ -15,19 +18,13 @@
     <link rel="stylesheet" href="/static/css/base.css" type="text/css">
     <link rel="icon" type="image/icon" href="/static/assets/img/favicon.ico" />
   </head>
-  <body style="background-color:#FDFFF7"></body>
-</html>
+  <body style="background-color:#FDFFF7">
 
-<body>
-<html>
-  
   {% include 'includes/navigation.html' %}
 
   {% block content %}
   {% endblock content %}
 
   {% include 'includes/footer.html' %}
-
-
-</body>
+  </body>
 </html>
