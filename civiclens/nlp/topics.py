@@ -10,7 +10,6 @@ from bertopic import BERTopic
 from gensim.corpora import Dictionary
 from gensim.models import HdpModel
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
-from nltk.stem.wordnet import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
@@ -64,7 +63,7 @@ class HDAModel:
         self.stop_words = stopwords(
             Path(__file__).resolve().parent / "saved_models/stop_words.pickle"
         )
-        self.lemmatizer = WordNetLemmatizer()
+        self.terms = None
 
     def _process_text(
         self, comments: list[Comment]
@@ -81,7 +80,7 @@ class HDAModel:
         # remove numbers, tokens 2 character tokens, and stop words, lemmatize
         docs = [
             [
-                self.lemmatizer.lemmatize(token)
+                token
                 for token in doc
                 if not token.isnumeric()
                 and len(token) > 2
@@ -113,12 +112,17 @@ class HDAModel:
         hdp_model = HdpModel(corpus, token_dict)
         numeric_topics = self._find_best_topic(hdp_model, corpus)
 
-        # assign list of terms for
         comment_topics = {}
+        topic_terms = {}
         for doc_id, topic in numeric_topics.items():
             comment_id = document_id[doc_id]
-            topic_terms = [word for word, _ in hdp_model.show_topic(topic)]
-            comment_topics[comment_id] = topic_terms
+            if topic not in topic_terms:
+                topic_terms[topic] = [
+                    word for word, _ in hdp_model.show_topic(topic)
+                ]
+            comment_topics[comment_id] = topic
+
+        self.terms = topic_terms
 
         return comment_topics
 
@@ -139,6 +143,30 @@ class HDAModel:
             best_topic[doc_id] = topic_id
 
         return best_topic
+
+    def get_terms(self) -> dict:
+        """
+        Returns terms for a all topics
+        """
+        if not self.terms:
+            return {}
+
+        return self.terms
+
+    def generate_search_vector(self) -> list[str]:
+        """
+        Creates array of topics to use in Django serach model.
+        """
+        if not self.terms:
+            raise RuntimeError(
+                "Must run topic model before generating search vector"
+            )
+
+        search_vector = set()
+        for term_list in self.terms.values():
+            search_vector.update(term_list)
+
+        return list(search_vector)
 
 
 class TopicModel:
@@ -326,7 +354,7 @@ def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
 
 def topic_comment_analysis(
     comment_data: RepComments,
-    model: TopicModel = None,
+    model: HDAModel = None,
     labeler: LabelChain = None,
     sentiment_analyzer: Callable = None,
 ) -> RepComments:
@@ -340,22 +368,7 @@ def topic_comment_analysis(
             Comment(text=comment_data.summary, id="Summary", source="Summary")
         ]
 
-    comments += comment_data.to_list()
-    for analysis in (
-        "representative",
-        "all",
-    ):  # try with representative comments
-        if analysis == "all":  # if failure, try with all comments
-            comments += comment_data.get_nonrepresentative_comments()
-        try:
-            comment_topics = model.run_model(comments)
-            break
-        except (TooFewTopics, TopicModelFailure) as e:
-            # log error
-            print(e)
-    else:  # return input if unable to generate comments
-        return comment_data
-
+    comment_topics = model.run_model(comments)
     topic_terms = model.get_terms()
     topic_labels = label_topics(topic_terms, labeler)
 
