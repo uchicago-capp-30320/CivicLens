@@ -5,9 +5,16 @@ from typing import Optional
 def regex_tokenize(text: str, pattern: str = r"\W+"):
     """
     Splits strings into tokens base on regular expression.
+
+    Inputs:
+        text: string to tokenize
+        pattern: regular expression to split tokens on, defaults to white space
+
+    Returns:
+        List of strings represented tokens
     """
     return re.split(pattern, text)
-  
+
 
 def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
     r"""
