@@ -3,8 +3,8 @@ import polars as pl
 from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
 
-from ..utils.database_access import Database, pull_data
-from .tools import RepComments
+from civiclens.nlp.tools import RepComments
+from civiclens.utils.database_access import Database, pull_data
 
 
 def get_doc_comments(id: str) -> pl.DataFrame:
@@ -211,9 +211,7 @@ def representative_comments(
         return output_df
 
 
-def rep_comment_analysis(
-    id: str, model: SentenceTransformer
-) -> tuple[pl.DataFrame]:
+def rep_comment_analysis(id: str, model: SentenceTransformer) -> RepComments:
     """Runs all representative comment code for a document
 
     Args:
@@ -249,19 +247,18 @@ def rep_comment_analysis(
         print("Form Letter Clustering Not Possible: Empty DataFrame")
 
     # fill out comment class
-    comment_data = RepComments()
-    comment_data.doc_comments = df
+    comment_data = RepComments(document_id=id, doc_comments=df)
 
     if df_rep_form.is_empty():
-        comment_data.rep_comments = df_rep_paraphrase.to_dict()
+        comment_data.rep_comments = df_rep_paraphrase.to_dicts()
         comment_data.num_representative_comment = df_rep_paraphrase.shape[0]
     elif df_rep_paraphrase.is_empty():
-        comment_data.rep_comments = df_rep_form.to_dict()
+        comment_data.rep_comments = df_rep_form.to_dicts()
         comment_data.num_representative_comment = df_rep_form.shape[0]
     else:
-        combined_data = pl.concat([df_rep_form, df_rep_paraphrase]).to_dict()
+        combined_data = pl.concat([df_rep_form, df_rep_paraphrase]).to_dicts()
         comment_data.rep_comments = combined_data
-        comment_data.num_representative_comment = combined_data.shape[0]
+        comment_data.num_representative_comment = len(comment_data.rep_comments)
 
     comment_data.num_total_comments = df.shape[0]
     comment_data.num_unique_comments = df_paraphrases.shape[0]

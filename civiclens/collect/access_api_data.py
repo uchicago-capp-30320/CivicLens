@@ -33,36 +33,29 @@ def _is_duplicated_on_server(response_json):
     )
 
 
-def api_date_format_params(data_type, start_date=None, end_date=None):
+def api_date_format_params(start_date=None, end_date=None):
     """
     Formats dates to be passed to API call. Assumes we want whole days, and
     aren't filtering by time.
 
     Inputs:
-        data_type (str): 'dockets', 'documents', or 'comments' -- what kind of
-        data we want back from the API start_date (str in YYYY-MM-DD format,
-        optional): the inclusive start date of our data pull end_date
-        (str in YYYY-MM-DD format, optional): the inclusive end date of our
-        data pull
+        start_date (str in YYYY-MM-DD format, optional): the inclusive start 
+        date of our data pull
+        end_date (str in YYYY-MM-DD format, optional): the inclusive end date 
+        of our data pull
 
     Returns:
         date_param (dict): dict containing the right formatted date calls
     """
     date_param = {}
-    if data_type == "dockets":
-        if start_date:
-            date_param.update(
-                {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
-            )
-        if end_date:
-            date_param.update(
-                {"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"}
-            )
-    else:
-        if start_date:
-            date_param.update({"filter[postedDate][ge]": start_date})
-        if end_date:
-            date_param.update({"filter[postedDate][le]": end_date})
+    if start_date:
+        date_param.update(
+            {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
+        )
+    if end_date:
+        date_param.update(
+            {"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"}
+        )
 
     return date_param
 
@@ -106,7 +99,6 @@ def pull_reg_gov_data(  # noqa: C901
     print_remaining_requests=False,
     wait_for_rate_reset=True,
     skip_duplicates=False,
-    comment_on_id=None,
 ):
     """
     Returns the JSON associated with a request to the API; max length of 24000
@@ -116,26 +108,25 @@ def pull_reg_gov_data(  # noqa: C901
     comments_downloader.py)
 
     Args:
-        data_type (str): 'dockets', 'documents', or 'comments' -- what kind of
-        data we want back from the API start_date (str in YYYY-MM-DD format,
-        optional): the inclusive start date of our data pull end_date
-        (str in YYYY-MM-DD format, optional): the inclusive end date of
-        our data pull
+        data_type (str): 'dockets', 'documents', or 'comments' -- what kind of 
+        data we want back from the API
+        start_date (str in YYYY-MM-DD format, optional): the inclusive start 
+        date of our data pull
+        end_date (str in YYYY-MM-DD format, optional): the inclusive end date 
+        of our data pull
         params (dict, optional): Parameters to specify to the endpoint request.
         Defaults to None.
-            If we are querying the non-details endpoint, we also append the
-            "page[size]" parameter so that we always get the maximum page size
-            of 250 elements per page.
-        print_remaining_requests (bool, optional): Whether to print out the
-        number of remaining requests this hour, based on the response headers.
+        If we are querying the non-details endpoint, we also append the 
+        "page[size]" parameter so that we always get the maximum page size of 
+        250 elements per page.
+        print_remaining_requests (bool, optional): Whether to print out the 
+        number of remaining requests this hour, based on the response headers. 
         Defaults to False.
-        wait_for_rate_reset (bool, optional): Determines whether to wait to
+        wait_for_rate_reset (bool, optional): Determines whether to wait to 
         re-try if we run out of requests in a given hour. Defaults to False.
         skip_duplicates (bool, optional): If a request returns multiple items
-        when only 1 was expected,should we skip that request? Defaults to
+        when only 1 was expected, should we skip that request? Defaults to 
         False.
-        comment_on_id (str, optional): For documents containing > 5k objects,
-        specify 'commentOnId'. Used in chaining API requests. Defaults to None
 
     Returns:
         dict: JSON-ified request response
@@ -159,7 +150,7 @@ def pull_reg_gov_data(  # noqa: C901
 
     # if any dates are specified, format those and add to the params
     if start_date or end_date:
-        param_dates = api_date_format_params(data_type, start_date, end_date)
+        param_dates = api_date_format_params(start_date, end_date)
         params.update(param_dates)
 
     # whether we are querying the search endpoint (e.g., /documents)
@@ -176,7 +167,8 @@ def pull_reg_gov_data(  # noqa: C901
 
     def poll_for_response(api_key, wait_for_rate_reset):
         r = session.get(
-            endpoint, headers={"X-Api-Key": api_key}, params=params, verify=True
+            endpoint, headers={"X-Api-Key": api_key}, 
+            params=params, verify=True
         )
 
         if r.status_code == 200:
@@ -218,13 +210,12 @@ def pull_reg_gov_data(  # noqa: C901
 
         return [False, r.json()]
 
-    if data_type == "comments":
-        all_comments = []
-        unique_comments = {}
+    if data_type == "comments" or data_type == "documents":
+        all_objects = []
+        unique_objects = {}
 
         params.update(
             {
-                "filter[commentOnId]": comment_on_id,
                 "page[size]": 250,
                 "sort": "lastModifiedDate,documentId",
             }
@@ -238,10 +229,10 @@ def pull_reg_gov_data(  # noqa: C901
                 api_key, wait_for_rate_reset=True
             )
             if success:
-                all_comments.extend(r_json["data"])
+                all_objects.extend(r_json["data"])
                 print(
-                    f"""Fetched {len(r_json['data'])}
-                    comments, total: {len(all_comments)}"""
+                    f"""Fetched {len(r_json['data'])} objects, 
+                    total: {len(all_objects)}"""
                 )
 
                 # Check and handle the pagination
@@ -258,28 +249,35 @@ def pull_reg_gov_data(  # noqa: C901
                     last_modified_date = format_datetime_for_api(
                         r_json["data"][-1]["attributes"]["lastModifiedDate"]
                     )
-                    params = {
-                        "filter[commentOnId]": comment_on_id,
-                        "filter[lastModifiedDate][ge]": last_modified_date,
-                        "page[size]": 250,
-                        "sort": "lastModifiedDate,documentId",
-                        "page[number]": 1,
-                        "api_key": api_key,
-                    }
+                    params.update(
+                        {
+                            "filter[lastModifiedDate][ge]": last_modified_date,
+                            "filter[lastModifiedDate][le]": f"{end_date} 23:59:59",
+                            "page[size]": 250,
+                            "sort": "lastModifiedDate,documentId",
+                            "page[number]": 1,
+                            "api_key": api_key,
+                        }
+                    )
                     print(f"Fetching more data from {last_modified_date}")
             else:
                 print("Failed to fetch data")
                 continue_fetching = False
 
         # Remove Duplicates
-        for comment in all_comments:
-            unique_comments[comment["id"]] = comment
-        return list(unique_comments.values())
+        for obj in all_objects:
+            unique_objects[obj["id"]] = obj
+        return list(unique_objects.values())
 
     else:
         doc_data = None  # Initialize doc_data to None
         for i in range(1, 21):  # Fetch up to 20 pages
-            params["page[number]"] = str(i)  # Add page number to the params
+            params.update({
+            "page[size]": 250,
+            "sort": "lastModifiedDate",  # Ensure that only lastModifiedDate is considered, dockets cant take in documentID
+            "page[number]": str(i),
+            "api_key": api_key,
+        })
 
             success, r_json = poll_for_response(
                 api_key, wait_for_rate_reset=True
