@@ -1,4 +1,6 @@
+import pickle
 from collections import defaultdict
+from pathlib import Path
 from typing import Callable
 
 import gensim.corpora as corpora
@@ -7,7 +9,6 @@ from bertopic import BERTopic
 from gensim.corpora import Dictionary
 from gensim.models import HdpModel
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
-from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tokenize import RegexpTokenizer
 from sentence_transformers import SentenceTransformer
@@ -16,6 +17,16 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from civiclens.nlp.tools import Comment, RepComments
 from civiclens.utils.errors import TooFewTopics, TopicModelFailure
 from civiclens.utils.text import clean_text, sentence_splitter
+
+
+def stopwords(model_path: Path):
+    """
+    Loads in pickled set of stopword for text processing.
+    """
+    with open(model_path, "rb") as f:
+        stop_words = pickle.load(f)
+
+    return stop_words
 
 
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
@@ -50,7 +61,9 @@ class HDAModel:
     def __init__(self, tokenizer: RegexpTokenizer = None):
         self.model = None
         self.tokenizer = tokenizer
-        self.stop_words = stopwords.words("english")
+        self.stop_words = stopwords(
+            Path(__file__).resolve().parent / "saved_models/stop_words.pickle"
+        )
         self.lemmatizer = WordNetLemmatizer()
 
     def _process_text(
