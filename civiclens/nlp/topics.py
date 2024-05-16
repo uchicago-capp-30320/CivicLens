@@ -210,7 +210,7 @@ def topic_comment_analysis(
             Comment(text=comment_data.summary, id="Summary", source="Summary")
         ]
 
-    comments + comment_data.to_list()
+    comments += comment_data.to_list()
     comment_topics = model.run_model(comments)
     topic_terms = model.get_terms()
     topic_labels = label_topics(topic_terms, labeler)
