@@ -374,7 +374,7 @@ def add_dockets_to_db(
 
             if not qa_docket_data(docket_data):
                 print(
-                    f"""docket {docket_id} appears to have data in the wrong 
+                    f"""docket {docket_id} appears to have data in the wrong
                     format; not added"""
                 )
                 continue
@@ -688,7 +688,7 @@ def add_documents_to_db(
             # qa step
             if not qa_document_data(full_doc_info):
                 print(
-                    f"""document {document_id} appears to have data in the 
+                    f"""document {document_id} appears to have data in the
                     wrong format; not added"""
                 )
                 continue
@@ -742,13 +742,13 @@ def get_comment_text(api_key: str, comment_id: str) -> dict:
             )
             the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(
-                f"""Rate limit exceeded at {the_time}. 
+                f"""Rate limit exceeded at {the_time}.
                 Waiting {wait_time} seconds to retry."""
             )
             time.sleep(wait_time)
         else:
             print(
-                f"""Failed to retrieve comment data. 
+                f"""Failed to retrieve comment data.
                 Status code: {response.status_code}"""
             )
             return None
@@ -1090,7 +1090,7 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
 
         if not qa_comment_data(all_comment_data):
             print(
-                f"""comment {all_comment_data['id']} 
+                f"""comment {all_comment_data['id']}
                 appears to have data in the wrong format; not added"""
             )
             continue
@@ -1144,7 +1144,7 @@ def add_comments_to_db_for_existing_doc(
 
         if not qa_comment_data(all_comment_data):
             print(
-                f"""comment {all_comment_data['id']} appears to have data 
+                f"""comment {all_comment_data['id']} appears to have data
                 in the wrong format; not added"""
             )
             continue
@@ -1200,7 +1200,7 @@ def add_comments_based_on_comment_date_range(
     start_date: str, end_date: str
 ) -> None:
     """
-    Add comments to the comments table based on a date range of when the 
+    Add comments to the comments table based on a date range of when the
     comments were posted
 
     Inputs:

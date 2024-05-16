@@ -274,9 +274,9 @@ def pull_reg_gov_data(  # noqa: C901,E501
             params.update(
                 {
                     "page[size]": 250,
-                    # Ensure that only lastModifiedDate is considered, 
+                    # Ensure that only lastModifiedDate is considered,
                     # dockets cant take in documentID
-                    "sort": "lastModifiedDate", 
+                    "sort": "lastModifiedDate",
                     "page[number]": str(i),
                     "api_key": api_key,
                 }
