@@ -1,13 +1,13 @@
 import argparse
 import datetime as dt
 import json
+import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
-from requests.adapters import HTTPAdapter
-import time
 
 import psycopg2
 import requests
+from requests.adapters import HTTPAdapter
 
 from civiclens.collect.access_api_data import pull_reg_gov_data
 from civiclens.utils.constants import (
@@ -255,7 +255,9 @@ def qa_docket_data(docket_data: json) -> None:
         assert "attributes" in data_for_db, "'attributes' not in docket_data"
 
         # check the fields
-        assert len(data_for_db["id"]) < 255, "id field longer than 255 characters"
+        assert (
+            len(data_for_db["id"]) < 255
+        ), "id field longer than 255 characters"
         assert attributes["docketType"] in [
             "Rulemaking",
             "Nonrulemaking",
@@ -266,7 +268,9 @@ def qa_docket_data(docket_data: json) -> None:
         ), "lastModifiedDate is unexpected length"
         assert attributes["agencyId"].isalpha(), "agencyId is not just letter"
         assert isinstance(attributes["title"], str), "title is not string"
-        assert attributes["objectId"][:2] == "0b", "objectId does not start with '0b'"
+        assert (
+            attributes["objectId"][:2] == "0b"
+        ), "objectId does not start with '0b'"
         # attributes["highlightedContent"]
 
         return True
@@ -370,7 +374,8 @@ def add_dockets_to_db(
 
             if not qa_docket_data(docket_data):
                 print(
-                    f"docket {docket_id} appears to have data in the wrong format; not added"
+                    f"""docket {docket_id} appears to have data in the wrong 
+                    format; not added"""
                 )
                 continue
             # add docket_data to docket table in the database
@@ -405,10 +410,10 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
             parsed_xml_content = parse_xml_content(xml_content)
             doc.update(parsed_xml_content)  # merge the json objects
         except Exception:
-            # if there's an error, that means we can't use the xml_url to get 
+            # if there's an error, that means we can't use the xml_url to get
             # the doc text, so we enter None for those fields
             print(
-                f"""Error accessing federal register xml data for frDocNum
+                rf"""Error accessing federal register xml data for frDocNum
                 {fr_doc_num},\ document id {document_id}"""
             )
             blank_xml_fields = {
@@ -512,7 +517,9 @@ def qa_document_data(document_data: json) -> True:
             len((attributes["commentEndDate"])) == 20
             and "202" in attributes["commentEndDate"]
         ), "commentEndDate is unexpected length"
-        assert len(attributes["postedDate"]) == 20, "postedDate is unexpected length"
+        assert (
+            len(attributes["postedDate"]) == 20
+        ), "postedDate is unexpected length"
         # attributes["docketId"]
         # attributes["subtype"]
         assert (
@@ -681,7 +688,8 @@ def add_documents_to_db(
             # qa step
             if not qa_document_data(full_doc_info):
                 print(
-                    f"document {document_id} appears to have data in the wrong format; not added"
+                    f"""document {document_id} appears to have data in the 
+                    wrong format; not added"""
                 )
                 continue
 
@@ -718,7 +726,9 @@ def get_comment_text(api_key: str, comment_id: str) -> dict:
     session.mount("https", HTTPAdapter(max_retries=4))
 
     while True:
-        response = session.get(endpoint, headers={"X-Api-Key": api_key}, verify=True)
+        response = session.get(
+            endpoint, headers={"X-Api-Key": api_key}, verify=True
+        )
 
         if response.status_code == 200:
             # SUCCESS! Return the JSON of the request
@@ -732,12 +742,14 @@ def get_comment_text(api_key: str, comment_id: str) -> dict:
             )
             the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(
-                f"Rate limit exceeded at {the_time}. Waiting {wait_time} seconds to retry."
+                f"""Rate limit exceeded at {the_time}. 
+                Waiting {wait_time} seconds to retry."""
             )
             time.sleep(wait_time)
         else:
             print(
-                f"Failed to retrieve comment data. Status code: {response.status_code}"
+                f"""Failed to retrieve comment data. 
+                Status code: {response.status_code}"""
             )
             return None
 
@@ -772,7 +784,9 @@ def clean_comment_data(comment_data: json) -> None:
     # format the date fields
     for date_field in ["modifyDate", "postedDate", "receiveDate"]:
         comment_text_attributes[date_field] = (
-            datetime.strptime(comment_text_attributes[date_field], "%Y-%m-%dT%H:%M:%SZ")
+            datetime.strptime(
+                comment_text_attributes[date_field], "%Y-%m-%dT%H:%M:%SZ"
+            )
             if comment_text_attributes[date_field]
             else None
         )
@@ -798,7 +812,9 @@ def qa_comment_data(comment_data: json) -> None:
     try:
         assert len(comment_data["id"]) < 255, "id is more than 255 characters"
 
-        assert attributes["objectId"][:2] == "09", "objectId does not start with '09'"
+        assert (
+            attributes["objectId"][:2] == "09"
+        ), "objectId does not start with '09'"
         assert (
             comment_text_attributes["commentOn"][:2] == "09"
         ), "commentOn does not start with '09'"
@@ -807,9 +823,9 @@ def qa_comment_data(comment_data: json) -> None:
             comment_text_attributes["duplicateComments"] == 0
         ), "duplicateComments != 0"
         # assert comment_data["stateProvinceRegion"]
-        assert comment_text_attributes["subtype"] is None or comment_text_attributes[
+        assert comment_text_attributes[
             "subtype"
-        ] in [
+        ] is None or comment_text_attributes["subtype"] in [
             "Public Comment",
             "Comment(s)",
         ], "subtype is not an expected value"
@@ -840,7 +856,9 @@ def qa_comment_data(comment_data: json) -> None:
             comment_text_attributes["receiveDate"], datetime
         ), "receiveDate is not datetime"
         # comment_data["trackingNbr"]
-        assert comment_text_attributes["withdrawn"] is False, "withdrawn is not False"
+        assert (
+            comment_text_attributes["withdrawn"] is False
+        ), "withdrawn is not False"
         # comment_data["reasonWithdrawn"]
         # comment_data["zip"]
         # comment_data["restrictReason"]
@@ -1072,7 +1090,8 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
 
         if not qa_comment_data(all_comment_data):
             print(
-                f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
+                f"""comment {all_comment_data['id']} 
+                appears to have data in the wrong format; not added"""
             )
             continue
 
@@ -1125,7 +1144,8 @@ def add_comments_to_db_for_existing_doc(
 
         if not qa_comment_data(all_comment_data):
             print(
-                f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
+                f"""comment {all_comment_data['id']} appears to have data 
+                in the wrong format; not added"""
             )
             continue
 
@@ -1176,9 +1196,12 @@ def add_comments_to_db(
                 )
 
 
-def add_comments_based_on_comment_date_range(start_date: str, end_date: str) -> None:
+def add_comments_based_on_comment_date_range(
+    start_date: str, end_date: str
+) -> None:
     """
-    Add comments to the comments table based on a date range of when the comments were posted
+    Add comments to the comments table based on a date range of when the 
+    comments were posted
 
     Inputs:
         start_date (str): the date in YYYY-MM-DD format to pull data from
@@ -1196,10 +1219,9 @@ def add_comments_based_on_comment_date_range(start_date: str, end_date: str) -> 
     )
     for comment in comment_data:
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
-        
+
         # clean
         clean_comment_data(all_comment_data)
-
 
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
@@ -1286,19 +1308,19 @@ if __name__ == "__main__":
         "-k",
         "--pull_dockets",
         action="store_true",
-        help="Pull dockets that were posted during date range and add to db if not there",
+        help="Pull dockets posted during date range, add to db if not there",
     )
     parser.add_argument(
         "-d",
         "--pull_documents",
         action="store_true",
-        help="Pull documents that were posted during date range and add to db if not there",
+        help="Pull documents posted during date range, add to db if not there",
     )
     parser.add_argument(
         "-c",
         "--pull_comments",
         action="store_true",
-        help="Pull comments that were posted during date range and add to db if not there",
+        help="Pull comments posted during date range, add to db if not there",
     )
 
     args = parser.parse_args()

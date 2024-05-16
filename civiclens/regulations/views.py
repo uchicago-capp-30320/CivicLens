@@ -5,18 +5,13 @@ from django.contrib.postgres.search import (
     SearchVector,
     TrigramSimilarity,
 )
-from django.shortcuts import render
-
-from .models import Comment, Document, AgencyReference
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count
-
 from django.db.models.functions import TruncDate
-
+from django.shortcuts import render
 from django.utils import timezone
 
-from django.core.exceptions import ObjectDoesNotExist
-
+from .models import AgencyReference, Comment, Document
 
 
 def home(request):
@@ -26,12 +21,12 @@ def home(request):
 def search_page(request):
     return render(request, "search_page.html")
 
-#require method decorqator to only allow GET requests
-def search_results(request):
+
+# require method decorqator to only allow GET requests
+def search_results(request): # noqa C901
     today = timezone.now().date()
     context = {}
-    
-    
+
     if request.method == "GET":
         query = request.GET.get("q", "")
         sort_by = request.GET.get("sort_by", "most_relevant")
@@ -64,8 +59,8 @@ def search_results(request):
             documents = (
                 Document.objects.annotate(rank=SearchRank(vector, search_query))
                 .annotate(headline=search_headline)
-                .annotate(comment_count=Count('comment'))
-                .annotate(comment_count=Count('comment'))
+                .annotate(comment_count=Count("comment"))
+                .annotate(comment_count=Count("comment"))
                 .filter(rank__gte=0.0001)
                 .filter(comment_end_date__gte=today)
                 .order_by("-rank")
@@ -80,8 +75,8 @@ def search_results(request):
                         + TrigramSimilarity("agency_type", query)
                         + TrigramSimilarity("agency_type", query)
                     )
-                    .annotate(comment_count=Count('comment'))
-                    .annotate(comment_count=Count('comment'))
+                    .annotate(comment_count=Count("comment"))
+                    .annotate(comment_count=Count("comment"))
                     .filter(rank__gt=0.20)
                     .filter(comment_end_date__gte=today)
                     .filter(comment_end_date__gte=today)
@@ -103,20 +98,20 @@ def search_results(request):
                     documents = documents.filter(comment_count__gte=1)
                 if comments_over_hundred:
                     documents = documents.filter(comment_count__gte=100)
-            if sort_by == 'most_recent':
+            if sort_by == "most_recent":
                 documents = documents.order_by("-posted_date")
-            elif sort_by == 'most_comments':
+            elif sort_by == "most_comments":
                 documents = documents.order_by("-comment_count")
-            elif sort_by == 'least_comments':
+            elif sort_by == "least_comments":
                 documents = documents.order_by("comment_count")
-            
+
             if selected_agencies:
                 documents = documents.filter(agency_id__in=selected_agencies)
-            
+
             if search_results:
                 documents = documents.filter(document_type__in=category_lst)
                 if comments_any:
-                    documents = documents.filter(comment_count__gte=1) 
+                    documents = documents.filter(comment_count__gte=1)
                 if comments_over_hundred:
                     documents = documents.filter(comment_count__gte=100)
 
@@ -138,36 +133,41 @@ def search_results(request):
 
 def document(request, doc_id):
     try:
-        doc = Document.objects.filter(id=doc_id).annotate(comment_count=Count(
-            "comment")
-        ).get()
-        
+        doc = (
+            Document.objects.filter(id=doc_id)
+            .annotate(comment_count=Count("comment"))
+            .get()
+        )
+
     except Document.DoesNotExist:
         doc = None
     try:
-        comments_api = Comment.objects.filter(document=doc_id).annotate(
-            posted_date_only=TruncDate("posted_date")).annotate(
-            modify_date_only=TruncDate("modify_date")).annotate(
-            receive_date_only=TruncDate("receive_date")
+        comments_api = (
+            Comment.objects.filter(document=doc_id)
+            .annotate(posted_date_only=TruncDate("posted_date"))
+            .annotate(modify_date_only=TruncDate("modify_date"))
+            .annotate(receive_date_only=TruncDate("receive_date"))
         )
-        comments_last_updated = comments_api.latest("modify_date_only").modify_date_only
+        comments_last_updated = comments_api.latest(
+            "modify_date_only"
+        ).modify_date_only
         unique_comments = comments_api.distinct("comment").count()
     except Comment.DoesNotExist:
         comments_api = None
         unique_comments = 0
-    
+
     if comments_api:
         try:
-            latest_comment = comments_api.latest('modify_date_only')
+            latest_comment = comments_api.latest("modify_date_only")
             comments_last_updated = latest_comment.modify_date_only
         except ObjectDoesNotExist:
             comments_last_updated = "No comments found."
     else:
         comments_last_updated = "No comments found."
-        
+
     # test data from jack
     comments_nlp = {
-        "id": "7588edfc-4239-4970-970e-d080eecf4da7", 
+        "id": "7588edfc-4239-4970-970e-d080eecf4da7",
         "rep_comments": [
             {
                 "id": "ED-2023-OPE-0123-28272",
@@ -229,8 +229,18 @@ def document(request, doc_id):
         "last_updated": "May 6, 2024",
         "document_id": "ED-2023-OPE-0123-26398",
     }
-    # comments_nlp = {} 
-    return render(request, "document.html", {"doc": doc, "comments_nlp": comments_nlp, "comments_api": comments_api, "unique_comments": unique_comments, "comments_last_updated": comments_last_updated})
+    # comments_nlp = {}
+    return render(
+        request,
+        "document.html",
+        {
+            "doc": doc,
+            "comments_nlp": comments_nlp,
+            "comments_api": comments_api,
+            "unique_comments": unique_comments,
+            "comments_last_updated": comments_last_updated,
+        },
+    )
 
 
 def comment(request):
