@@ -251,7 +251,7 @@ def pull_reg_gov_data(  # noqa: C901,E501
                     params.update(
                         {
                             "filter[lastModifiedDate][ge]": last_modified_date,
-                            "filter[lastModifiedDate][le]": f"{end_date} 23:59:59",
+                            "filter[lastModifiedDate][le]": f"{end_date} 23:59:59",  # noqa: E501
                             "page[size]": 250,
                             "sort": "lastModifiedDate,documentId",
                             "page[number]": 1,

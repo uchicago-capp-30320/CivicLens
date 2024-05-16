@@ -35,7 +35,7 @@ def fetch_fr_document_details(fr_doc_num: str) -> str:
         data = response.json()
         return data.get("full_text_xml_url")
     else:
-        error_message = f"Error fetching FR document details for {fr_doc_num}: {response.status_code}"
+        error_message = f"Error fetching FR document details for {fr_doc_num}: {response.status_code}"  # noqa: E501
         raise Exception(error_message)
 
 

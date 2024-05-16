@@ -23,7 +23,7 @@ def search_page(request):
 
 
 # require method decorqator to only allow GET requests
-def search_results(request):  # noqa C901
+def search_results(request):  # noqa: C901
     today = timezone.now().date()
     context = {}
 
