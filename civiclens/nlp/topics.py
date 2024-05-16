@@ -7,10 +7,9 @@ from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
+from civiclens.nlp.tools import Comment, RepComments
 from civiclens.utils.errors import TooFewTopics, TopicModelFailure
 from civiclens.utils.text import clean_text, sentence_splitter
-
-from .tools import Comment, RepComments
 
 
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
