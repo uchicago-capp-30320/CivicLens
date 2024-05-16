@@ -357,7 +357,7 @@ def add_dockets_to_db(
     """
     Add the dockets connected to a list of documents into the database
 
-    Inputs:
+    Args:
         doc_list (list of json objects): what is returned from an API call
         for documents
         print_statements (boolean): whether to print info on progress

@@ -16,7 +16,7 @@ def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
     """
     Sorts input terms by maximal marginal relevance (MMR).
 
-    Inputs:
+    Args:
         terms: list of strings to sort
         query_string: query terms to compare relevance against
         lam: lambda value for MMR formula
@@ -205,7 +205,7 @@ def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
     """
     Generates a label for all topics
 
-    Inputs:
+    Args:
         topics: dictionary of topics, as lists of terms
         model: LLM model to generate labels
 

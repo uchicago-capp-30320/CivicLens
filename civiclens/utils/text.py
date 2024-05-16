@@ -6,7 +6,7 @@ def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
     r"""
     String cleaning function for comments.
 
-    Inputs:
+    Args:
         text (str): comment text
         patterns (list[str]): optional list of regular expression patterns
             to pass in (eg. [(r'\w+', "-")])
@@ -33,7 +33,7 @@ def truncate(text: str, num_words: int) -> str:
     """
     Truncates commments:
 
-    Inputs:
+    Args:
         text (str): Text of the comment
         num_words (int): Number of words to keep
 
@@ -49,7 +49,7 @@ def sentence_splitter(text: str, sep: str = ".") -> list[str]:
     """
     Splits string into sentences.
 
-    Inputs:
+    Args:
         text: string to process
         sep: value to seperate string on, defaults to '.'
 
