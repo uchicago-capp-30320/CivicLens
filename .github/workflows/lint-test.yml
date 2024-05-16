@@ -44,7 +44,7 @@ jobs:
 
     - name: run tests with pytest
       run: poetry run pytest
-    
+
     - name: run django tests
       run: poetry run python civiclens/manage.py test --keepdb
 
@@ -56,4 +56,3 @@ jobs:
         with:
           python-version: "3.11"
       - uses: pre-commit/action@v3.0.0
-
