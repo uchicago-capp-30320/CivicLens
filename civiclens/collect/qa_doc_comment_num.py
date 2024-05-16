@@ -111,6 +111,7 @@ def fetch_comment_count_for_docs_in_db():
         counter += 1
 
     results_df = pl.DataFrame(ret_lst)
+    print("finished!")
 
     return results_df
 
