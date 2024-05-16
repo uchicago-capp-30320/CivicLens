@@ -716,11 +716,18 @@ def clean_comment_data(comment_data: json) -> None:
 
     comment_text_attributes = comment_data["data"]["attributes"]
 
+    # format the date fields
     for date_field in ["modifyDate", "postedDate", "receiveDate"]:
         comment_text_attributes[date_field] = (
             datetime.strptime(comment_text_attributes[date_field], "%Y-%m-%dT%H:%M:%SZ")
             if comment_text_attributes[date_field]
             else None
+        )
+
+    # clean the text
+    if comment_text_attributes["comment"] is not None:
+        comment_text_attributes["comment"] = clean_text(
+            comment_text_attributes["comment"]
         )
 
 
