@@ -11,6 +11,7 @@ CivicLens is currently under active development. This site will continue to be u
 
 CivicLens requires `poetry` (see [here](https://python-poetry.org/) for more information) to run. To install the necessary dependencies, run `poetry run` from the project directory. You can the run the project locally by prefixing python commands with `poetry run` or by using `poetry shell` to open activate the virtual environment.
 
+
 To run the test suite, run `poetry run pytest`.
 
 ### Set Up Pre-Commit Hooks
