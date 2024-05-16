@@ -29,14 +29,14 @@ def get_last_update():
         connection=db_date,
         schema=["last_updated"],
     )
-    
-    if last_updated.is_empty(): 
+
+    if last_updated.is_empty():
         return new_date
 
     last_updated = last_updated[0, "last_updated"]
     if last_updated:
         new_date = last_updated.strftime("%Y-%m-%d %H:%M:%S")
-        
+
     return new_date
 
 
