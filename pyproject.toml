@@ -20,13 +20,11 @@ sentence-transformers = "^2.7.0"
 networkx = "^3.3"
 langchain-community = "^0.0.36"
 langchain-core = "^0.1.50"
-spacy = "^3.7.4"
 polars = "^0.20.22"
 pandas = "^2.2.2"
 pytest-django = "^4.8.0"
 langchain = "^0.1.17"
 matplotlib = "^3.8.4"
-en-core-web-sm = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0.tar.gz"}
 gensim = "^4.3.2"
 scipy = "1.12"
 
