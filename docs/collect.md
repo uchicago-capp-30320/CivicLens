@@ -1,4 +1,4 @@
-collect DOCS
+collect
 ==============
 
 Quick start guide for CivicLens' internal library for accessing data via the regulations.gov API. This library contains methods for collecting comments, dockets, and documents from regulations.gov.

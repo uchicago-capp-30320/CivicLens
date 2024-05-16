@@ -245,7 +245,8 @@ def qa_docket_data(docket_data: json) -> None:
     """
     Run assert statements to check docket data looks right
 
-    Input: docket_data (json object): the docket data from the API
+    Args:
+        docket_data (json object): the docket data from the API
 
     Returns: (bool) whether data is in the expected format
     """
@@ -290,7 +291,8 @@ def insert_docket_into_db(docket_data: json) -> dict:
     """
     Run assert statements to check docket data looks right
 
-    Input: docket_data (json): the docket info from regulations.gov API
+    Args: 
+        docket_data (json): the docket info from regulations.gov API
 
     Returns: nothing unless an error; adds the info into the table
     """
@@ -499,7 +501,8 @@ def qa_document_data(document_data: json) -> True:
     """
     Run assert statements to check document data looks right
 
-    Input: document_data (json object): the document data from the API
+    Args: 
+        document_data (json object): the document data from the API
 
     Returns: (bool) whether data is in the expected format
     """
@@ -681,7 +684,7 @@ def add_documents_to_db(
     """
     Add a list of document json objects into the database
 
-    Inputs:
+    Args:
         doc_list (list of json objects): what is returned from an API call for
         documents
         print_statements (boolean): whether to print info on progress
@@ -814,7 +817,8 @@ def qa_comment_data(comment_data: json) -> None:
     """
     Run assert statements to check comment data looks right
 
-    Input: comment_data (json object): the document data from the API
+    Args:
+        comment_data (json object): the document data from the API
 
     Returns: (bool) whether data is in the expected format
     """
@@ -1085,7 +1089,8 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
     Add comments to the comments table for a new doc (ie, when we have just
         added the doc to the database)
 
-    Input: document_object_id (str): the object id for the document we want
+    Args: 
+        document_object_id (str): the object id for the document we want
         comments for (comes from the document json object)
 
     Returns: nothing; adds comments, if available, to the db
@@ -1123,7 +1128,7 @@ def add_comments_to_db_for_existing_doc(
     Gets the most recent comment in the comments table and pulls comments for
         a doc from the API since then
 
-    Inputs:
+    Args:
         document id (str): the id for the document we want comments for (comes
             from the document json object)
         document_object_id (str): the object id for the document we want
@@ -1175,7 +1180,7 @@ def add_comments_to_db(
     """
     Add comments on a list of documents to the database
 
-    Inputs:
+    Args:
         doc_list (list of json objects): what is returned from an API call for
         documents
         print_statements (boolean): whether to print info on progress
@@ -1217,7 +1222,7 @@ def add_comments_based_on_comment_date_range(
     Add comments to the comments table based on a date range of when the
     comments were posted
 
-    Inputs:
+    Args:
         start_date (str): the date in YYYY-MM-DD format to pull data from
         (inclusive)
         end_date (str): the date in YYYY-MM-DD format to stop the data pull
@@ -1253,7 +1258,7 @@ def pull_all_api_data_for_date_range(
     """
     Pull different types of data from regulations.gov API based on date range
 
-    Inputs:
+    Args:
         start_date (str): the date in YYYY-MM-DD format to pull data from
         (inclusive)
         end_date (str): the date in YYYY-MM-DD format to stop the data pull

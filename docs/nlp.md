@@ -1,4 +1,4 @@
-nlp DOCS
+nlp
 ==============
 
 API reference for CivicLen's natural language processing toolkit.
