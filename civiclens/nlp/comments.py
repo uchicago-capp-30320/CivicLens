@@ -3,7 +3,8 @@ import polars as pl
 from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
 
-from ..utils.database_access import Database, pull_data
+from civiclens.utils.database_access import Database, pull_data
+
 from .tools import RepComments
 
 

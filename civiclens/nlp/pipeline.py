@@ -3,7 +3,8 @@ from functools import partial
 import polars as pl
 from sentence_transformers import SentenceTransformer
 
-from ..utils.database_access import Database, pull_data, upload_comments
+from civiclens.utils.database_access import Database, pull_data, upload_comments
+
 from . import comments, titles
 from .models import sentiment_pipeline
 from .tools import sentiment_analysis
