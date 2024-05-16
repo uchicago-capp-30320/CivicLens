@@ -7,13 +7,9 @@ from langchain_community.vectorstores.utils import maximal_marginal_relevance
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from ..utils.ml_utils import (
-    TooFewTopics,
-    TopicModelFailure,
-    clean_comments,
-    sentence_splitter,
-)
-from .tools import Comment, RepComments
+from civiclens.nlp.tools import Comment, RepComments
+from civiclens.utils.errors import TooFewTopics, TopicModelFailure
+from civiclens.utils.text import clean_text, sentence_splitter
 
 
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
@@ -56,7 +52,7 @@ class TopicModel:
         sentences = defaultdict(list)
 
         for comment in docs:
-            split_text = sentence_splitter(clean_comments(comment.text))
+            split_text = sentence_splitter(clean_text(comment.text))
             for sentence in split_text:
                 if comment.text:
                     sentences[sentence].append(comment.id)

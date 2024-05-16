@@ -11,7 +11,7 @@ from civiclens.nlp import comments
 from civiclens.nlp.models import BertModel
 from civiclens.nlp.tools import Comment, RepComments
 from civiclens.nlp.topics import TopicModel, mmr_sort
-from civiclens.utils.ml_utils import TopicModelFailure
+from civiclens.utils.errors import TopicModelFailure
 
 
 BASE_DIR = Path(__file__).resolve().parent
