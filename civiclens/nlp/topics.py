@@ -5,17 +5,12 @@ from pathlib import Path
 from typing import Callable
 
 import gensim.corpora as corpora
-import numpy as np
-from bertopic import BERTopic
 from gensim.corpora import Dictionary
-from gensim.models import HdpModel
-from langchain_community.vectorstores.utils import maximal_marginal_relevance
-from sentence_transformers import SentenceTransformer
+from gensim.models import HdpModel, Phrases
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from civiclens.nlp.tools import Comment, RepComments
-from civiclens.utils.errors import TooFewTopics, TopicModelFailure
-from civiclens.utils.text import clean_text, regex_tokenize, sentence_splitter
+from civiclens.utils.text import clean_text, regex_tokenize
 
 
 def stopwords(model_path: Path):
@@ -26,30 +21,6 @@ def stopwords(model_path: Path):
         stop_words = pickle.load(f)
 
     return stop_words
-
-
-def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
-    """
-    Sorts input terms by maximal marginal relevance (MMR).
-
-    Inputs:
-        terms: list of strings to sort
-        query_string: query terms to compare relevance against
-        lam: lambda value for MMR formula
-
-    Returns:
-        List of terms sorted by relevance to query terms
-    """
-    embeding_model = SentenceTransformer("all-MiniLM-L6-v2")
-    term_matrix = embeding_model.encode(terms)
-    query = embeding_model.encode(query_string, convert_to_numpy=True)
-
-    indices = maximal_marginal_relevance(
-        query, term_matrix, lambda_mult=lam, k=len(terms)
-    )
-    sorted_terms = np.array(terms)[indices]
-
-    return sorted_terms.tolist()
 
 
 class HDAModel:
@@ -97,6 +68,13 @@ class HDAModel:
         """
         Converts tokens to corpus and corresponding dictionary
         """
+        bigram_generator = Phrases(docs, min_count=10).freeze()
+
+        for doc in docs:
+            for token in bigram_generator[doc]:
+                if "_" in token:
+                    doc.append(token)
+
         token_dict = corpora.Dictionary(docs)
         corpus = [token_dict.doc2bow(doc) for doc in docs]
 
@@ -169,142 +147,6 @@ class HDAModel:
         return list(search_vector)
 
 
-class TopicModel:
-    """
-    Wrapper for BERT-based topic model.
-    """
-
-    def __init__(self, model: BERTopic):
-        self.model = model
-        self.terms = {}
-
-    def _process_sentences(self, docs: list[Comment]) -> dict[str, str]:
-        """
-        Map setences to comments.
-        """
-        sentences = defaultdict(list)
-
-        for comment in docs:
-            split_text = sentence_splitter(clean_text(comment.text))
-            for sentence in split_text:
-                if comment.text:
-                    sentences[sentence].append(comment.id)
-
-        return sentences
-
-    def get_terms(self) -> dict[int, list]:
-        """
-        Returns generated terms for all topics
-        """
-        return self.terms
-
-    def run_model(self, docs: list[Comment]):
-        """
-        Runs model and generates topics.
-        """
-        sentences = self._process_sentences(docs)
-        input = list(sentences.keys())
-
-        try:
-            numeric_topics, probs = self.model.fit_transform(input)
-        except Exception as error:
-            raise TopicModelFailure(error) from error
-
-        num_topics = max(numeric_topics)
-
-        if num_topics < 0:
-            raise TooFewTopics
-
-        # intialize no topic default
-        self.terms[-1] = []
-
-        for i in range(num_topics + 1):
-            phrases = set()
-            model_results = self.model.get_topic(i, full=True)
-            for model_topics in model_results.values():
-                phrases.update({phrase for (phrase, _) in model_topics})
-
-            self.terms[i] = list(phrases)
-
-        return self._aggregate_comments(sentences, input, numeric_topics, probs)
-
-    def _generate_mmr_query(self, topics):
-        """
-        Generates topics query to calculate MMR terms.
-        """
-        topic_labels = self.model.generate_topic_labels(
-            nr_words=3, separator=", ", topic_prefix=False
-        )
-        min_topic = min(topics)
-
-        if min_topic < 0:
-            topic_labels = topic_labels[1:]
-
-        return topic_labels
-
-    def _aggregate_comments(
-        self,
-        sentences: dict[str, str],
-        input: list[str],
-        numeric_topics: list[int],
-        probs: np.ndarray,
-    ) -> dict[int, int]:
-        """
-        Aggregates topics from sentences to comments. If comments have multiple
-        corresponding topics, topic with highest joint probability is chosen.
-        """
-        topics_by_comment = defaultdict(dict)
-        for idx, topic in enumerate(numeric_topics):
-            # turn into array and loop through to handle form letter bug
-            comment_ids = sentences[input[idx]]
-            for id in comment_ids:
-                topics_by_comment[id][topic] = (
-                    topics_by_comment[id].get(topic, 0) + probs[idx]
-                )
-
-        # find highest probability topic
-        assigned_topics = {}
-        for doc, topics in topics_by_comment.items():
-            max_topic_prob = float("-inf")
-            max_topic = -1
-            for topic, prob in topics.items():
-                if prob > max_topic_prob:
-                    max_topic = topic
-                    max_topic_prob = prob
-            assigned_topics[doc] = max_topic
-
-        return assigned_topics
-
-    def generate_search_vector(self) -> list[str]:
-        """
-        Creates array of topics to use in Django serach model.
-        """
-        if not self.terms:
-            raise RuntimeError(
-                "Must run topic model before generating search vector"
-            )
-
-        search_vector = set()
-        for term_list in self.terms.values():
-            search_vector.update(term_list)
-
-        return list(search_vector)
-
-    def find_n_representative_topics(
-        self, labeled_comments: dict[str, int], n: int
-    ) -> dict[int, list[str]]:
-        """
-        Generates n topic terms per comment.
-        """
-        # add way to make topic terms unique
-        comment_topics = {}
-        for comment, topic_num in labeled_comments.items():
-            terms = self.terms[topic_num]
-            comment_topics[comment] = terms[:n]
-
-        return comment_topics
-
-
 class LabelChain:
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -368,6 +210,7 @@ def topic_comment_analysis(
             Comment(text=comment_data.summary, id="Summary", source="Summary")
         ]
 
+    comments + comment_data.to_list()
     comment_topics = model.run_model(comments)
     topic_terms = model.get_terms()
     topic_labels = label_topics(topic_terms, labeler)
