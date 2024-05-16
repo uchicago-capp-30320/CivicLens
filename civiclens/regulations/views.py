@@ -192,7 +192,7 @@ def document(request, doc_id):
                 "num_represented": 231,
                 "topic": "Student Loans",
                 "form_letter": False,
-            },
+            }
         ],
         "doc_plain_english_title": """Student Loan Debt Waiver: Department Of
         Education""",
