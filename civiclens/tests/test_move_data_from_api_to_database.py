@@ -107,7 +107,7 @@ def test_parse_xml_content_failure():
         parse_xml_content(xml_content)
 
     assert str(e) == (
-        "<ExceptionInfo ParseError('no element found: line 1,"
+        "<ExceptionInfo ParseError('no element found: line 1, "
         "column 0') tblen=3>"
     )
 
