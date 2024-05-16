@@ -5,8 +5,8 @@ from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
 from sklearn.cluster import AgglomerativeClustering
 
-from ..utils.database_access import Database, pull_data
-from .tools import RepComments
+from civiclens.nlp.tools import RepComments
+from civiclens.utils.database_access import Database, pull_data
 
 
 def get_doc_comments(id: str) -> pl.DataFrame:

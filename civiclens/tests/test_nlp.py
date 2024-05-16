@@ -12,7 +12,7 @@ from civiclens.nlp import comments
 from civiclens.nlp.models import BertModel
 from civiclens.nlp.tools import Comment, RepComments
 from civiclens.nlp.topics import TopicModel, mmr_sort
-from civiclens.utils.ml_utils import TopicModelFailure
+from civiclens.utils.errors import TopicModelFailure
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -176,6 +176,8 @@ def test_sim_clusters():
 def test_empty_form_df():
     df = pl.DataFrame()
     mock_sbert = MagicMock(spec=SentenceTransformer)
-    out_lst, num_comments = comments.find_form_letters(df, mock_sbert, form_threshold=10)
+    out_lst, num_comments = comments.find_form_letters(
+        df, mock_sbert, form_threshold=10
+    )
     assert out_lst == []
     assert num_comments == 0
