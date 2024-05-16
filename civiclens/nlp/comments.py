@@ -261,7 +261,7 @@ def find_form_letters(
         return form_letters, num_form_letters
 
     embeds = model.encode(docs, convert_to_numpy=True)
-    clusters = compute_similiarity_clusters(embeds, sim_threshold=0.05)
+    clusters = compute_similiarity_clusters(embeds, sim_threshold=0.025)
     document_id = df.unique(subset="document_id").select("document_id").item()
 
     num_form_letters += clusters.max() + 1
