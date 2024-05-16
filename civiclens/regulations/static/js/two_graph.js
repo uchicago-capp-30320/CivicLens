@@ -39,7 +39,7 @@ export function drawGraph() {
     // console.log(stackedData);
     // stackedData.sort((a, b) => b.total - a.total);
     // console.log(stackedData);
-    
+
     // Define scales for totals chart
     const xTotals = d3.scaleLinear()
     .domain([0, xMax])
