@@ -19,6 +19,7 @@ def doc_generator(df: pl.DataFrame):
 
 def get_last_update():
     """gets the timestamp of last update"""
+    new_date = None
     nlp_updated_query = """SELECT last_updated
                         FROM regulations_nlpoutput
                         ORDER BY last_updated ASC LIMIT 1"""
@@ -28,12 +29,15 @@ def get_last_update():
         connection=db_date,
         schema=["last_updated"],
     )
-    if not last_updated.is_empty():
-        last_updated = last_updated[0, "last_updated"]
-        last_updated = last_updated.strftime("%Y-%m-%d %H:%M:%S")
-    else:
-        last_updated = None
-    return last_updated
+    
+    if last_updated.is_empty(): 
+        return new_date
+
+    last_updated = last_updated[0, "last_updated"]
+    if last_updated:
+        new_date = last_updated.strftime("%Y-%m-%d %H:%M:%S")
+        
+    return new_date
 
 
 def docs_have_titles():
