@@ -348,6 +348,7 @@ def rep_comment_analysis(id: str, model: SentenceTransformer) -> RepComments:
         comment_data.rep_comments = form_letters
         comment_data.num_representative_comment = num_form_letters
     else:
+        form_letters, num_form_letters = find_form_letters(df_rep_form, model)
         comment_data.rep_comments = form_letters + df_rep_paraphrase.to_dicts()
         comment_data.num_representative_comment = len(comment_data.rep_comments)
 
