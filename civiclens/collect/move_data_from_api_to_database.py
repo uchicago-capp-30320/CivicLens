@@ -1,21 +1,22 @@
-import requests
-import xml.etree.ElementTree as ET
-import psycopg2
-import json
 import argparse
 import datetime as dt
-from datetime import datetime
-from requests.adapters import HTTPAdapter
+import json
 import time
+import xml.etree.ElementTree as ET
+from datetime import datetime
+
+import psycopg2
+import requests
+from requests.adapters import HTTPAdapter
 
 from civiclens.collect.access_api_data import pull_reg_gov_data
 from civiclens.utils.constants import (
-    REG_GOV_API_KEY,
-    DATABASE_NAME,
-    DATABASE_USER,
-    DATABASE_PASSWORD,
     DATABASE_HOST,
+    DATABASE_NAME,
+    DATABASE_PASSWORD,
     DATABASE_PORT,
+    DATABASE_USER,
+    REG_GOV_API_KEY,
 )
 from civiclens.utils.text import clean_text
 
@@ -34,7 +35,7 @@ def fetch_fr_document_details(fr_doc_num: str) -> str:
         data = response.json()
         return data.get("full_text_xml_url")
     else:
-        error_message = f"Error fetching FR document details for {fr_doc_num}: {response.status_code}"
+        error_message = f"Error fetching FR document details for {fr_doc_num}: {response.status_code}"  # noqa: E501
         raise Exception(error_message)
 
 
@@ -50,13 +51,16 @@ def fetch_xml_content(url: str) -> str:
     if response.status_code == 200:
         return response.text
     else:
-        error_message = f"Error fetching XML content from {url}: {response.status_code}"
+        error_message = (
+            f"Error fetching XML content from {url}: {response.status_code}"
+        )
         raise Exception(error_message)
 
 
 def parse_xml_content(xml_content: str) -> dict:
     """
-    Parses XML content and extracts relevant data such as agency type, CFR, RIN, title, summary, etc.
+    Parses XML content and extracts relevant data such as agency type, CFR,
+    RIN, title, summary, etc.
 
     Input: xml_content (str): xml formatted text
 
@@ -88,7 +92,9 @@ def parse_xml_content(xml_content: str) -> dict:
 
     # Extract Summary
     summary = root.find(".//SUM/P")
-    extracted_data["summary"] = summary.text if summary is not None else "Not Found"
+    extracted_data["summary"] = (
+        summary.text if summary is not None else "Not Found"
+    )
 
     # Extract DATES
     dates = root.find(".//DATES/P")
@@ -104,7 +110,8 @@ def parse_xml_content(xml_content: str) -> dict:
     supl_info_texts = []
     supl_info_elements = root.findall(".//SUPLINF/*")
     for element in supl_info_elements:
-        # Assuming we want to gather all text from children tags within <SUPLINF>
+        # Assuming we want to gather all text from children tags within
+        # <SUPLINF>
         if element.text is not None:
             supl_info_texts.append(element.text.strip())
         for sub_element in element:
@@ -119,7 +126,8 @@ def parse_xml_content(xml_content: str) -> dict:
 
 def extract_xml_text_from_doc(doc: json) -> json:
     """
-    Take a document's json object, pull the xml text, add the text to the object
+    Take a document's json object, pull the xml text, add the text to the
+    object
 
     Input: doc (json): the object from regulations.gov API
 
@@ -136,7 +144,9 @@ def extract_xml_text_from_doc(doc: json) -> json:
         xml_content = fetch_xml_content(xml_url)
         if xml_content:
             extracted_data = parse_xml_content(xml_content)
-            processed_data.append({**doc, **extracted_data})  # merge the json objects
+            processed_data.append(
+                {**doc, **extracted_data}
+            )  # merge the json objects
 
     return processed_data
 
@@ -167,7 +177,8 @@ def verify_database_existence(
     Inputs:
         table (str): one of the tables in the CivicLens db
         api_field_val (str): the value we're looking for in the table
-        db_field (str): the field in the table where we're looking for the value
+        db_field (str): the field in the table where we're looking for the
+        value
 
     Returns: boolean indicating the value was found
     """
@@ -201,8 +212,10 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
             response = cursor.fetchall()
 
     # format the text
-    # it seems that the regulations.gov API returns postedDate rounded to the hour
-    # if we used that naively as the most recent date, we might miss some comments
+    # it seems that the regulations.gov API returns postedDate rounded to the
+    # hour
+    # if we used that naively as the most recent date, we might miss some
+    # comments
     # when we pull comments again. By backing up one hour, we trade off some
     # unnecessary API calls for ensuring we don't miss anything
     date_dt = response[0][0]
@@ -238,7 +251,9 @@ def qa_docket_data(docket_data: json) -> None:
         assert "attributes" in data_for_db, "'attributes' not in docket_data"
 
         # check the fields
-        assert len(data_for_db["id"]) < 255, "id field longer than 255 characters"
+        assert (
+            len(data_for_db["id"]) < 255
+        ), "id field longer than 255 characters"
         assert attributes["docketType"] in [
             "Rulemaking",
             "Nonrulemaking",
@@ -249,7 +264,9 @@ def qa_docket_data(docket_data: json) -> None:
         ), "lastModifiedDate is unexpected length"
         assert attributes["agencyId"].isalpha(), "agencyId is not just letter"
         assert isinstance(attributes["title"], str), "title is not string"
-        assert attributes["objectId"][:2] == "0b", "objectId does not start with '0b'"
+        assert (
+            attributes["objectId"][:2] == "0b"
+        ), "objectId does not start with '0b'"
         # attributes["highlightedContent"]
 
         return True
@@ -270,7 +287,6 @@ def insert_docket_into_db(docket_data: json) -> dict:
     data_for_db = docket_data[0]
     attributes = data_for_db["attributes"]
     try:
-
         connection, cursor = connect_db_and_get_cursor()
 
         with connection:
@@ -308,9 +324,8 @@ def insert_docket_into_db(docket_data: json) -> dict:
                 )
                 connection.commit()
     except Exception as e:
-        error_message = (
-            f"Error inserting docket {attributes['objectId']} into dockets table: {e}"
-        )
+        error_message = f"""Error inserting docket {attributes['objectId']}
+        into dockets table: {e}"""
         # print(error_message)
         return {
             "error": True,
@@ -325,12 +340,15 @@ def insert_docket_into_db(docket_data: json) -> dict:
     }
 
 
-def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
+def add_dockets_to_db(
+    doc_list: list[dict], print_statements: bool = True
+) -> None:
     """
     Add the dockets connected to a list of documents into the database
 
     Inputs:
-        doc_list (list of json objects): what is returned from an API call for documents
+        doc_list (list of json objects): what is returned from an API call
+        for documents
         print_statements (boolean): whether to print info on progress
 
     """
@@ -352,7 +370,8 @@ def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> No
 
             if not qa_docket_data(docket_data):
                 print(
-                    f"docket {docket_id} appears to have data in the wrong format; not added"
+                    f"""docket {docket_id} appears to have data in the wrong
+                    format; not added"""
                 )
                 continue
             # add docket_data to docket table in the database
@@ -367,12 +386,14 @@ def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> No
 
 def query_register_API_and_merge_document_data(doc: json) -> json:
     """
-    Attempts to pull document text via federal register API and merge with reg gov API data
+    Attempts to pull document text via federal register API and merge with reg
+    gov API data
 
     Input: doc (json): the raw json for a document from regulations.gov API
 
     Returns:
-        merged_doc (json): the json with fields for text from federal register API
+        merged_doc (json): the json with fields for text from federal register
+        API
     """
 
     # extract the document text using the general register API
@@ -385,10 +406,11 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
             parsed_xml_content = parse_xml_content(xml_content)
             doc.update(parsed_xml_content)  # merge the json objects
         except Exception:
-            # if there's an error, that means we can't use the xml_url to get the doc text, so we enter None for those fields
+            # if there's an error, that means we can't use the xml_url to get
+            # the doc text, so we enter None for those fields
             print(
-                f"Error accessing federal register xml data for frDocNum {fr_doc_num},\
-                  document id {document_id}"
+                rf"""Error accessing federal register xml data for frDocNum
+                {fr_doc_num},\ document id {document_id}"""
             )
             blank_xml_fields = {
                 "agencyType": None,
@@ -491,7 +513,9 @@ def qa_document_data(document_data: json) -> True:
             len((attributes["commentEndDate"])) == 20
             and "202" in attributes["commentEndDate"]
         ), "commentEndDate is unexpected length"
-        assert len(attributes["postedDate"]) == 20, "postedDate is unexpected length"
+        assert (
+            len(attributes["postedDate"]) == 20
+        ), "postedDate is unexpected length"
         # attributes["docketId"]
         # attributes["subtype"]
         assert (
@@ -560,7 +584,9 @@ def insert_document_into_db(document_data: json) -> dict:
         document_data["supplementaryInformation"],
     )
 
-    # annoying quirk: https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-column-of-relation-does-not-exist
+    # annoying quirk:
+    # https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-
+    # column-of-relation-does-not-exist
     query = """INSERT INTO regulations_document ("id",
                             "document_type",
                             "last_modified_date",
@@ -606,7 +632,8 @@ def insert_document_into_db(document_data: json) -> dict:
                         summary = EXCLUDED.summary,
                         dates = EXCLUDED.dates,
                         further_information = EXCLUDED.further_information,
-                        supplementary_information = EXCLUDED.supplementary_information;"""
+                        supplementary_information =
+                        EXCLUDED.supplementary_information;"""
     try:
         connection, cursor = connect_db_and_get_cursor()
         with connection:
@@ -618,9 +645,8 @@ def insert_document_into_db(document_data: json) -> dict:
                 connection.commit()
 
     except Exception as e:
-        error_message = (
-            f"Error inserting document {document_data['id']} into documents table: {e}"
-        )
+        error_message = f"""Error inserting document
+        {document_data['id']} into dockets table: {e}"""
         # print(error_message)
         return {
             "error": True,
@@ -635,12 +661,15 @@ def insert_document_into_db(document_data: json) -> dict:
     }
 
 
-def add_documents_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
+def add_documents_to_db(
+    doc_list: list[dict], print_statements: bool = True
+) -> None:
     """
     Add a list of document json objects into the database
 
     Inputs:
-        doc_list (list of json objects): what is returned from an API call for documents
+        doc_list (list of json objects): what is returned from an API call for
+        documents
         print_statements (boolean): whether to print info on progress
 
     """
@@ -655,7 +684,8 @@ def add_documents_to_db(doc_list: list[dict], print_statements: bool = True) -> 
             # qa step
             if not qa_document_data(full_doc_info):
                 print(
-                    f"document {document_id} appears to have data in the wrong format; not added"
+                    f"""document {document_id} appears to have data in the
+                    wrong format; not added"""
                 )
                 continue
 
@@ -692,7 +722,9 @@ def get_comment_text(api_key: str, comment_id: str) -> dict:
     session.mount("https", HTTPAdapter(max_retries=4))
 
     while True:
-        response = session.get(endpoint, headers={"X-Api-Key": api_key}, verify=True)
+        response = session.get(
+            endpoint, headers={"X-Api-Key": api_key}, verify=True
+        )
 
         if response.status_code == 200:
             # SUCCESS! Return the JSON of the request
@@ -706,12 +738,14 @@ def get_comment_text(api_key: str, comment_id: str) -> dict:
             )
             the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(
-                f"Rate limit exceeded at {the_time}. Waiting {wait_time} seconds to retry."
+                f"""Rate limit exceeded at {the_time}.
+                Waiting {wait_time} seconds to retry."""
             )
             time.sleep(wait_time)
         else:
             print(
-                f"Failed to retrieve comment data. Status code: {response.status_code}"
+                f"""Failed to retrieve comment data.
+                Status code: {response.status_code}"""
             )
             return None
 
@@ -746,7 +780,9 @@ def clean_comment_data(comment_data: json) -> None:
     # format the date fields
     for date_field in ["modifyDate", "postedDate", "receiveDate"]:
         comment_text_attributes[date_field] = (
-            datetime.strptime(comment_text_attributes[date_field], "%Y-%m-%dT%H:%M:%SZ")
+            datetime.strptime(
+                comment_text_attributes[date_field], "%Y-%m-%dT%H:%M:%SZ"
+            )
             if comment_text_attributes[date_field]
             else None
         )
@@ -772,7 +808,9 @@ def qa_comment_data(comment_data: json) -> None:
     try:
         assert len(comment_data["id"]) < 255, "id is more than 255 characters"
 
-        assert attributes["objectId"][:2] == "09", "objectId does not start with '09'"
+        assert (
+            attributes["objectId"][:2] == "09"
+        ), "objectId does not start with '09'"
         assert (
             comment_text_attributes["commentOn"][:2] == "09"
         ), "commentOn does not start with '09'"
@@ -781,9 +819,9 @@ def qa_comment_data(comment_data: json) -> None:
             comment_text_attributes["duplicateComments"] == 0
         ), "duplicateComments != 0"
         # assert comment_data["stateProvinceRegion"]
-        assert comment_text_attributes["subtype"] is None or comment_text_attributes[
+        assert comment_text_attributes[
             "subtype"
-        ] in [
+        ] is None or comment_text_attributes["subtype"] in [
             "Public Comment",
             "Comment(s)",
         ], "subtype is not an expected value"
@@ -814,7 +852,9 @@ def qa_comment_data(comment_data: json) -> None:
             comment_text_attributes["receiveDate"], datetime
         ), "receiveDate is not datetime"
         # comment_data["trackingNbr"]
-        assert comment_text_attributes["withdrawn"] is False, "withdrawn is not False"
+        assert (
+            comment_text_attributes["withdrawn"] is False
+        ), "withdrawn is not False"
         # comment_data["reasonWithdrawn"]
         # comment_data["zip"]
         # comment_data["restrictReason"]
@@ -877,7 +917,9 @@ def insert_comment_into_db(comment_data: json) -> dict:
     restrictReasonType = comment_text_attributes.get("restrictReasonType", "")
     submitterRep = comment_text_attributes.get("submitterRep", "")
     submitterRepAddress = comment_text_attributes.get("submitterRepAddress", "")
-    submitterRepCityState = comment_text_attributes.get("submitterRepCityState", "")
+    submitterRepCityState = comment_text_attributes.get(
+        "submitterRepCityState", ""
+    )
 
     # SQL INSERT statement
     query = """
@@ -918,7 +960,8 @@ def insert_comment_into_db(comment_data: json) -> dict:
         "submitter_rep_address",
         "submitter_rep_city_state"
     ) VALUES (
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     )
     ON CONFLICT (id) DO UPDATE SET
         object_id = EXCLUDED.object_id,
@@ -1003,9 +1046,8 @@ def insert_comment_into_db(comment_data: json) -> dict:
             connection.commit()
 
     except Exception as e:
-        error_message = (
-            f"Error inserting comment {comment_data['id']} into comment table: {e}"
-        )
+        error_message = f"""Error inserting comment {comment_data['id']} into
+        comment table: {e}"""
         # print(error_message)
         return {
             "error": True,
@@ -1044,7 +1086,8 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
 
         if not qa_comment_data(all_comment_data):
             print(
-                f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
+                f"""comment {all_comment_data['id']}
+                appears to have data in the wrong format; not added"""
             )
             continue
 
@@ -1076,7 +1119,8 @@ def add_comments_to_db_for_existing_doc(
     most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
     if print_statements:
         print(
-            f"comments found for document {document_id}, most recent was {most_recent_comment_date}"
+            f"""comments found for document {document_id}, most recent was
+            {most_recent_comment_date}"""
         )
 
     comment_data = pull_reg_gov_data(
@@ -1096,7 +1140,8 @@ def add_comments_to_db_for_existing_doc(
 
         if not qa_comment_data(all_comment_data):
             print(
-                f"comment {all_comment_data['id']} appears to have data in the wrong format; not added"
+                f"""comment {all_comment_data['id']} appears to have data
+                in the wrong format; not added"""
             )
             continue
 
@@ -1106,12 +1151,15 @@ def add_comments_to_db_for_existing_doc(
             # would want to add logging here
 
 
-def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
+def add_comments_to_db(
+    doc_list: list[dict], print_statements: bool = True
+) -> None:
     """
     Add comments on a list of documents to the database
 
     Inputs:
-        doc_list (list of json objects): what is returned from an API call for documents
+        doc_list (list of json objects): what is returned from an API call for
+        documents
         print_statements (boolean): whether to print info on progress
 
     """
@@ -1125,12 +1173,18 @@ def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> N
                 "regulations_comment", document_id, "document_id"
             ):  # doc doesn't exist in the db; it's new
                 if print_statements:
-                    print(f"no comments found in database for document {document_id}")
+                    print(
+                        f"""no comments found in database for document
+                        {document_id}"""
+                    )
 
                 add_comments_to_db_for_new_doc(document_object_id)
 
                 if print_statements:
-                    print(f"tried to add comments on document {document_id} to the db")
+                    print(
+                        f"""tried to add comments on document
+                        {document_id} to the db"""
+                    )
 
             else:  # doc exists in db; only need to add new comments
                 add_comments_to_db_for_existing_doc(
@@ -1138,13 +1192,18 @@ def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> N
                 )
 
 
-def add_comments_based_on_comment_date_range(start_date: str, end_date: str) -> None:
+def add_comments_based_on_comment_date_range(
+    start_date: str, end_date: str
+) -> None:
     """
-    Add comments to the comments table based on a date range of when the comments were posted
+    Add comments to the comments table based on a date range of when the
+    comments were posted
 
     Inputs:
-        start_date (str): the date in YYYY-MM-DD format to pull data from (inclusive)
-        end_date (str): the date in YYYY-MM-DD format to stop the data pull (inclusive)
+        start_date (str): the date in YYYY-MM-DD format to pull data from
+        (inclusive)
+        end_date (str): the date in YYYY-MM-DD format to stop the data pull
+        (inclusive)
 
     Returns: nothing; adds comments, if available, to the db
     """
@@ -1156,10 +1215,9 @@ def add_comments_based_on_comment_date_range(start_date: str, end_date: str) -> 
     )
     for comment in comment_data:
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
-        
+
         # clean
         clean_comment_data(all_comment_data)
-
 
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
@@ -1178,8 +1236,10 @@ def pull_all_api_data_for_date_range(
     Pull different types of data from regulations.gov API based on date range
 
     Inputs:
-        start_date (str): the date in YYYY-MM-DD format to pull data from (inclusive)
-        end_date (str): the date in YYYY-MM-DD format to stop the data pull (inclusive)
+        start_date (str): the date in YYYY-MM-DD format to pull data from
+        (inclusive)
+        end_date (str): the date in YYYY-MM-DD format to stop the data pull
+        (inclusive)
         pull_dockets (boolean):
 
     Returns: nothing; adds data to the db
@@ -1202,7 +1262,8 @@ def pull_all_api_data_for_date_range(
         docket_id = doc["attributes"]["docketId"]
         if docket_id and doc["attributes"]["openForComment"]:
             commentable_docs.append(doc)
-            # can't add this doc to the db right now because docket needs to be added first
+            # can't add this doc to the db right now because docket needs to be
+            # added first
             # the db needs the docket primary key first
 
     print(f"{len(commentable_docs)} documents open for comment")
@@ -1226,7 +1287,9 @@ def pull_all_api_data_for_date_range(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Pull info for a date range from API")
+    parser = argparse.ArgumentParser(
+        description="Pull info for a date range from API"
+    )
     parser.add_argument(
         "start_date",
         type=str,
@@ -1241,19 +1304,19 @@ if __name__ == "__main__":
         "-k",
         "--pull_dockets",
         action="store_true",
-        help="Pull dockets that were posted during date range and add to db if not there",
+        help="Pull dockets posted during date range, add to db if not there",
     )
     parser.add_argument(
         "-d",
         "--pull_documents",
         action="store_true",
-        help="Pull documents that were posted during date range and add to db if not there",
+        help="Pull documents posted during date range, add to db if not there",
     )
     parser.add_argument(
         "-c",
         "--pull_comments",
         action="store_true",
-        help="Pull comments that were posted during date range and add to db if not there",
+        help="Pull comments posted during date range, add to db if not there",
     )
 
     args = parser.parse_args()

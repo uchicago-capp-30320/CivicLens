@@ -7,7 +7,7 @@ def regex_tokenize(text: str, pattern: str = r"\W+"):
     Splits strings into tokens base on regular expression.
     """
     return re.split(pattern, text)
-
+  
 
 def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
     r"""
@@ -21,6 +21,9 @@ def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
     Returns:
         Cleaned verison of text
     """
+    if patterns is None:
+        patterns = []
+
     text = re.sub(r"<\s*br\s*/>", " ", text)
     text = re.sub(r"[^a-zA-Z0-9.'\"\?\: -]", "", text)
     text = re.sub(r"\w*ndash\w*", "", text)
