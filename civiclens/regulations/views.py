@@ -8,7 +8,7 @@ from django.contrib.postgres.search import (
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count
 from django.db.models.functions import TruncDate
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
 from .models import AgencyReference, Comment, Document
@@ -60,7 +60,6 @@ def search_results(request):  # noqa: C901
                 Document.objects.annotate(rank=SearchRank(vector, search_query))
                 .annotate(headline=search_headline)
                 .annotate(comment_count=Count("comment"))
-                .annotate(comment_count=Count("comment"))
                 .filter(rank__gte=0.0001)
                 .filter(comment_end_date__gte=today)
                 .order_by("-rank")
@@ -73,31 +72,12 @@ def search_results(request):  # noqa: C901
                         + TrigramSimilarity("summary", query)
                         + TrigramSimilarity("agency_id", query)
                         + TrigramSimilarity("agency_type", query)
-                        + TrigramSimilarity("agency_type", query)
                     )
-                    .annotate(comment_count=Count("comment"))
                     .annotate(comment_count=Count("comment"))
                     .filter(rank__gt=0.20)
                     .filter(comment_end_date__gte=today)
-                    .filter(comment_end_date__gte=today)
                     .order_by("-rank")
                 )
-            if sort_by == "most_recent":
-                documents = documents.order_by("-posted_date")
-            elif sort_by == "most_comments":
-                documents = documents.order_by("-comment_count")
-            elif sort_by == "least_comments":
-                documents = documents.order_by("comment_count")
-
-            if selected_agencies:
-                documents = documents.filter(agency_id__in=selected_agencies)
-
-            if search_results:
-                documents = documents.filter(document_type__in=category_lst)
-                if comments_any:
-                    documents = documents.filter(comment_count__gte=1)
-                if comments_over_hundred:
-                    documents = documents.filter(comment_count__gte=100)
             if sort_by == "most_recent":
                 documents = documents.order_by("-posted_date")
             elif sort_by == "most_comments":
@@ -131,16 +111,15 @@ def search_results(request):  # noqa: C901
     )
 
 
-def document(request, doc_id):
-    try:
-        doc = (
-            Document.objects.filter(id=doc_id)
-            .annotate(comment_count=Count("comment"))
-            .get()
-        )
+def document(request, doc_id):  # noqa: E501
+    today = timezone.now().date()
 
-    except Document.DoesNotExist:
-        doc = None
+    doc = get_object_or_404(
+        Document.objects.filter(id=doc_id)
+        .filter(comment_end_date__gte=today)
+        .annotate(comment_count=Count("comment"))
+    )
+
     try:
         comments_api = (
             Comment.objects.filter(document=doc_id)
