@@ -1,146 +1,135 @@
+import pickle
 from collections import defaultdict
+from functools import partial
+from pathlib import Path
 from typing import Callable
 
-import numpy as np
-from bertopic import BERTopic
-from langchain_community.vectorstores.utils import maximal_marginal_relevance
-from sentence_transformers import SentenceTransformer
+import gensim.corpora as corpora
+from gensim.corpora import Dictionary
+from gensim.models import HdpModel, Phrases
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from civiclens.nlp.tools import Comment, RepComments
-from civiclens.utils.errors import TooFewTopics, TopicModelFailure
-from civiclens.utils.text import clean_text, sentence_splitter
+from civiclens.utils.text import clean_text, regex_tokenize
 
 
-def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
+def stopwords(model_path: Path):
     """
-    Sorts input terms by maximal marginal relevance (MMR).
-
-    Args:
-        terms: list of strings to sort
-        query_string: query terms to compare relevance against
-        lam: lambda value for MMR formula
-
-    Returns:
-        List of terms sorted by relevance to query terms
+    Loads in pickled set of stopword for text processing.
     """
-    embeding_model = SentenceTransformer("all-MiniLM-L6-v2")
-    term_matrix = embeding_model.encode(terms)
-    query = embeding_model.encode(query_string, convert_to_numpy=True)
+    with open(model_path, "rb") as f:
+        stop_words = pickle.load(f)
 
-    indices = maximal_marginal_relevance(
-        query, term_matrix, lambda_mult=lam, k=len(terms)
-    )
-    sorted_terms = np.array(terms)[indices]
-
-    return sorted_terms.tolist()
+    return stop_words
 
 
-class TopicModel:
+class HDAModel:
     """
-    Wrapper for BERT-based topic model.
+    Peforms LDA topic modeling
     """
 
-    def __init__(self, model: BERTopic):
-        self.model = model
-        self.terms = {}
-
-    def _process_sentences(self, docs: list[Comment]) -> dict[str, str]:
-        """
-        Map setences to comments.
-        """
-        sentences = defaultdict(list)
-
-        for comment in docs:
-            split_text = sentence_splitter(clean_text(comment.text))
-            for sentence in split_text:
-                if comment.text:
-                    sentences[sentence].append(comment.id)
-
-        return sentences
-
-    def get_terms(self) -> dict[int, list]:
-        """
-        Returns generated terms for all topics
-        """
-        return self.terms
-
-    def run_model(self, docs: list[Comment]):
-        """
-        Runs model and generates topics.
-        """
-        sentences = self._process_sentences(docs)
-        input = list(sentences.keys())
-
-        try:
-            numeric_topics, probs = self.model.fit_transform(input)
-        except Exception as error:
-            raise TopicModelFailure(error) from error
-
-        num_topics = max(numeric_topics)
-
-        if num_topics < 0:
-            raise TooFewTopics
-
-        # intialize no topic default
-        self.terms[-1] = []
-
-        for i in range(num_topics + 1):
-            phrases = set()
-            model_results = self.model.get_topic(i, full=True)
-            for model_topics in model_results.values():
-                phrases.update({phrase for (phrase, _) in model_topics})
-
-            self.terms[i] = list(phrases)
-
-        return self._aggregate_comments(sentences, input, numeric_topics, probs)
-
-    def _generate_mmr_query(self, topics):
-        """
-        Generates topics query to calculate MMR terms.
-        """
-        topic_labels = self.model.generate_topic_labels(
-            nr_words=3, separator=", ", topic_prefix=False
+    def __init__(self):
+        self.model = None
+        self.tokenizer = partial(regex_tokenize, pattern=r"\W+")
+        self.stop_words = stopwords(
+            Path(__file__).resolve().parent / "saved_models/stop_words.pickle"
         )
-        min_topic = min(topics)
+        self.terms = None
 
-        if min_topic < 0:
-            topic_labels = topic_labels[1:]
+    def _process_text(
+        self, comments: list[Comment]
+    ) -> tuple[list[list[str]], dict[int, str]]:
+        """
+        Clean text and convert to tokens
+        """
+        docs = []
+        document_ids = {}
+        for idx, comment in enumerate(comments):
+            docs.append(self.tokenizer(clean_text(comment.text).lower()))
+            document_ids[idx] = comment.id
 
-        return topic_labels
+        # remove numbers, tokens 2 character tokens, and stop words, lemmatize
+        docs = [
+            [
+                token
+                for token in doc
+                if not token.isnumeric()
+                and len(token) > 2
+                and token not in self.stop_words
+            ]
+            for doc in docs
+        ]
 
-    def _aggregate_comments(
-        self,
-        sentences: dict[str, str],
-        input: list[str],
-        numeric_topics: list[int],
-        probs: np.ndarray,
+        return docs, document_ids
+
+    def _create_corpus(
+        self, docs: list[list[str]]
+    ) -> tuple[Dictionary, list[tuple]]:
+        """
+        Converts tokens to corpus and corresponding dictionary
+        """
+        bigram_generator = Phrases(docs, min_count=10).freeze()
+
+        for doc in docs:
+            for token in bigram_generator[doc]:
+                if "_" in token:
+                    doc.append(token)
+
+        token_dict = corpora.Dictionary(docs)
+        corpus = [token_dict.doc2bow(doc) for doc in docs]
+
+        return token_dict, corpus
+
+    def run_model(self, comments: list[Comment]):
+        """
+        Runs HDA topic analysis.
+        """
+        docs, document_id = self._process_text(comments)
+        token_dict, corpus = self._create_corpus(docs)
+
+        hdp_model = HdpModel(corpus, token_dict)
+        numeric_topics = self._find_best_topic(hdp_model, corpus)
+
+        comment_topics = {}
+        topic_terms = {}
+        for doc_id, topic in numeric_topics.items():
+            comment_id = document_id[doc_id]
+            if topic not in topic_terms:
+                topic_terms[topic] = [
+                    word for word, _ in hdp_model.show_topic(topic)
+                ]
+            comment_topics[comment_id] = topic
+
+        self.terms = topic_terms
+
+        return comment_topics
+
+    def _find_best_topic(
+        self, model: HdpModel, corpus: list[tuple]
     ) -> dict[int, int]:
         """
-        Aggregates topics from sentences to comments. If comments have multiple
-        corresponding topics, topic with highest joint probability is chosen.
+        Computes most probable topic per document
         """
-        topics_by_comment = defaultdict(dict)
-        for idx, topic in enumerate(numeric_topics):
-            # turn into array and loop through to handle form letter bug
-            comment_ids = sentences[input[idx]]
-            for id in comment_ids:
-                topics_by_comment[id][topic] = (
-                    topics_by_comment[id].get(topic, 0) + probs[idx]
-                )
+        best_topic = {}
+        for doc_id, doc in enumerate(corpus):
+            max_prob = float("-inf")
+            topic_id = -1
+            for topic_num, prob in model[doc]:
+                if prob > max_prob:
+                    max_prob = prob
+                    topic_id = topic_num
+            best_topic[doc_id] = topic_id
 
-        # find highest probability topic
-        assigned_topics = {}
-        for doc, topics in topics_by_comment.items():
-            max_topic_prob = float("-inf")
-            max_topic = -1
-            for topic, prob in topics.items():
-                if prob > max_topic_prob:
-                    max_topic = topic
-                    max_topic_prob = prob
-            assigned_topics[doc] = max_topic
+        return best_topic
 
-        return assigned_topics
+    def get_terms(self) -> dict:
+        """
+        Returns terms for a all topics
+        """
+        if not self.terms:
+            return {}
+
+        return self.terms
 
     def generate_search_vector(self) -> list[str]:
         """
@@ -156,20 +145,6 @@ class TopicModel:
             search_vector.update(term_list)
 
         return list(search_vector)
-
-    def find_n_representative_topics(
-        self, labeled_comments: dict[str, int], n: int
-    ) -> dict[int, list[str]]:
-        """
-        Generates n topic terms per comment.
-        """
-        # add way to make topic terms unique
-        comment_topics = {}
-        for comment, topic_num in labeled_comments.items():
-            terms = self.terms[topic_num]
-            comment_topics[comment] = terms[:n]
-
-        return comment_topics
 
 
 class LabelChain:
@@ -221,7 +196,7 @@ def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
 
 def topic_comment_analysis(
     comment_data: RepComments,
-    model: TopicModel = None,
+    model: HDAModel = None,
     labeler: LabelChain = None,
     sentiment_analyzer: Callable = None,
 ) -> RepComments:
@@ -236,21 +211,7 @@ def topic_comment_analysis(
         ]
 
     comments += comment_data.to_list()
-    for analysis in (
-        "representative",
-        "all",
-    ):  # try with representative comments
-        if analysis == "all":  # if failure, try with all comments
-            comments += comment_data.get_nonrepresentative_comments()
-        try:
-            comment_topics = model.run_model(comments)
-            break
-        except (TooFewTopics, TopicModelFailure) as e:
-            # log error
-            print(e)
-    else:  # return input if unable to generate comments
-        return comment_data
-
+    comment_topics = model.run_model(comments)
     topic_terms = model.get_terms()
     topic_labels = label_topics(topic_terms, labeler)
 
@@ -298,9 +259,9 @@ def create_topics(comments: list[Comment]) -> dict:
 
     topics = []
     # create output dictionary
-    for topic_label, partial in temp.items():
-        partial["topic"] = topic_label
-        topics.append(partial)
+    for topic_label, part in temp.items():
+        part["topic"] = topic_label
+        topics.append(part)
 
     # sort topics by "total"
     return sorted(topics, key=lambda topic: topic["total"], reverse=True)
