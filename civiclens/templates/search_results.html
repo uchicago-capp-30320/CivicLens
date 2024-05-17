@@ -10,7 +10,7 @@
 
 {% block content %}
 <div class="form-group">
-  <form action="/regulations/search/results/" method="GET">
+  <form action="/search/results/" method="GET">
     <input type="hidden" name="source" value="search_results">
     {% csrf_token %}
     {{ form.as_p }}
