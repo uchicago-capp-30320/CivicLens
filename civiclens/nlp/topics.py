@@ -13,9 +13,15 @@ from civiclens.nlp.tools import Comment, RepComments
 from civiclens.utils.text import clean_text, regex_tokenize
 
 
-def stopwords(model_path: Path):
+def stopwords(model_path: Path) -> set[str]:
     """
     Loads in pickled set of stopword for text processing.
+
+    Args:
+        model_path: path from downloaded model
+
+    Returns:
+        Set of stop words.
     """
     with open(model_path, "rb") as f:
         stop_words = pickle.load(f)
@@ -180,7 +186,7 @@ def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
     """
     Generates a label for all topics
 
-    Inputs:
+    Args:
         topics: dictionary of topics, as lists of terms
         model: LLM model to generate labels
 
@@ -202,6 +208,15 @@ def topic_comment_analysis(
 ) -> RepComments:
     """
     Run topic and sentiment analysis.
+
+    Args:
+        comment_data: RepComment object
+        model: instance topic model class
+        labeler: chain for generating topic labels
+        sentiment_analyzer: function to analyze comment text sentiment
+
+    Returns:
+        RepComment object with full topic anlayis complete
     """
     comments: list[Comment] = []
 
@@ -245,6 +260,12 @@ def topic_comment_analysis(
 def create_topics(comments: list[Comment]) -> dict:
     """
     Condense topics for document summary
+
+    Args:
+        Comments: list of Comment objects
+
+    Returns:
+        Dictionary of topics, and corresponding sentiment data
     """
     temp = defaultdict(dict)
 

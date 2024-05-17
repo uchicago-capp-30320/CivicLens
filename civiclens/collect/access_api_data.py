@@ -38,7 +38,7 @@ def api_date_format_params(start_date=None, end_date=None):
     Formats dates to be passed to API call. Assumes we want whole days, and
     aren't filtering by time.
 
-    Inputs:
+    Args:
         start_date (str in YYYY-MM-DD format, optional): the inclusive start
         date of our data pull
         end_date (str in YYYY-MM-DD format, optional): the inclusive end date
@@ -70,7 +70,7 @@ def format_datetime_for_api(dt_str):
     required when making API requests.
     Ref: https://open.gsa.gov/api/regulationsgov/#searching-for-comments-1
 
-    Inputs:
+    Args:
         dt_str (str): The UTC datetime string in ISO 8601 format (e.g.,
         "2020-08-10T15:58:52Z").
 
@@ -97,7 +97,6 @@ def pull_reg_gov_data(  # noqa: C901,E501
     end_date=None,
     params=None,
     print_remaining_requests=False,
-    wait_for_rate_reset=True,
     skip_duplicates=False,
 ):
     """

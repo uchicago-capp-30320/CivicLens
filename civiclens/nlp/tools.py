@@ -99,7 +99,7 @@ def extract_formletters(
     """
     Extracts from letters from collection of comments.
 
-    Inputs:
+    Args:
         docs: List of comments
         embeddings: Embedding matrix for list of comments
         sim_threhold: Threhold (cosine similarity) for similar comments
@@ -136,7 +136,7 @@ def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
     """
     Analyze sentiment of a comment.
 
-    Inputs:
+    Args:
         comment: Comment object
         pipeline: Hugging Face pipeline for conducting sentiment analysis
 

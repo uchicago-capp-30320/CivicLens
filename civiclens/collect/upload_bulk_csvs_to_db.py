@@ -72,7 +72,7 @@ def extract_fields_from_row(
     """
     Takes a polars row and outputs it in properly formatted dict
 
-    Inputs:
+    Args:
         df_row (polars df): a polars row representing a comment
         doc_objectId (str): the object id for the doc the comment is on.
         Not included in the csv, but necessary to insert into the db
