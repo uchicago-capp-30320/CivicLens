@@ -19,7 +19,7 @@
     <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
       <div class="container-sm py-0">
         <div class="input-group mb-4">
-          <input class="form-control" title="search term" id="q" name="q" type="text" value="{{Search.search_term}}">
+          <input class="form-control" id="q" name="q" type="text" value="{{Search.search_term}}">
           <button class="btn btn-primary">Search</button>
         </div>
       </div>
@@ -74,7 +74,7 @@
 
             <div class="form-group agency-container">
               <label class="font-italic">Agency</label>
-              <select multiple class="form-control agency-list" id="selected_agencies" name="selected_agencies" title="Selected Agencies">
+              <select multiple class="form-control agency-list" id="selected_agencies" name="selected_agencies">
                 <!-- for loop through all agencies in the database -- USE JINJA -->
                 {% for agency in agencies %}
                   <option value="{{ agency.id }}">{{ agency.id }}:  {{ agency.name }}</option>
@@ -93,7 +93,7 @@
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" title="Proposed Rule" name="proposed_rule" id="Proposed Rule" value="Proposed Rule" checked>
+                <input class="form-check-input" type="checkbox" name="proposed_rule" id="Proposed Rule" value="Proposed Rule" checked>
                 <label class="form-check-label" for="proposed_rule">
                   Proposed Rule
                 </label>
@@ -139,7 +139,7 @@
                 {% endif %}
                   <button href="#" class="badge mb-2">doc.topic</button>
                 </div>
-                <div class="card-footer p-0 text-right" >
+                <div class="card-footer text-muted p-0 text-right" >
                   comment by {{ doc.comment_end_date }}
                 </div>
               </div>
