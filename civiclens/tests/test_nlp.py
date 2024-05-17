@@ -1,4 +1,6 @@
+import pickle
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import polars as pl
 from sentence_transformers import SentenceTransformer
@@ -95,3 +97,23 @@ def test_gen_search_unique():
     topic_model.terms = {0: ["green", "red"], 1: ["green", "orange"]}
     # check all values are unique
     assert len(topic_model.generate_search_vector()) == 3
+
+
+def test_sim_clusters():
+    with open(BASE_DIR / "nlp_test_data/test_embeddings.pkl", "rb") as f:
+        test_data = pickle.load(f)
+        mock_embeddings = test_data["embeddings"]
+        out = comments.compute_similiarity_clusters(
+            mock_embeddings, sim_threshold=0.05
+        )
+        assert out.size == 3
+
+
+def test_empty_form_df():
+    df = pl.DataFrame({"comment_text": []})
+    mock_sbert = MagicMock(spec=SentenceTransformer)
+    out_lst, num_comments = comments.find_form_letters(
+        df, mock_sbert, form_threshold=10
+    )
+    assert out_lst == []
+    assert num_comments == 0

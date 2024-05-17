@@ -2,10 +2,8 @@ from datetime import datetime
 from uuid import uuid4
 
 import polars as pl
-import torch
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
-from sentence_transformers.util import cos_sim
 from transformers import pipeline
 
 
@@ -13,7 +11,7 @@ from transformers import pipeline
 class RepComments:
     # clustered df for topics
     document_id: str
-    doc_comments: pl.DataFrame = Field(default=pl.DataFrame)
+    doc_comments: pl.DataFrame = Field(default=pl.DataFrame())
 
     # fields for nlp table
     rep_comments: list = Field(default=[])
@@ -23,10 +21,11 @@ class RepComments:
     num_representative_comment: int = 0
     topics: list = Field(default=[])
     last_updated: datetime = datetime.now()
+    uuid: int = uuid4().int
     search_vector: list = Field(default=[])
     summary: str = ""
 
-    # TODO tests for this method
+    # test this!
     def get_nonrepresentative_comments(self):
         """
         Converts nonrepresentative comments to list of Comment objects.
@@ -90,7 +89,6 @@ class Comment:
             "source": self.source,
         }
 
-
 def extract_formletters(
     docs: list[str],
     embeddings: torch.tensor,
@@ -130,7 +128,6 @@ def extract_formletters(
             break
 
     return form_comments
-
 
 def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
     """
