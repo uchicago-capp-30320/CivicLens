@@ -1,10 +1,9 @@
 from functools import partial
 
 import polars as pl
-from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments, titles
-from civiclens.nlp.models import sentiment_pipeline, sentence_transformer
+from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
 from civiclens.nlp.tools import sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
