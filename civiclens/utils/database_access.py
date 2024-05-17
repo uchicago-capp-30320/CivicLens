@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 from typing import List, Optional, Tuple
 
 import polars as pl
@@ -81,19 +82,34 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
         connection: Postgres client
         comments: comments to be uploaded
     """
-    query = """INSERT INTO regulations_nlpoutput (
-                    "rep_comments",
-                    "doc_plain_english_title",
-                    "num_total_comments",
-                    "num_unique_comments",
-                    "num_representative_comment",
-                    "topics",
-                    "num_topics",
-                    "created_at",
-                    "search_topics",
-                    "document_id")
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (document_id) DO NOTHING;
+    query = """
+    INSERT INTO regulations_nlpoutput (
+            rep_comments,
+            doc_plain_english_title,
+            num_total_comments,
+            num_unique_comments,
+            num_representative_comment,
+            topics,
+            num_topics,
+            last_updated,
+            created_at,
+            search_topics,
+            document_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT(document_id)
+        DO UPDATE SET
+            rep_comments = EXCLUDED.rep_comments,
+            doc_plain_english_title = EXCLUDED.doc_plain_english_title,
+            num_total_comments = EXCLUDED.num_total_comments,
+            num_unique_comments = EXCLUDED.num_unique_comments,
+            num_representative_comment = EXCLUDED.num_representative_comment,
+            topics = EXCLUDED.topics,
+            last_updated = EXCLUDED.last_updated,
+            search_topics = EXCLUDED.search_topics
+        WHERE (
+            regulations_nlpoutput.last_updated < EXCLUDED.last_updated
+            or regulations_nlpoutput.last_updated IS NULL
+            );
                 """
 
     values = (
@@ -104,6 +120,7 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
         comments.num_representative_comment,
         json.dumps(comments.topics),
         len(comments.topics),
+        datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
         comments.last_updated.strftime("%m/%d/%Y, %H:%M:%S"),
         ", ".join(comments.search_vector),
         comments.document_id,
