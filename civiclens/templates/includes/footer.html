@@ -11,7 +11,7 @@
                 <div class="row">
                     <div class="col-lg-4 mb-5 mb-lg-0">
                         <!-- Theme's logo -->
-                        <a href="/regulations/">
+                        <a href="{% url 'home' %}">
                             <img alt="Image placeholder" src="/static/assets/img/logo_white.png" width="200" id="footer-logo">
                         </a>
                         <!-- mission -->
@@ -29,10 +29,10 @@
                     <div class="col-lg-2 col-6 col-sm-4 ml-lg-auto mb-5 mb-lg-0" >
                     </div>
                     <div class="col-lg-2 col-6 col-sm-4 mb-5 mb-lg-0">
-                        <h6 class="heading mb-3"><a href="/regulations">Home</a></h6>
+                        <h6 class="heading mb-3"><a href="">Home</a></h6>
                         <ul class="list-unstyled">
-                            <li><a href="/regulations/search">Search</a></li>
-                            <li><a href="/regulations#learn">Learn</a></li>
+                            <li><a href="{% url 'search' %}">Search</a></li>
+                            <li><a href="{% url 'home' %}#learn">Learn</a></li>
                         </ul>
                     </div>
                 </div>
