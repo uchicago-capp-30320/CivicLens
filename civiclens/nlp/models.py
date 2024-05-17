@@ -1,7 +1,3 @@
-from bertopic import BERTopic
-from bertopic.representation import KeyBERTInspired, PartOfSpeech
-from sentence_transformers import SentenceTransformer
-from sklearn.feature_extraction.text import CountVectorizer
 from transformers import (
     AutoModelForSequenceClassification,
     AutoModelForSeq2SeqLM,
@@ -20,18 +16,6 @@ title_tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base")
 
 # topic models
 sentence_transformer = SentenceTransformer("all-MiniLM-L6-v2")
-pos_tags = [[{"POS": "ADJ"}, {"POS": "NOUN"}], [{"POS": "NOUN"}]]
-
-rep_models = {
-    "KeyBert": KeyBERTInspired,
-    "POS": PartOfSpeech("en_core_web_sm", pos_patterns=pos_tags),
-}
-
-BertModel = BERTopic(
-    embedding_model=SentenceTransformer("all-mpnet-base-v2"),
-    vectorizer_model=CountVectorizer(stop_words="english", ngram_range=(1, 2)),
-    representation_model=rep_models,
-)
 
 label_tokenizer = AutoTokenizer.from_pretrained(
             "fabiochiu/t5-base-tag-generation"

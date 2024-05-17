@@ -2,10 +2,8 @@ from datetime import datetime
 from uuid import uuid4
 
 import polars as pl
-import torch
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
-from sentence_transformers.util import cos_sim
 from transformers import pipeline
 
 
@@ -13,7 +11,7 @@ from transformers import pipeline
 class RepComments:
     # clustered df for topics
     document_id: str
-    doc_comments: pl.DataFrame = Field(default=pl.DataFrame)
+    doc_comments: pl.DataFrame = Field(default=pl.DataFrame())
 
     # fields for nlp table
     rep_comments: list = Field(default=[])
@@ -23,10 +21,11 @@ class RepComments:
     num_representative_comment: int = 0
     topics: list = Field(default=[])
     last_updated: datetime = datetime.now()
+    uuid: int = uuid4().int
     search_vector: list = Field(default=[])
     summary: str = ""
 
-    # TODO tests for this method
+    # test this!
     def get_nonrepresentative_comments(self):
         """
         Converts nonrepresentative comments to list of Comment objects.
@@ -89,47 +88,6 @@ class Comment:
             "sentiment": self.sentiment,
             "source": self.source,
         }
-
-
-def extract_formletters(
-    docs: list[str],
-    embeddings: torch.tensor,
-    sim_threhold: float = 0.99,
-) -> dict[str, int]:
-    """
-    Extracts from letters from collection of comments.
-
-    Inputs:
-        docs: List of comments
-        embeddings: Embedding matrix for list of comments
-        sim_threhold: Threhold (cosine similarity) for similar comments
-
-    Returns:
-        Dictionary containing text of identified form letters, and number
-        of form comments.
-    """
-    df = pl.DataFrame({"comment": docs})
-    df = df.with_row_index()
-
-    form_comments = {}
-
-    for _ in range(len(docs) // 100):
-        row = df.sample(n=1)
-        idx = row["index"]
-        sim_tensor = cos_sim(embeddings[idx], embeddings)
-
-        _, indices = torch.where(sim_tensor > sim_threhold)
-        sample = df.filter(~df["index"].is_in(indices.tolist()))
-
-        if (len(df) - len(sample)) / len(df) > 0.25:
-            form_comments[row["comment"].item()] = len(df) - len(sample)
-
-        df = sample
-
-        if df.is_empty():
-            break
-
-    return form_comments
 
 
 def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
