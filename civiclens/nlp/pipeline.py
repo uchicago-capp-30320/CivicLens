@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 from civiclens.nlp import comments, titles
 from civiclens.nlp.models import sentiment_pipeline
 from civiclens.nlp.tools import sentiment_analysis
-from civiclens.nlp.topics import LabelChain, TopicModel, topic_comment_analysis
+from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
 
 
@@ -104,7 +104,7 @@ if __name__ == "__main__":
                 new_title = title_creator.invoke(paragraph=comment_data.summary)
                 comment_data.doc_plain_english_title = new_title
 
-            topic_model = TopicModel()
+            topic_model = HDAModel()
             comment_data = topic_comment_analysis(
                 comment_data,
                 model=topic_model,
@@ -112,7 +112,6 @@ if __name__ == "__main__":
                 sentiment_analyzer=sentiment_analyzer,
             )
 
-            # TODO update upload function to search column
             # TODO logging for upload errors
             upload_comments(Database(), comment_data)
 
