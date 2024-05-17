@@ -24,7 +24,7 @@ label_model = AutoModelForSeq2SeqLM.from_pretrained(
     "fabiochiu/t5-base-tag-generation"
 )
 
-# sentiment models
+# sentiment models and pipeline
 sentiment_model = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 sentiment_base = AutoModelForSequenceClassification.from_pretrained(
     sentiment_model
