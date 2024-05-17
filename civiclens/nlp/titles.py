@@ -3,7 +3,7 @@ from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 
-from ..utils.database_access import Database, pull_data
+from civiclens.utils.database_access import Database, pull_data
 
 
 def get_doc_summary(id: str) -> pl.DataFrame:

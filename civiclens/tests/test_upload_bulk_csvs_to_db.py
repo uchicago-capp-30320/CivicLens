@@ -1,6 +1,8 @@
-import pytest
 from unittest.mock import patch
+
 import polars as pl
+import pytest
+
 from civiclens.collect import upload_bulk_csvs_to_db
 
 
@@ -78,7 +80,8 @@ def test_get_document_objectId_working_id():
         # Assert that the function returned the expected output
         assert result == expected_output
 
-        # Assert that the API call function was called with the correct arguments
+        # Assert that the API call function was called with the correct
+        # arguments
         mock_api_call.assert_called_once_with(input_id)
 
 
@@ -117,7 +120,9 @@ def test_extract_fields_from_row_no_data():
     Check that extracting a field from a blank row returns an error
     """
     try:
-        upload_bulk_csvs_to_db.extract_fields_from_row(pl.DataFrame({}), "test_id")
+        upload_bulk_csvs_to_db.extract_fields_from_row(
+            pl.DataFrame({}), "test_id"
+        )
     except Exception as e:
         assert type(e) is TypeError
 
@@ -179,14 +184,27 @@ def test_extract_fields_from_row_good_data():
         "Representative's City, State & Zip": None,
         "Government Agency": None,
         "Government Agency Type": None,
-        "Comment": "I support this proposed rule. Informing refuge managers about Indigenous Knowledge of the species they are working with will undoubtedly help to advance the care and protection that the animals on these refuges recieve. Additionally, I appreciate the enumerated requirement for refuge managers to consult with adjacent landowners and tribes to ensure that refuge activity is not encroaching upon their way of life. However, I do not support the option for refuges to aquire more land for species preservation. I believe that negotiations should be made with adjacent landowners over creating a wildlife corridor, but the default option should not be to automatically purchase new land. ",
+        "Comment": (
+            "I support this proposed rule. Informing refuge managers about "
+            "Indigenous Knowledge of the species they are working with will "
+            "undoubtedly help to advance the care and protection that the "
+            "animals on these refuges recieve. Additionally, I appreciate "
+            "the enumerated requirement for refuge managers to consult with "
+            "adjacent landowners and tribes to ensure that refuge activity "
+            "is not encroaching upon their way of life. However, I do not "
+            "support the option for refuges to aquire more land for species "
+            "preservation. I believe that negotiations should be made with "
+            "adjacent landowners over creating a wildlife corridor, but the "
+            "default option should not be to automatically purchase new land. "
+        ),
         "Category": None,
         "Restrict Reason Type": None,
         "Restrict Reason": None,
         "Reason Withdrawn": None,
         "Content Files": None,
         "Attachment Files": None,
-        "Display Properties (Name, Label, Tooltip)": "pageCount, Page Count, Number of pages In the content file",
+        "Display Properties (Name, Label, Tooltip)": """pageCount, Page Count,
+        Number of pages In the content file""",
     }
 
     row_json = {
@@ -197,7 +215,21 @@ def test_extract_fields_from_row_good_data():
                 "duplicateComments": 1,
                 "stateProvinceRegion": None,
                 "subtype": "Comment(s)",
-                "comment": "I support this proposed rule. Informing refuge managers about Indigenous Knowledge of the species they are working with will undoubtedly help to advance the care and protection that the animals on these refuges recieve. Additionally, I appreciate the enumerated requirement for refuge managers to consult with adjacent landowners and tribes to ensure that refuge activity is not encroaching upon their way of life. However, I do not support the option for refuges to aquire more land for species preservation. I believe that negotiations should be made with adjacent landowners over creating a wildlife corridor, but the default option should not be to automatically purchase new land. ",
+                "comment": (
+                    "I support this proposed rule. Informing refuge managers "
+                    "about Indigenous Knowledge of the species they are "
+                    "working with will undoubtedly help to advance the "
+                    "care and protection that the animals on these refuges "
+                    "recieve. Additionally, I appreciate the enumerated "
+                    "requirement for refuge managers to consult with adjacent"
+                    " landowners and tribes to ensure that refuge activity is"
+                    " not encroaching upon their way of life. However, I do "
+                    "not support the option for refuges to aquire more land"
+                    " for species preservation. I believe that negotiations"
+                    " should be made with adjacent landowners over creating"
+                    " a wildlife corridor, but the default option should not"
+                    " be to automatically purchase new land. "
+                ),
                 "firstName": "Ava",
                 "lastName": "Nowicki",
                 "address1": None,
@@ -226,7 +258,10 @@ def test_extract_fields_from_row_good_data():
                 "submitterRepCityState": None,
             }
         },
-        "attributes": {"objectId": "test_id", "title": "Comment from Nowicki, Ava"},
+        "attributes": {
+            "objectId": "test_id",
+            "title": "Comment from Nowicki, Ava",
+        },
         "type": "comments",
         "id": "FWS-HQ-NWRS-2022-0106-35393",
     }
