@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 import polars as pl
 
-from civiclens.nlp.models import sentence_transformer
 from civiclens.nlp import comments
+from civiclens.nlp.models import sentence_transformer
 from civiclens.nlp.tools import Comment
 from civiclens.nlp.topics import HDAModel
 
