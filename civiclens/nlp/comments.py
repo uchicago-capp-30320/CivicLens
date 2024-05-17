@@ -91,6 +91,19 @@ def comment_similarity(
     return df_paraphrases, df_form_letter
 
 
+def count_unique_comments(df: pl.DataFrame) -> int:
+    """
+    Counts number of unique comments identified by performing paraphrasing
+    mining on a corpus of comments.
+
+    Args:
+        df: dataframe of similiar comments
+    """
+    indices = df["idx1"].to_list() + df["idx2"].to_list()
+
+    return len(set(indices))
+
+
 def build_graph(df: pl.DataFrame) -> nx.Graph:
     """Builds a network graph with comments as nodes and their similarities as
     weights
@@ -348,11 +361,12 @@ def rep_comment_analysis(id: str, model: SentenceTransformer) -> RepComments:
         comment_data.rep_comments = form_letters
         comment_data.num_representative_comment = num_form_letters
     else:
-        form_letters, num_form_letters = find_form_letters(df_rep_form, model)
         comment_data.rep_comments = form_letters + df_rep_paraphrase.to_dicts()
         comment_data.num_representative_comment = len(comment_data.rep_comments)
 
     comment_data.num_total_comments = df.shape[0]
-    comment_data.num_unique_comments = len(df_rep_paraphrase) + num_form_letters
+    comment_data.num_unique_comments = (
+        count_unique_comments(df_paraphrases) + num_form_letters
+    )
 
     return comment_data
