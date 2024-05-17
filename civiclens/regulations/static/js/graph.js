@@ -7,7 +7,7 @@ const drawOneHorizonalStackedBarGraph = function(){
 
     // Clear only the SVG element from the chart div
     d3.select('#chart').select('svg').remove();
-    
+
     // set up
     const margin = { top: 10, right: 100, bottom: 20, left: 150 };
 
