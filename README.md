@@ -14,7 +14,6 @@ If you'd like to learn more about federal commenting in the meantime, we’re co
 - [Public Comment Project](https://publiccommentproject.org/how-to): A short guide to writing effective public comments.
 - [Library of Congress](https://guides.loc.gov/trace-federal-regulations/docket-information): How to trace regulations through the rulemaking process.
 
-
 ## Development
 
 CivicLens is currently under active development.
