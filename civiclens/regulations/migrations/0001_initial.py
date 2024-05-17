@@ -15,9 +15,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.CharField(
-                        max_length=255, primary_key=True, serialize=False
-                    ),
+                    models.CharField(max_length=255, primary_key=True, serialize=False),
                 ),
                 ("docketType", models.CharField(blank=True, max_length=255)),
                 ("lastModifiedDate", models.DateTimeField()),
@@ -35,9 +33,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.CharField(
-                        max_length=255, primary_key=True, serialize=False
-                    ),
+                    models.CharField(max_length=255, primary_key=True, serialize=False),
                 ),
                 ("documentType", models.CharField(blank=True, max_length=255)),
                 ("lastModifiedDate", models.DateTimeField()),
@@ -77,9 +73,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.CharField(
-                        max_length=255, primary_key=True, serialize=False
-                    ),
+                    models.CharField(max_length=255, primary_key=True, serialize=False),
                 ),
                 ("objectId", models.CharField(max_length=255)),
                 ("commentOn", models.CharField(blank=True, max_length=255)),

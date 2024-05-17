@@ -24,9 +24,7 @@ def get_doc_comments(id: str) -> pl.DataFrame:
         """
     # filter out attached files
     db = Database()
-    df = pull_data(
-        query=query, connection=db, schema=["id", "document_id", "comment"]
-    )
+    df = pull_data(query=query, connection=db, schema=["id", "document_id", "comment"])
     pattern = (
         r"(?i)^see attached file(s)?\.?$"
         r"|(?i)^please see attached?\.?$"
@@ -44,9 +42,7 @@ def get_doc_comments(id: str) -> pl.DataFrame:
     return filtered_df
 
 
-def comment_similarity(
-    df: pl.DataFrame, model: SentenceTransformer
-) -> pl.DataFrame:
+def comment_similarity(df: pl.DataFrame, model: SentenceTransformer) -> pl.DataFrame:
     """Create df with comment mappings and their semantic similarity scores
     according to the SBERT paraphrase mining method using the all-mpnet-base-v2
     model from hugging face.
@@ -67,24 +63,16 @@ def comment_similarity(
             "similarity": pl.Series(
                 "similarity", [x[0] for x in paraphrases], dtype=pl.Float64
             ),
-            "idx1": pl.Series(
-                "idx1", [x[1] for x in paraphrases], dtype=pl.Int64
-            ),
-            "idx2": pl.Series(
-                "idx2", [x[2] for x in paraphrases], dtype=pl.Int64
-            ),
+            "idx1": pl.Series("idx1", [x[1] for x in paraphrases], dtype=pl.Int64),
+            "idx2": pl.Series("idx2", [x[2] for x in paraphrases], dtype=pl.Int64),
         }
     )
 
     df_paraphrases = df_full.filter(pl.col("similarity") <= 0.99)
-    df_paraphrases = df_paraphrases.with_columns(
-        pl.lit(False).alias("form_letter")
-    )
+    df_paraphrases = df_paraphrases.with_columns(pl.lit(False).alias("form_letter"))
 
     df_form_letter = df_full.filter(pl.col("similarity") > 0.99)
-    df_form_letter = df_form_letter.with_columns(
-        pl.lit(True).alias("form_letter")
-    )
+    df_form_letter = df_form_letter.with_columns(pl.lit(True).alias("form_letter"))
 
     return df_paraphrases, df_form_letter
 

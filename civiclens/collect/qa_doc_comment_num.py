@@ -49,17 +49,13 @@ def get_doc_api_comment_count(object_id: str) -> int:
         elif response.status_code == 429:  # Rate limit exceeded
             retry_after = response.headers.get("Retry-After", None)
             wait_time = (
-                int(retry_after)
-                if retry_after and retry_after.isdigit()
-                else 3600
+                int(retry_after) if retry_after and retry_after.isdigit() else 3600
             )
             print(f"Rate limit exceeded. Waiting {wait_time} seconds to retry.")
             time.sleep(wait_time)
 
         else:
-            print(
-                f"API request failed with status code: {response.status_code}"
-            )
+            print(f"API request failed with status code: {response.status_code}")
             continue_fetching = False
 
     # Return a default value
@@ -80,9 +76,7 @@ def get_doc_db_comment_count(document_id: str) -> int:
     return db_count
 
 
-def diff_api_to_db_comment_count(
-    document_id: str, object_id: str, rin: str
-) -> dict:
+def diff_api_to_db_comment_count(document_id: str, object_id: str, rin: str) -> dict:
     db_count = get_doc_db_comment_count(document_id)
 
     real_object_id = find_object_id(object_id, rin)

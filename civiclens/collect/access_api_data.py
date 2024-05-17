@@ -49,13 +49,9 @@ def api_date_format_params(start_date=None, end_date=None):
     """
     date_param = {}
     if start_date:
-        date_param.update(
-            {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
-        )
+        date_param.update({"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"})
     if end_date:
-        date_param.update(
-            {"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"}
-        )
+        date_param.update({"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"})
 
     return date_param
 
@@ -183,10 +179,7 @@ def pull_reg_gov_data(  # noqa: C901,E501
 
             return [True, r.json()]
         else:
-            if (
-                r.status_code == STATUS_CODE_OVER_RATE_LIMIT
-                and wait_for_rate_reset
-            ):
+            if r.status_code == STATUS_CODE_OVER_RATE_LIMIT and wait_for_rate_reset:
                 the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 retry_after = r.headers.get("Retry-After", None)
                 wait_time = (
@@ -224,9 +217,7 @@ def pull_reg_gov_data(  # noqa: C901,E501
         continue_fetching = True
 
         while continue_fetching:
-            success, r_json = poll_for_response(
-                api_key, wait_for_rate_reset=True
-            )
+            success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
             if success:
                 all_objects.extend(r_json["data"])
                 print(
@@ -282,13 +273,9 @@ def pull_reg_gov_data(  # noqa: C901,E501
                 }
             )
 
-            success, r_json = poll_for_response(
-                api_key, wait_for_rate_reset=True
-            )
+            success, r_json = poll_for_response(api_key, wait_for_rate_reset=True)
 
-            if success or (
-                _is_duplicated_on_server(r_json) and skip_duplicates
-            ):
+            if success or (_is_duplicated_on_server(r_json) and skip_duplicates):
                 if doc_data is not None:
                     doc_data += r_json["data"]
                 else:

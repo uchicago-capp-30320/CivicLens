@@ -148,9 +148,7 @@ def document(request, doc_id):
             .annotate(modify_date_only=TruncDate("modify_date"))
             .annotate(receive_date_only=TruncDate("receive_date"))
         )
-        comments_last_updated = comments_api.latest(
-            "modify_date_only"
-        ).modify_date_only
+        comments_last_updated = comments_api.latest("modify_date_only").modify_date_only
         unique_comments = comments_api.distinct("comment").count()
     except Comment.DoesNotExist:
         comments_api = None
@@ -192,7 +190,7 @@ def document(request, doc_id):
                 "num_represented": 231,
                 "topic": "Student Loans",
                 "form_letter": False,
-            }
+            },
         ],
         "doc_plain_english_title": """Student Loan Debt Waiver: Department Of
         Education""",

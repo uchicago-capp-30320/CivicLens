@@ -30,9 +30,7 @@ def add_comments_for_existing_docs(df):
             if not verify_database_existence(
                 "regulations_comment", document_id, "document_id"
             ):  # doc doesn't exist in the db; it's new
-                print(
-                    f"no comments found in database for document {document_id}"
-                )
+                print(f"no comments found in database for document {document_id}")
 
                 add_comments_to_db_for_new_doc(real_object_id)
 
@@ -69,9 +67,7 @@ def main(doc_to_start=None):
     # if we know a document id where we left off, subset the df accordingly
     if doc_to_start is not None:
         df = df.with_row_index(name="my_index", offset=1)
-        index_pos = df.filter(df["document_id"] == doc_to_start)[
-            "my_index"
-        ].item()
+        index_pos = df.filter(df["document_id"] == doc_to_start)["my_index"].item()
         df = df[index_pos - 1 : df.height]
 
     print(f"{len(df)} documents which need comments added")

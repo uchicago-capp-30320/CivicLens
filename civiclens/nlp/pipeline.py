@@ -86,9 +86,7 @@ if __name__ == "__main__":
     title_creator = titles.TitleChain()
     labeler = LabelChain()
     sbert_model = SentenceTransformer("all-mpnet-base-v2")
-    sentiment_analyzer = partial(
-        sentiment_analysis, pipeline=sentiment_pipeline
-    )
+    sentiment_analyzer = partial(sentiment_analysis, pipeline=sentiment_pipeline)
 
     for _ in range(len(docs_to_update)):
         try:
@@ -97,9 +95,7 @@ if __name__ == "__main__":
             comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
 
             # generate title if there is not already one
-            comment_data.summary = titles.get_doc_summary(id=doc_id)[
-                0, "summary"
-            ]
+            comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
             if doc_id not in docs_with_titles and comment_data.summary:
                 new_title = title_creator.invoke(paragraph=comment_data.summary)
                 comment_data.doc_plain_english_title = new_title

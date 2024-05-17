@@ -18,9 +18,7 @@ def test_api_date_format_params():
     """
     Ensure we return the right parameters for formatting lastModifiedDate
     """
-    assert access_api_data.api_date_format_params(
-        "01-01-0001", "12-12-1212"
-    ) == {
+    assert access_api_data.api_date_format_params("01-01-0001", "12-12-1212") == {
         "filter[lastModifiedDate][ge]": "01-01-0001 00:00:00",
         "filter[lastModifiedDate][le]": "12-12-1212 23:59:59",
     }

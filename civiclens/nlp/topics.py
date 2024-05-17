@@ -147,9 +147,7 @@ class TopicModel:
         Creates array of topics to use in Django serach model.
         """
         if not self.terms:
-            raise RuntimeError(
-                "Must run topic model before generating search vector"
-            )
+            raise RuntimeError("Must run topic model before generating search vector")
 
         search_vector = set()
         for term_list in self.terms.values():
@@ -194,9 +192,9 @@ class LabelChain:
             **inputs, num_beams=8, do_sample=True, min_length=10, max_length=64
         )
 
-        decoded_output = self.tokenizer.batch_decode(
-            output, skip_special_tokens=True
-        )[0]
+        decoded_output = self.tokenizer.batch_decode(output, skip_special_tokens=True)[
+            0
+        ]
 
         return tuple(set(decoded_output.strip().split(", ")))
 
@@ -231,9 +229,7 @@ def topic_comment_analysis(
     comments: list[Comment] = []
 
     if comment_data.summary:
-        comments += [
-            Comment(text=comment_data.summary, id="Summary", source="Summary")
-        ]
+        comments += [Comment(text=comment_data.summary, id="Summary", source="Summary")]
 
     comments += comment_data.to_list()
     for analysis in (

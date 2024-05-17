@@ -57,18 +57,14 @@ def format_date(datetime_str: str) -> str:
         parsed_datetime_dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%MZ")
 
         # Convert the parsed datetime object to the desired format string
-        formatted_datetime_str = parsed_datetime_dt.strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
-        )
+        formatted_datetime_str = parsed_datetime_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         return formatted_datetime_str
     except Exception as e:
         print(f"Error parsing datetime string '{datetime_str}': {e}")
         raise e
 
 
-def extract_fields_from_row(
-    df_row: pl.DataFrame([]), doc_objectId: str
-) -> dict:
+def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict:
     """
     Takes a polars row and outputs it in properly formatted dict
 
@@ -96,9 +92,7 @@ def extract_fields_from_row(
     ]  # this is the ID field, confusingly named
     attributes["objectId"] = doc_objectId
     comment_text_attributes["commentOn"] = None
-    comment_text_attributes["commentOnDocumentId"] = df_row[
-        "Comment on Document ID"
-    ]
+    comment_text_attributes["commentOnDocumentId"] = df_row["Comment on Document ID"]
     comment_text_attributes["duplicateComments"] = (
         df_row["Duplicate Comments"] if df_row["Duplicate Comments"] else 0
     )
@@ -123,22 +117,16 @@ def extract_fields_from_row(
         df_row["Page Count"] if df_row["Page Count"] else 0
     )
     comment_text_attributes["postedDate"] = format_date(df_row["Posted Date"])
-    comment_text_attributes["receiveDate"] = format_date(
-        df_row["Received Date"]
-    )
+    comment_text_attributes["receiveDate"] = format_date(df_row["Received Date"])
     attributes["title"] = df_row["Title"]
     comment_text_attributes["trackingNbr"] = df_row["Tracking Number"]
     comment_text_attributes["withdrawn"] = df_row["Is Withdrawn?"]
     comment_text_attributes["reasonWithdrawn"] = df_row["Reason Withdrawn"]
     comment_text_attributes["zip"] = df_row["Zip/Postal Code"]
     comment_text_attributes["restrictReason"] = df_row["Restrict Reason"]
-    comment_text_attributes["restrictReasonType"] = df_row[
-        "Restrict Reason Type"
-    ]
+    comment_text_attributes["restrictReasonType"] = df_row["Restrict Reason Type"]
     comment_text_attributes["submitterRep"] = df_row["Submitter Representative"]
-    comment_text_attributes["submitterRepAddress"] = df_row[
-        "Representative's Address"
-    ]
+    comment_text_attributes["submitterRepAddress"] = df_row["Representative's Address"]
     comment_text_attributes["submitterRepCityState"] = df_row[
         "Representative's City, State & Zip"
     ]
