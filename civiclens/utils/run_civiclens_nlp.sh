@@ -1,12 +1,32 @@
+#!/bin/bash
+
 # set paths for logging nlp batch info
 LOG_DIR="/usr/civiclens/log"
 LAST_UPDATE_FILE="${LOG_DIR}/nlp_batch.csv"
+PROJECT_DIR="/home/civiclens/CivicLens"
+VENV_PATH="/home/civiclens/.cache/pypoetry/virtualenvs/civiclens-InIOQkFS-py3.12/bin/activate"
 
-# go to project directory
-if [ -d "/home/CivicLens" ]; then
-    cd /home/CivicLens
+echo "===================================="
+echo "Running NLP Update..."
+
+# make sure logging directory exists
+if [ ! -d "$LOG_DIR" ]; then
+    mkdir -p "$LOG_DIR"
+fi
+
+# go to project directory if exists
+if [ -d "$PROJECT_DIR" ]; then
+    cd "$PROJECT_DIR"
 else
     echo "Project directory does not exist."
+    exit 1
+fi
+
+# activate python virtual environment
+source "$VENV_PATH"
+
+if ! source "$VENV_PATH"; then
+    echo "Failed to activate virtual environment."
     exit 1
 fi
 
