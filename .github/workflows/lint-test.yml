@@ -45,12 +45,6 @@ jobs:
       - name: run tests with pytest
         run: poetry run pytest
 
-      - name: Django Test CI
-        uses: UKnowWhoIm/django-test-action@v0.6.1
-        with:
-          settings-dir-path: civiclens/website
-          requirements-file: pyproject.toml
-
   pre-commit:
     runs-on: ubuntu-latest
     steps:
