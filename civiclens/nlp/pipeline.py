@@ -4,7 +4,7 @@ import polars as pl
 from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments, titles
-from civiclens.nlp.models import sentiment_pipeline
+from civiclens.nlp.models import sentiment_pipeline, sentence_transformer
 from civiclens.nlp.tools import sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     title_creator = titles.TitleChain()
     labeler = LabelChain()
-    sbert_model = SentenceTransformer("all-mpnet-base-v2")
+    sbert_model = sentence_transformer
     sentiment_analyzer = partial(
         sentiment_analysis, pipeline=sentiment_pipeline
     )

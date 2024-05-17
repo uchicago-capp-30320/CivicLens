@@ -7,8 +7,8 @@ from typing import Callable
 import gensim.corpora as corpora
 from gensim.corpora import Dictionary
 from gensim.models import HdpModel, Phrases
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
+from civiclens.nlp.models import label_tokenizer, label_model
 from civiclens.nlp.tools import Comment, RepComments
 from civiclens.utils.text import clean_text, regex_tokenize
 
