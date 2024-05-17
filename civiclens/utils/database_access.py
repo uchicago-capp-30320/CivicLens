@@ -106,11 +106,9 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
             topics = EXCLUDED.topics,
             last_updated = EXCLUDED.last_updated,
             search_topics = EXCLUDED.search_topics
-        WHERE (
-            regulations_nlpoutput.last_updated < EXCLUDED.last_updated
-            or regulations_nlpoutput.last_updated IS NULL
-            );
-                """
+        WHERE (regulations_nlpoutput.last_updated < EXCLUDED.last_updated
+                or regulations_nlpoutput.last_updated IS NULL);
+            """
 
     values = (
         json.dumps(comments.rep_comments),
