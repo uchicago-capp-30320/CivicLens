@@ -21,5 +21,5 @@ from django.urls import include, path  # noqa: F401
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("regulations/", include("regulations.urls")),
+    path("", include("regulations.urls")),
 ]
