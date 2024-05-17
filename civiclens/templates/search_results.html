@@ -4,40 +4,36 @@
     Documents
 {% endblock title %}
 
-{% block content %}
+<head>
+  <link rel="stylesheet" type="text/css" href="/static/css/base.css">
+</head>
 
-<!-- search bar -->
-<section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
-  <div class="container-sm py-0">
-    <div class="form-group">
-      <form action="/regulations/search/results/" method="GET">
-        {{ form.as_p }}
+{% block content %}
+<div class="form-group">
+  <form action="/search/results/" method="GET">
+    <input type="hidden" name="source" value="search_results">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <!-- search bar section -->
+    <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
+      <div class="container-sm py-0">
         <div class="input-group mb-4">
-          <input class="form-control" id="q" name="q" type="text" value="{{Search.search}}">
+          <input class="form-control" id="q" name="q" type="text" value="{{Search.search_term}}">
           <button class="btn btn-primary">Search</button>
         </div>
-      </form>
-    </div>
-  </div>
-</section>
+      </div>
+    </section>
 
-<!-- sort/filter section -->
-<section class="slice py-0" style="background-color:#FDFFF7" id="core-block">
-  <div class="container">
-    <div class="form-group">
-      <form action="/regulations/search/results/" method="GET">
-        {{ form.as_p }}
-        <!-- include existing search term in filter -->
-        <input id="q" name="q" type="hidden" value="{{Search.search}}">
-
-        <!-- include existing search term in filter -->
+    <!-- sort/filter section -->
+    <section class="slice py-0" style="background-color:#FDFFF7" id="core-block">
+      <div class="container">
         <div class="input-group mb-3 order-md-1">
           <div class="col-md-3" >
-
             <!-- sort section -->
             <span class="h6 font-weight-bold" >Sort by:</span>
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevent">
+              <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevant">
               <label class="form-check-label" for="most_relevant">
                 Most relevant
               </label>
@@ -67,25 +63,23 @@
             <span class="h6 font-weight-bold">Filter by:</span>
             <h6 class="font-italic font-weight-normal">Number of comments</h6>
             <div class="custom-switch">
-              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault">
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault" name="comments_any" value=True>
               <label class="custom-control-label" for="flexSwitchCheckDefault">Contains any comments</label>
             </div>
-
             <div class="custom-switch">
-              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2">
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2" name="comments_over_hundred" value=True>
               <label class="custom-control-label" for="flexSwitchCheckDefault2">Contains 100+ comments</label>
             </div>
             <p></p>
 
-            <div class="form-group">
+            <div class="form-group agency-container">
               <label class="font-italic">Agency</label>
-              <select multiple class="form-control" id="include_agencies">
+              <select multiple class="form-control agency-list" id="selected_agencies" name="selected_agencies">
                 <!-- for loop through all agencies in the database -- USE JINJA -->
-                <option>Agency 1</option>
-                <option>Longer Agency Name 2</option>
-                <option>Agency 3</option>
-                <option>Agency 4</option>
-                <option>Agency 5</option>
+                {% for agency in agencies %}
+                  <option value="{{ agency.id }}">{{ agency.id }}:  {{ agency.name }}</option>
+                  {% comment %} <option>{{ agency.id }}</option> {% endcomment %}
+                {% endfor %}
               </select>
             </div>
 
@@ -93,31 +87,31 @@
             <div class="form-group" >
               <label for="exampleFormControlSelect2" class="font-italic">Category</label>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="true" id="rule" name="rule" checked>
+                <input class="form-check-input" type="checkbox" name="rule" id="rule" value="Rule" checked>
                 <label class="form-check-label" for="rule">
                   Rule
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="true" id="proposed_rule" name="proposed_rule" checked>
+                <input class="form-check-input" type="checkbox" name="proposed_rule" id="Proposed Rule" value="Proposed Rule" checked>
                 <label class="form-check-label" for="proposed_rule">
                   Proposed Rule
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="true" id="notice" name="notice" checked>
+                <input class="form-check-input" type="checkbox" name="notice" id="notice" value="Notice" checked>
                 <label class="form-check-label" for="notice">
                   Notice
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="true" id="other" name="other" checked>
+                <input class="form-check-input" type="checkbox" name="other" id="other" value="Other" checked>
                 <label class="form-check-label" for="other">
                   Other
                 </label>
               </div>
             <p></p>
-            <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7">Refine results</button>
+            {% comment %} <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7">Refine results</button> {% endcomment %}
             </div>
           </div>
 
@@ -151,14 +145,13 @@
               </div>
               {% endfor %}
             {% else %}
-                Your search did not match any documents at this time.  Try adjusting your search query, or browse through agencies to find something similar.
+              Your search did not match any documents at this time.  Try adjusting your search query, or browse through agencies to find something similar.
             {% endif %}
           </div>
         </div>
-      </form>
-    </div>
-  </div>
-</section>
-
+      </div>
+    </section>
+  </form>
+</div>
 
 {% endblock content %}

@@ -4,8 +4,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from transformers import pipeline
 
-from ..utils.database_access import Database, pull_data
-from .models import title_model, title_tokenizer
+from civiclens.nlp.models import title_model, title_tokenizer
+from civiclens.utils.database_access import Database, pull_data
 
 
 def get_doc_summary(id: str) -> pl.DataFrame:

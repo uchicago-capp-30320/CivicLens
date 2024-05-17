@@ -11,7 +11,7 @@
                 <div class="row">
                     <div class="col-lg-4 mb-5 mb-lg-0">
                         <!-- Theme's logo -->
-                        <a href="/regulations/">
+                        <a href="{% url 'home' %}">
                             <img alt="Image placeholder" src="/static/assets/img/logo_white.png" width="200" id="footer-logo">
                         </a>
                         <!-- mission -->
@@ -29,10 +29,10 @@
                     <div class="col-lg-2 col-6 col-sm-4 ml-lg-auto mb-5 mb-lg-0" >
                     </div>
                     <div class="col-lg-2 col-6 col-sm-4 mb-5 mb-lg-0">
-                        <h6 class="heading mb-3"><a href="/regulations">Home</a></h6>
+                        <h6 class="heading mb-3"><a href="">Home</a></h6>
                         <ul class="list-unstyled">
-                            <li><a href="/regulations/search">Search</a></li>
-                            <li><a href="/regulations#learn">Learn</a></li>
+                            <li><a href="{% url 'search' %}">Search</a></li>
+                            <li><a href="{% url 'home' %}#learn">Learn</a></li>
                         </ul>
                     </div>
                 </div>
@@ -40,7 +40,7 @@
                 <div class="row align-items-center justify-content-md-between pb-4 text-dark">
                     <div class="col-md-6">
                         <div class="copyright text-sm font-weight-bold text-center text-md-left">
-                            &copy; <a href="https://github.com/uchicago-capp-30320/CivicLens/?tab=AGPL-3.0-1-ov-file" class="font-weight-bold" target="_blank">GNU AFFERO GENERAL PUBLIC LICENSE</a> 
+                            &copy; <a href="https://github.com/uchicago-capp-30320/CivicLens/?tab=AGPL-3.0-1-ov-file" class="font-weight-bold" target="_blank">GNU AFFERO GENERAL PUBLIC LICENSE</a>
                             - coded by <a target="_blank" href="https://github.com/uchicago-capp-30320/CivicLens/">CivicLens</a>
                         </div>
                     </div>

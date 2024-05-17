@@ -74,7 +74,7 @@ CREATE TABLE PublicComments (
     submitterRepAddress VARCHAR(255),
     submitterRepCityState VARCHAR(100)
 );
--- Create the nlp_output table 
+-- Create the nlp_output table
 CREATE TABLE nlp_output (
     document_id VARCHAR(255) REFERENCES document(id) ON DELETE CASCADE,
     rep_comments TEXT,

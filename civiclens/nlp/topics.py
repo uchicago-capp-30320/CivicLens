@@ -2,13 +2,13 @@ from collections import defaultdict
 from typing import Callable
 
 import numpy as np
-from bertopic import BERTopic
 from langchain_community.vectorstores.utils import maximal_marginal_relevance
-from sentence_transformers import SentenceTransformer
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from ..utils.ml_utils import TooFewTopics, clean_comments, sentence_splitter
-from .tools import Comment, RepComments
+from civiclens.nlp.tools import Comment, RepComments
+from civiclens.utils.errors import TooFewTopics, TopicModelFailure
+from civiclens.utils.text import clean_text, sentence_splitter
+from civiclens.nlp.models import sentence_transformer, BertModel, label_tokenizer, label_model
+
 
 
 def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
@@ -23,7 +23,7 @@ def mmr_sort(terms: list[str], query_string: str, lam: float) -> list[str]:
     Returns:
         List of terms sorted by relevance to query terms
     """
-    embeding_model = SentenceTransformer("all-MiniLM-L6-v2")
+    embeding_model = sentence_transformer
     term_matrix = embeding_model.encode(terms)
     query = embeding_model.encode(query_string, convert_to_numpy=True)
 
@@ -40,7 +40,7 @@ class TopicModel:
     Wrapper for BERT-based topic model.
     """
 
-    def __init__(self, model: BERTopic):
+    def __init__(self, model: BertModel):
         self.model = model
         self.terms = {}
 
@@ -51,7 +51,7 @@ class TopicModel:
         sentences = defaultdict(list)
 
         for comment in docs:
-            split_text = sentence_splitter(clean_comments(comment.text))
+            split_text = sentence_splitter(clean_text(comment.text))
             for sentence in split_text:
                 if comment.text:
                     sentences[sentence].append(comment.id)
@@ -73,9 +73,8 @@ class TopicModel:
 
         try:
             numeric_topics, probs = self.model.fit_transform(input)
-        except Exception as e:
-            print(f"Hugging Face error: {e}")
-            return {}
+        except Exception as error:
+            raise TopicModelFailure(error) from error
 
         num_topics = max(numeric_topics)
 
@@ -174,12 +173,8 @@ class TopicModel:
 
 class LabelChain:
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "fabiochiu/t5-base-tag-generation"
-        )
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(
-            "fabiochiu/t5-base-tag-generation"
-        )
+        self.tokenizer = label_tokenizer
+        self.model = label_model
 
     def generate_label(self, terms: list[str]) -> tuple:
         """
@@ -234,14 +229,21 @@ def topic_comment_analysis(
         comments += [
             Comment(text=comment_data.summary, id="Summary", source="Summary")
         ]
-    try:
-        comments += comment_data.to_list()
-        comment_topics = model.run_model(comments)
-    except TooFewTopics:
-        comments += comment_data.get_nonrepresentative_comments()
-        comment_topics = model.run_model(comments)
-    except Exception:
-        # log error
+
+    comments += comment_data.to_list()
+    for analysis in (
+        "representative",
+        "all",
+    ):  # try with representative comments
+        if analysis == "all":  # if failure, try with all comments
+            comments += comment_data.get_nonrepresentative_comments()
+        try:
+            comment_topics = model.run_model(comments)
+            break
+        except (TooFewTopics, TopicModelFailure) as e:
+            # log error
+            print(e)
+    else:  # return input if unable to generate comments
         return comment_data
 
     topic_terms = model.get_terms()

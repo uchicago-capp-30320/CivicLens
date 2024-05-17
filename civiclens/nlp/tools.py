@@ -23,11 +23,10 @@ class RepComments:
     num_representative_comment: int = 0
     topics: list = Field(default=[])
     last_updated: datetime = datetime.now()
-    uuid: int = uuid4().int
     search_vector: list = Field(default=[])
     summary: str = ""
 
-    # test this!
+    # TODO tests for this method
     def get_nonrepresentative_comments(self):
         """
         Converts nonrepresentative comments to list of Comment objects.
@@ -92,9 +91,6 @@ class Comment:
         }
 
 
-# order topics by number of total comments represented
-
-
 def extract_formletters(
     docs: list[str],
     embeddings: torch.tensor,
@@ -136,10 +132,16 @@ def extract_formletters(
     return form_comments
 
 
-# look into using a fixture for the pipeline
 def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
     """
     Analyze sentiment of a comment.
+
+    Inputs:
+        comment: Comment object
+        pipeline: Hugging Face pipeline for conducting sentiment analysis
+
+    Returns:
+        Sentiment label as string (e.g 'postive', 'negative', 'neutral')
     """
     try:
         out = pipeline(comment.text)[0]
@@ -147,4 +149,5 @@ def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
         print(e)
         return ""
 
+    out = pipeline(comment.text)[0]
     return out["label"]
