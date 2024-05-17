@@ -19,7 +19,9 @@ BASE_DIR = Path(__file__).resolve().parent
 # load real model to test error catching
 live_model = TopicModel(BertModel)
 
-sample_df = pl.read_csv(BASE_DIR / "nlp_test_data/sample_comments.csv", separator=",")
+sample_df = pl.read_csv(
+    BASE_DIR / "nlp_test_data/sample_comments.csv", separator=","
+)
 
 
 def test_comment_similarity():
@@ -147,7 +149,9 @@ def test_find_2_terms():
     labeled_comments = {0: 1, 1: 0}
     correct = {0: ["cat", "dog"], 1: ["red", "blue"]}
 
-    assert correct == topic_model.find_n_representative_topics(labeled_comments, 2)
+    assert correct == topic_model.find_n_representative_topics(
+        labeled_comments, 2
+    )
 
 
 def test_mmr_sort():

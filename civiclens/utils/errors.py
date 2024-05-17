@@ -7,5 +7,7 @@ class TooFewTopics(Exception):
 class TopicModelFailure(Exception):
     def __init__(self, error: str):
         self.error = error
-        self.message = f"Topic modeling failure due to exteral error: {self.error}"
+        self.message = (
+            f"Topic modeling failure due to exteral error: {self.error}"
+        )
         super().__init__(self.message)
