@@ -45,6 +45,12 @@ jobs:
     - name: run tests with pytest
       run: poetry run pytest
 
+    - name: Django Test CI
+      uses: UKnowWhoIm/django-test-action@v0.6.1
+      with:
+        settings-dir-path: civiclens/website
+        requirements-file: pyproject.toml
+
   pre-commit:
     runs-on: ubuntu-latest
     steps:
@@ -53,11 +59,3 @@ jobs:
         with:
           python-version: "3.11"
       - uses: pre-commit/action@v3.0.0
-
-
-    # - name: Install modules
-    #  run: yarn
-    # - name: Run ESLint
-    # run: eslint . --ext .js,.jsx,.ts,.tsx
-    # - name: Test JS with Jest
-    #  run: yarn test
