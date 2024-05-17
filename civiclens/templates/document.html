@@ -155,7 +155,7 @@
           <p>The following comments capture the core themes of the comments received.
             [potentially include some clarity on the methods used here].
           </p>
-          {% for rep_comment in comments_nlp.rep_comments %}
+          {% for rep_comment in comments_nlp.rep_comments|slice:":5" %}
           <!-- cards for each representative comment -->
             <div class="card p-0">
               <div class="card-body">
@@ -186,7 +186,7 @@
           <p></p>
           <span class="h6">{{ doc.comment_count }} Total Comments</span>
           <p></p>
-          {% for comment in comments_api %}
+          {% for comment in comments_api|slice:":5" %}
           <!-- cards for each representative comment -->
             <div class="card p-0">
               <div class="card-body">
