@@ -291,7 +291,7 @@ def insert_docket_into_db(docket_data: json) -> dict:
     """
     Run assert statements to check docket data looks right
 
-    Args: 
+    Args:
         docket_data (json): the docket info from regulations.gov API
 
     Returns: nothing unless an error; adds the info into the table
@@ -501,7 +501,7 @@ def qa_document_data(document_data: json) -> True:
     """
     Run assert statements to check document data looks right
 
-    Args: 
+    Args:
         document_data (json object): the document data from the API
 
     Returns: (bool) whether data is in the expected format
@@ -1089,7 +1089,7 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
     Add comments to the comments table for a new doc (ie, when we have just
         added the doc to the database)
 
-    Args: 
+    Args:
         document_object_id (str): the object id for the document we want
         comments for (comes from the document json object)
 
