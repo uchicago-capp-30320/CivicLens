@@ -1,3 +1,4 @@
+import argparse
 from functools import partial
 
 import polars as pl
@@ -8,6 +9,10 @@ from civiclens.nlp.models import sentiment_pipeline
 from civiclens.nlp.tools import sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--refresh", type=bool, required=False, default=False)
 
 
 def doc_generator(df: pl.DataFrame):
@@ -53,6 +58,7 @@ def docs_have_titles():
 
 
 if __name__ == "__main__":
+    args = parser.parse_args()
     last_updated = get_last_update()
     docs_with_titles = docs_have_titles()
 
@@ -68,7 +74,12 @@ if __name__ == "__main__":
             FROM regulations_comment rc2
             WHERE rc2.document_id = rc1.document_id
             GROUP BY document_id
-            HAVING COUNT(*) > 20 )
+            HAVING COUNT(*) > 20)
+        """
+    elif args.refresh:
+        docs_to_update = """SELECT document_id
+        FROM regulations_comment
+        GROUP BY document_id;
         """
     else:
         docs_to_update = """SELECT document_id
@@ -100,7 +111,9 @@ if __name__ == "__main__":
             comment_data.summary = titles.get_doc_summary(id=doc_id)[
                 0, "summary"
             ]
-            if doc_id not in docs_with_titles and comment_data.summary:
+            if (
+                doc_id not in docs_with_titles and comment_data.summary
+            ) or args.refresh:
                 new_title = title_creator.invoke(paragraph=comment_data.summary)
                 comment_data.doc_plain_english_title = new_title
 
