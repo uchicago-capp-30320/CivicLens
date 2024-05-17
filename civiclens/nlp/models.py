@@ -11,7 +11,7 @@ from transformers import (
     pipeline,
 )
 # TODO figure out the rol of rep_models, sentiment models in the code
-# I don't see them in use but am not as familiar with jacks code
+# I don't see them in use but am not as familiar with jacks code.
 
 # title models
 title_model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base")
