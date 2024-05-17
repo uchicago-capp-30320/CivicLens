@@ -12,7 +12,7 @@ from civiclens.utils.database_access import Database, pull_data, upload_comments
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--refresh", type=bool, required=False, default=False)
+parser.add_argument("--refresh", action="store_true", required=False)
 
 
 def doc_generator(df: pl.DataFrame):
@@ -75,7 +75,8 @@ if __name__ == "__main__":
             WHERE rc2.document_id = rc1.document_id
             GROUP BY document_id HAVING COUNT(*) > 20;
             """
-    elif args.refresh:
+    if args.refresh:
+        print("here!")
         docs_to_update = """SELECT document_id
         FROM regulations_comment
         GROUP BY document_id;
