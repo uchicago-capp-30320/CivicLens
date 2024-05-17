@@ -317,7 +317,9 @@ class BulkDl:
                     "Retry-After", None
                 )  # Obtain reset time
                 wait_time = (
-                    int(retry_after) if retry_after and retry_after.isdigit() else 3600
+                    int(retry_after)
+                    if retry_after and retry_after.isdigit()
+                    else 3600
                 )  # Default to 1 hour if no wait time provided
                 print(
                     f"""Rate limit exceeded.
@@ -346,7 +348,9 @@ class BulkDl:
                 # Extract relevant information from each docket
                 docket_details = {
                     "docket_id": docket.get("id"),
-                    "docket_type": docket.get("attributes", {}).get("docketType"),
+                    "docket_type": docket.get("attributes", {}).get(
+                        "docketType"
+                    ),
                     "last_modified": docket.get("attributes", {}).get(
                         "lastModifiedDate"
                     ),
@@ -392,7 +396,9 @@ class BulkDl:
             doc_data = {
                 "Doc_ID": document.get("id"),
                 "Doc_Type": document.get("attributes", {}).get("documentType"),
-                "Last_Modified": document.get("attributes", {}).get("lastModifiedDate"),
+                "Last_Modified": document.get("attributes", {}).get(
+                    "lastModifiedDate"
+                ),
                 "FR_Doc_Num": document.get("attributes", {}).get("frDocNum"),
                 "Withdrawn": document.get("attributes", {}).get("withdrawn"),
                 "Agency_ID": document.get("attributes", {}).get("agencyId"),
@@ -461,11 +467,15 @@ class BulkDl:
             while continue_fetching:
                 params = {"filter[commentOnId]": commentId}
 
-                response = requests.get(base_url, headers=self.headers, params=params)
+                response = requests.get(
+                    base_url, headers=self.headers, params=params
+                )
                 if response.status_code == 200:
                     data = response.json()
                     total_elements = data["meta"]["totalElements"]
-                    results.append({"id": commentId, "total_elements": total_elements})
+                    results.append(
+                        {"id": commentId, "total_elements": total_elements}
+                    )
                     continue_fetching = False
                 elif response.status_code == 429:  # Rate limit exceeded
                     retry_after = response.headers.get("Retry-After", None)

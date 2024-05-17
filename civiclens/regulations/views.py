@@ -127,7 +127,9 @@ def document(request, doc_id):  # noqa: E501
             .annotate(modify_date_only=TruncDate("modify_date"))
             .annotate(receive_date_only=TruncDate("receive_date"))
         )
-        comments_last_updated = comments_api.latest("modify_date_only").modify_date_only
+        comments_last_updated = comments_api.latest(
+            "modify_date_only"
+        ).modify_date_only
         unique_comments = comments_api.distinct("comment").count()
     except Comment.DoesNotExist:
         comments_api = None
