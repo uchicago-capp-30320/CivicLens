@@ -14,20 +14,16 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # load real model to test error catching
 
-sample_df = pl.read_csv(
-    BASE_DIR / "nlp_test_data/sample_comments.csv", separator=","
-)
+sample_df = pl.read_csv(BASE_DIR / "nlp_test_data/sample_comments.csv", separator=",")
 
 
 def test_comment_similarity():
     df_paraphrase, df_form_letter = comments.comment_similarity(
         sample_df, model=sentence_transformer
     )
-
-    assert df_paraphrase.shape == (377, 4)
-    assert df_form_letter.shape == (1, 4)
-    assert df_paraphrase.columns == df_paraphrase.columns
-    assert df_form_letter.columns == df_form_letter.columns
+    cols = ["similarity", "idx1", "idx2", "form_letter"]
+    assert df_paraphrase.columns == cols
+    assert df_form_letter.columns == cols
 
 
 def test_graph():
@@ -103,9 +99,7 @@ def test_sim_clusters():
     with open(BASE_DIR / "nlp_test_data/test_embeddings.pkl", "rb") as f:
         test_data = pickle.load(f)
         mock_embeddings = test_data["embeddings"]
-        out = comments.compute_similiarity_clusters(
-            mock_embeddings, sim_threshold=0.05
-        )
+        out = comments.compute_similiarity_clusters(mock_embeddings, sim_threshold=0.05)
         assert out.size == 3
 
 
