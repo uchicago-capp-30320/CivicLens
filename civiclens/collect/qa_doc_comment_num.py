@@ -15,7 +15,7 @@ def pull_list_of_doc_info() -> list[tuple[str]]:
         with cursor:
             query = "SELECT id, object_id, rin \
                     FROM regulations_document \
-                    WHERE open_for_comment = True;"
+                    WHERE comment_end_date > NOW();"
             cursor.execute(query)
             response = cursor.fetchall()
 
