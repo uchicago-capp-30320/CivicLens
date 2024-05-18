@@ -194,7 +194,9 @@ def verify_database_existence(
     return bool(response)
 
 
-def add_data_quality_flag(data_id: str, data_type: str):
+def add_data_quality_flag(
+    data_id: str, data_type: str, error_message: str
+) -> None:
     """ """
     connection, cursor = connect_db_and_get_cursor()
     with connection:
@@ -203,14 +205,16 @@ def add_data_quality_flag(data_id: str, data_type: str):
             INSERT INTO regulations_dataqa (
                 "data_id",
                 "data_type",
+                "error_message
             ) VALUES (
-                %s, %s
+                %s, %s, %s
             )
             ON CONFLICT (id) DO UPDATE SET
                 data_id = EXCLUDED.data_id,
-                data_type = EXCLUDED.data_type;
+                data_type = EXCLUDED.data_type,
+                error_message = EXCLUDED.error_message;
             """,
-            (data_id, data_type)
+            (data_id, data_type, error_message)
         connection.commit()
 
 
@@ -225,7 +229,7 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"""SELECT MAX("posted_date") \
+            query = f"""SELECT MAX("modify_date") \
                         FROM regulations_comment \
                         WHERE "document_id" = '{doc_id}';"""
             cursor.execute(query)
@@ -289,10 +293,9 @@ def qa_docket_data(docket_data: json) -> None:
         ), "objectId does not start with '0b'"
         # attributes["highlightedContent"]
 
-        return True
     except AssertionError as e:
         print(f"AssertionError: {e}")
-        return False
+        add_data_quality_flag(data_for_db["id"], "docket", e)
 
 
 def insert_docket_into_db(docket_data: json) -> dict:
@@ -388,12 +391,8 @@ def add_dockets_to_db(
             # clean
             clean_docket_data(docket_data)
 
-            if not qa_docket_data(docket_data):
-                print(
-                    f"""docket {docket_id} appears to have data in the wrong
-                    format"""
-                )
-                add_data_quality_flag(docket_id, "docket")
+            # qa
+            qa_docket_data(docket_data)
 
             # add docket_data to docket table in the database
             insert_response = insert_docket_into_db(docket_data)
@@ -564,10 +563,9 @@ def qa_document_data(document_data: json) -> True:
             document_data["supplementaryInformation"], str
         ), "supplementaryInformation is not string"
 
-        return True
     except AssertionError as e:
         print(f"AssertionError: {e}")
-        return False
+        add_data_quality_flag(document_data["id"], "document", e)
 
 
 def insert_document_into_db(document_data: json) -> dict:
@@ -703,12 +701,7 @@ def add_documents_to_db(
             # add this doc to the documents table in the database
             full_doc_info = query_register_API_and_merge_document_data(doc)
             # qa step
-            if not qa_document_data(full_doc_info):
-                print(
-                    f"""document {document_id} appears to have data in the
-                    wrong format"""
-                )
-                add_data_quality_flag(document_id, "document")
+            qa_document_data(full_doc_info)
 
             # clean step
             clean_document_data(full_doc_info)
@@ -884,10 +877,9 @@ def qa_comment_data(comment_data: json) -> None:
         # comment_data["submitterRepAddress"]
         # comment_data["submitterRepCityState"]
 
-        return True
     except AssertionError as e:
         print(f"AssertionError: {e}")
-        return False
+        add_data_quality_flag(comment_data["id"], "comment", e)
 
 
 def insert_comment_into_db(comment_data: json) -> dict:
@@ -1105,13 +1097,8 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
         # clean
         clean_comment_data(all_comment_data)
 
-        if not qa_comment_data(all_comment_data):
-            print(
-                f"""comment {all_comment_data['id']}
-                appears to have data in the wrong format"""
-            )
-            comment_id = comment["id"]
-            add_data_quality_flag(comment_id, "comment")
+        # qa
+        qa_comment_data(all_comment_data)
 
         insert_response = insert_comment_into_db(all_comment_data)
 
@@ -1160,13 +1147,8 @@ def add_comments_to_db_for_existing_doc(
         # clean
         clean_comment_data(all_comment_data)
 
-        if not qa_comment_data(all_comment_data):
-            print(
-                f"""comment {all_comment_data['id']} appears to have data
-                in the wrong format"""
-            )
-            comment_id = comment["id"]
-            add_data_quality_flag(comment_id, "comment")
+        # qa
+        qa_comment_data(all_comment_data)
 
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
