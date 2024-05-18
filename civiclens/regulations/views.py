@@ -211,7 +211,3 @@ def document(request, doc_id):  # noqa: E501
             "comments_last_updated": comments_last_updated,
         },
     )
-
-
-def comment(request):
-    return render(request, "comment.html")
