@@ -51,9 +51,7 @@ def fetch_xml_content(url: str) -> str:
     if response.status_code == 200:
         return response.text
     else:
-        error_message = (
-            f"Error fetching XML content from {url}: {response.status_code}"
-        )
+        error_message = f"Error fetching XML content from {url}: {response.status_code}"
         raise Exception(error_message)
 
 
@@ -92,9 +90,7 @@ def parse_xml_content(xml_content: str) -> dict:
 
     # Extract Summary
     summary = root.find(".//SUM/P")
-    extracted_data["summary"] = (
-        summary.text if summary is not None else "Not Found"
-    )
+    extracted_data["summary"] = summary.text if summary is not None else "Not Found"
 
     # Extract DATES
     dates = root.find(".//DATES/P")
@@ -144,9 +140,7 @@ def extract_xml_text_from_doc(doc: json) -> json:
         xml_content = fetch_xml_content(xml_url)
         if xml_content:
             extracted_data = parse_xml_content(xml_content)
-            processed_data.append(
-                {**doc, **extracted_data}
-            )  # merge the json objects
+            processed_data.append({**doc, **extracted_data})  # merge the json objects
 
     return processed_data
 
@@ -194,15 +188,19 @@ def verify_database_existence(
     return bool(response)
 
 
-def add_data_quality_flag(
-    data_id: str, data_type: str, error_message: str
-) -> None:
-    """ """
+def add_data_quality_flag(data_id: str, data_type: str, error_message: str) -> None:
+    """Add data to the regulations_dataqa table is qa assert statements flag
+
+    Inputs:
+        data_id (str): id field of the data in question
+        data_type (str): whether docket, document, or comment
+        error_message (str): the error message raised by the assert statement
+    Returns: nothing, add a row to regulations_dataqa
+    """
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            """
-            INSERT INTO regulations_dataqa (
+            """INSERT INTO regulations_dataqa (
                 "data_id",
                 "data_type",
                 "error_message
@@ -212,8 +210,7 @@ def add_data_quality_flag(
             ON CONFLICT (id) DO UPDATE SET
                 data_id = EXCLUDED.data_id,
                 data_type = EXCLUDED.data_type,
-                error_message = EXCLUDED.error_message;
-            """,
+                error_message = EXCLUDED.error_message;""",
             (data_id, data_type, error_message)
         connection.commit()
 
@@ -229,7 +226,7 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"""SELECT MAX("modify_date") \
+            query = f"""SELECT MAX("posted_date") \
                         FROM regulations_comment \
                         WHERE "document_id" = '{doc_id}';"""
             cursor.execute(query)
@@ -275,9 +272,7 @@ def qa_docket_data(docket_data: json) -> None:
         assert "attributes" in data_for_db, "'attributes' not in docket_data"
 
         # check the fields
-        assert (
-            len(data_for_db["id"]) < 255
-        ), "id field longer than 255 characters"
+        assert len(data_for_db["id"]) < 255, "id field longer than 255 characters"
         assert attributes["docketType"] in [
             "Rulemaking",
             "Nonrulemaking",
@@ -288,9 +283,7 @@ def qa_docket_data(docket_data: json) -> None:
         ), "lastModifiedDate is unexpected length"
         assert attributes["agencyId"].isalpha(), "agencyId is not just letter"
         assert isinstance(attributes["title"], str), "title is not string"
-        assert (
-            attributes["objectId"][:2] == "0b"
-        ), "objectId does not start with '0b'"
+        assert attributes["objectId"][:2] == "0b", "objectId does not start with '0b'"
         # attributes["highlightedContent"]
 
     except AssertionError as e:
@@ -363,9 +356,7 @@ def insert_docket_into_db(docket_data: json) -> dict:
     }
 
 
-def add_dockets_to_db(
-    doc_list: list[dict], print_statements: bool = True
-) -> None:
+def add_dockets_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
     """
     Add the dockets connected to a list of documents into the database
 
@@ -533,9 +524,7 @@ def qa_document_data(document_data: json) -> True:
             len((attributes["commentEndDate"])) == 20
             and "202" in attributes["commentEndDate"]
         ), "commentEndDate is unexpected length"
-        assert (
-            len(attributes["postedDate"]) == 20
-        ), "postedDate is unexpected length"
+        assert len(attributes["postedDate"]) == 20, "postedDate is unexpected length"
         # attributes["docketId"]
         # attributes["subtype"]
         assert (
@@ -680,9 +669,7 @@ def insert_document_into_db(document_data: json) -> dict:
     }
 
 
-def add_documents_to_db(
-    doc_list: list[dict], print_statements: bool = True
-) -> None:
+def add_documents_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
     """
     Add a list of document json objects into the database
 
@@ -736,9 +723,7 @@ def get_comment_text(api_key: str, comment_id: str) -> dict:
     session.mount("https", HTTPAdapter(max_retries=4))
 
     while True:
-        response = session.get(
-            endpoint, headers={"X-Api-Key": api_key}, verify=True
-        )
+        response = session.get(endpoint, headers={"X-Api-Key": api_key}, verify=True)
 
         if response.status_code == 200:
             # SUCCESS! Return the JSON of the request
@@ -794,9 +779,7 @@ def clean_comment_data(comment_data: json) -> None:
     # format the date fields
     for date_field in ["modifyDate", "postedDate", "receiveDate"]:
         comment_text_attributes[date_field] = (
-            datetime.strptime(
-                comment_text_attributes[date_field], "%Y-%m-%dT%H:%M:%SZ"
-            )
+            datetime.strptime(comment_text_attributes[date_field], "%Y-%m-%dT%H:%M:%SZ")
             if comment_text_attributes[date_field]
             else None
         )
@@ -822,9 +805,7 @@ def qa_comment_data(comment_data: json) -> None:
     try:
         assert len(comment_data["id"]) < 255, "id is more than 255 characters"
 
-        assert (
-            attributes["objectId"][:2] == "09"
-        ), "objectId does not start with '09'"
+        assert attributes["objectId"][:2] == "09", "objectId does not start with '09'"
         assert (
             comment_text_attributes["commentOn"][:2] == "09"
         ), "commentOn does not start with '09'"
@@ -833,9 +814,9 @@ def qa_comment_data(comment_data: json) -> None:
             comment_text_attributes["duplicateComments"] == 0
         ), "duplicateComments != 0"
         # assert comment_data["stateProvinceRegion"]
-        assert comment_text_attributes[
+        assert comment_text_attributes["subtype"] is None or comment_text_attributes[
             "subtype"
-        ] is None or comment_text_attributes["subtype"] in [
+        ] in [
             "Public Comment",
             "Comment(s)",
         ], "subtype is not an expected value"
@@ -866,9 +847,7 @@ def qa_comment_data(comment_data: json) -> None:
             comment_text_attributes["receiveDate"], datetime
         ), "receiveDate is not datetime"
         # comment_data["trackingNbr"]
-        assert (
-            comment_text_attributes["withdrawn"] is False
-        ), "withdrawn is not False"
+        assert comment_text_attributes["withdrawn"] is False, "withdrawn is not False"
         # comment_data["reasonWithdrawn"]
         # comment_data["zip"]
         # comment_data["restrictReason"]
@@ -930,9 +909,7 @@ def insert_comment_into_db(comment_data: json) -> dict:
     restrictReasonType = comment_text_attributes.get("restrictReasonType", "")
     submitterRep = comment_text_attributes.get("submitterRep", "")
     submitterRepAddress = comment_text_attributes.get("submitterRepAddress", "")
-    submitterRepCityState = comment_text_attributes.get(
-        "submitterRepCityState", ""
-    )
+    submitterRepCityState = comment_text_attributes.get("submitterRepCityState", "")
 
     # SQL INSERT statement
     query = """
@@ -1156,9 +1133,7 @@ def add_comments_to_db_for_existing_doc(
             # would want to add logging here
 
 
-def add_comments_to_db(
-    doc_list: list[dict], print_statements: bool = True
-) -> None:
+def add_comments_to_db(doc_list: list[dict], print_statements: bool = True) -> None:
     """
     Add comments on a list of documents to the database
 
@@ -1197,9 +1172,7 @@ def add_comments_to_db(
                 )
 
 
-def add_comments_based_on_comment_date_range(
-    start_date: str, end_date: str
-) -> None:
+def add_comments_based_on_comment_date_range(start_date: str, end_date: str) -> None:
     """
     Add comments to the comments table based on a date range of when the
     comments were posted
@@ -1292,9 +1265,7 @@ def pull_all_api_data_for_date_range(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Pull info for a date range from API"
-    )
+    parser = argparse.ArgumentParser(description="Pull info for a date range from API")
     parser.add_argument(
         "start_date",
         type=str,
