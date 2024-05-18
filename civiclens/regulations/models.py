@@ -120,3 +120,4 @@ class DataQA(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
     data_id = models.CharField(max_length=255, blank=True, null=True)
     data_type = models.CharField(max_length=255, blank=True, null=True)
+    error_message = models.TextField(null=True)
