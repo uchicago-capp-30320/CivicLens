@@ -22,8 +22,14 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("added_at", models.DateTimeField(auto_now_add=True)),
-                ("data_id", models.CharField(blank=True, max_length=255, null=True)),
-                ("data_type", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "data_id",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "data_type",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
                 ("error_message", models.TextField(null=True)),
             ],
         ),
