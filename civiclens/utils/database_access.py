@@ -84,7 +84,7 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
     """
     query = """
     INSERT INTO regulations_nlpoutput (
-            rep_comments,
+            comments,
             doc_plain_english_title,
             num_total_comments,
             num_unique_comments,
@@ -98,7 +98,7 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT(document_id)
         DO UPDATE SET
-            rep_comments = EXCLUDED.rep_comments,
+            comments = EXCLUDED.comments,
             doc_plain_english_title = EXCLUDED.doc_plain_english_title,
             num_total_comments = EXCLUDED.num_total_comments,
             num_unique_comments = EXCLUDED.num_unique_comments,
