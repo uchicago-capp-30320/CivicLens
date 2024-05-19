@@ -80,32 +80,57 @@
         <span class="h6 font-weight-bold">In the Weeds</span>
 
         <p></p>
-        <div class="card-sm" style="background-color: lightgrey;">
-          <div class="card-body py-2 px-3">
-            <p class="card-text">
-              <a class="font-weight-bold">Document ID</a>
-              <a class="font-weight-normal">{{ doc.id }}</a>
-            </p>
-          </div>
-        </div>
 
-        <div class="card-sm" style="background-color: lightgrey;">
+        <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank"
+        class="card-sm-custom">
           <div class="card-body py-2 px-3">
             <p class="card-text">
-              <a class="font-weight-bold">Federal Register ID</a>
-              <a class="font-weight-normal">{{ doc.fr_doc_num }}</a>
+              <span class="font-weight-bold">Document ID</span>
+              <span class="font-weight-normal">{{ doc.id }}</span>
             </p>
           </div>
-        </div>
+        </a>
 
-        <div class="card-sm" style="background-color: lightgrey;">
-          <div class="card-body py-2 px-3">
-            <p class="card-text">
-              <a class="font-weight-bold">Docket ID</a>
-              <a class="font-weight-normal">{{ doc.docket_id }}</a>
-            </p>
+        {% if doc.fr_doc_num %}
+          <a href="https://www.federalregister.gov/documents/{{fed_register_url.doc_posted_year}}/{{fed_register_url.doc_posted_month}}/{{fed_register_url.doc_posted_day}}/{{doc.fr_doc_num}}/{{fed_register_url.doc_name_url}}" target="_blank"
+          class="card-sm-custom">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <span class="font-weight-bold">Federal Register ID</span>
+                <span class="font-weight-normal">{{ doc.fr_doc_num }}</span>
+              </p>
+            </div>
+          </a>
+        {% else %}
+          <div class="card-sm" style="background-color: lightgrey;">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <a class="font-weight-bold">Federal Register ID</a>
+                <a class="font-weight-normal">{{ doc.fr_doc_num }}</a>
+              </p>
+            </div>
           </div>
-        </div>
+        {% endif %}
+        {% if doc.docket_id %}
+          <a href="https://www.regulations.gov/docket/{{doc.docket_id}}" target="_blank"
+          class="card-sm-custom">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <span class="font-weight-bold">Docket ID</span>
+                <span class="font-weight-normal">{{ doc.docket_id }}</span>
+              </p>
+            </div>
+          </a>
+        {% else %}
+          <div class="card-sm" style="background-color: lightgrey;">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <a class="font-weight-bold">Docket ID</a>
+                <a class="font-weight-normal">{{ doc.docket_id }}</a>
+              </p>
+            </div>
+          </div>
+        {% endif %}
 
         <p></p>
         <p class="small"> Want to get even more in the weeds? </p>

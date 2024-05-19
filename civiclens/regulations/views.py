@@ -119,6 +119,13 @@ def document(request, doc_id):  # noqa: E501
         .annotate(comment_count=Count("comment"))
     )
 
+    fed_register_url = {
+        "doc_posted_month": doc.posted_date.strftime("%m"),
+        "doc_posted_day": doc.posted_date.strftime("%d"),
+        "doc_posted_year": doc.posted_date.strftime("%Y"),
+        "doc_name_url": doc.title.replace(" ", "-").lower(),
+    }
+
     try:
         comments_api = (
             Comment.objects.filter(document=doc_id)
@@ -209,6 +216,7 @@ def document(request, doc_id):  # noqa: E501
             "comments_api": comments_api,
             "unique_comments": unique_comments,
             "comments_last_updated": comments_last_updated,
+            "fed_register_url": fed_register_url,
         },
     )
 
