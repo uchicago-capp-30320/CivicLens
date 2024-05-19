@@ -208,18 +208,20 @@ def add_data_quality_flag(
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            """INSERT INTO regulations_dataqa (
-                "data_id",
-                "data_type",
-                "error_message
-            ) VALUES (
-                %s, %s, %s
+            cursor.execute(
+                """INSERT INTO regulations_dataqa (
+                    "data_id",
+                    "data_type",
+                    "error_message",
+                    "added_at"
+                ) VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (id) DO UPDATE SET
+                    data_id = EXCLUDED.data_id,
+                    data_type = EXCLUDED.data_type,
+                    error_message = EXCLUDED.error_message,
+                    added_at = EXCLUDED.added_at;""",
+                (data_id, data_type, error_message),
             )
-            ON CONFLICT (id) DO UPDATE SET
-                data_id = EXCLUDED.data_id,
-                data_type = EXCLUDED.data_type,
-                error_message = EXCLUDED.error_message;""",
-            (data_id, data_type, error_message)
         connection.commit()
 
 
