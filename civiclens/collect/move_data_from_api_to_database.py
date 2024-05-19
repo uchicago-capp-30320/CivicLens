@@ -202,7 +202,8 @@ def add_data_quality_flag(
     Inputs:
         data_id (str): id field of the data in question
         data_type (str): whether docket, document, or comment
-        error_message (str): the error message raised by the assert statement
+        error_message (Error): the error and message raised by the assert
+            statement
     Returns: nothing, add a row to regulations_dataqa
     """
     connection, cursor = connect_db_and_get_cursor()
@@ -220,7 +221,7 @@ def add_data_quality_flag(
                     data_type = EXCLUDED.data_type,
                     error_message = EXCLUDED.error_message,
                     added_at = EXCLUDED.added_at;""",
-                (data_id, data_type, error_message),
+                (data_id, data_type, str(error_message)),
             )
         connection.commit()
 
