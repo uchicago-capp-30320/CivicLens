@@ -211,6 +211,10 @@ def topic_comment_analysis(
         ]
 
     comments += comment_data.to_list()
+    if not comment_data.rep_comments:
+        comment_data.representative = False
+        comments += comment_data.get_nonrepresentative_comments()
+
     comment_topics = model.run_model(comments)
     topic_terms = model.get_terms()
     topic_labels = label_topics(topic_terms, labeler)
@@ -239,6 +243,7 @@ def topic_comment_analysis(
         num_representative_comment=comment_data.num_representative_comment,
         topics=create_topics(comments),
         search_vector=model.generate_search_vector(),
+        representative=comment_data.representative,
     )
 
 
