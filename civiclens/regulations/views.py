@@ -10,7 +10,7 @@ from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
-from .models import AgencyReference, Comment, Document
+from .models import AgencyReference, Comment, Document, NLPoutput
 
 
 def home(request):
@@ -18,7 +18,14 @@ def home(request):
 
 
 def search_page(request):
-    return render(request, "search_page.html")
+    # placeholder code before NLPoutput is updated
+    top_commented_documents = NLPoutput.objects.order_by(
+        "-num_total_comments"
+    ).values("doc_plain_english_title", "num_total_comments", "document_id")[:5]
+
+    return render(
+        request, "search_page.html", {"top_docs": top_commented_documents}
+    )
 
 
 # require method decorqator to only allow GET requests
