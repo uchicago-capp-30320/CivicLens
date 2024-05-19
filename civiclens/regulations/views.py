@@ -219,7 +219,3 @@ def document(request, doc_id):  # noqa: E501
             "fed_register_url": fed_register_url,
         },
     )
-
-
-def comment(request):
-    return render(request, "comment.html")
