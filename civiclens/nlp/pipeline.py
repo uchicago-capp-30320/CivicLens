@@ -76,7 +76,6 @@ if __name__ == "__main__":
             GROUP BY document_id HAVING COUNT(*) > 20;
             """
     if args.refresh:
-        print("here!")
         docs_to_update = """SELECT document_id
         FROM regulations_comment
         GROUP BY document_id;
@@ -105,6 +104,7 @@ if __name__ == "__main__":
         try:
             # do rep comment nlp
             doc_id = next(doc_gen)[0]
+            print(doc_id)
             comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
 
             # generate title if there is not already one
