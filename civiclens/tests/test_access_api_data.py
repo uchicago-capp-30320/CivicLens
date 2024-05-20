@@ -1,5 +1,5 @@
 from civiclens.collect import access_api_data
-
+from unittest.mock import patch, MagicMock
 
 api_key = "DEMO_KEY"
 
@@ -56,3 +56,48 @@ def test_format_datetime_for_api():
         access_api_data.format_datetime_for_api("2020-08-10T15:58:52Z")
         == "2020-08-10 11:58:52"
     )
+
+
+@patch('access_api_data.requests.Session')
+def test_pagination_handling(mock_session):
+    """
+    Tests if pull_reg_gov_data() handles pagination.
+    """
+    mock_get = MagicMock()
+    mock_session.return_value = mock_session_instance = MagicMock()
+    mock_session_instance.get = mock_get
+
+    # Set up mock responses for each page
+    response_page_1 = MagicMock(status_code=200, json=lambda: {
+        'data': ['data1', 'data2'],
+        'meta': {'hasNextPage': True}
+    })
+    response_page_2 = MagicMock(status_code=200, json=lambda: {
+        'data': ['data3'],
+        'meta': {'hasNextPage': False}
+    })
+    mock_get.side_effect = [response_page_1, response_page_2]
+
+    # The function being tested:
+    results = access_api_data.pull_reg_gov_data(
+        api_key=api_key,
+        data_type='documents',
+        start_date='2024-04-15',
+        end_date='2024-05-12'
+    )
+
+    # Check that:
+    # 1.) function handles multiple pages
+    # 2.) respects pagination indicators
+    assert len(results) == 3
+    # 3.) aggregates data across pages
+    assert 'data1' in results
+    assert 'data2' in results
+    assert 'data3' in results
+
+    # Ensure that the API endpoint was called with the expected URL and params
+    expected_calls = [
+        (('https://api.regulations.gov/v4/documents',), {'headers': {'X-Api-Key': 'DEMO_KEY'}, 'params': {'page[size]': 250, 'page[number]': 1, 'filter[lastModifiedDate][ge]': '2024-04-15 00:00:00', 'filter[lastModifiedDate][le]': '2024-05-12 23:59:59'}, 'verify': True}),
+        (('https://api.regulations.gov/v4/documents',), {'headers': {'X-Api-Key': 'DEMO_KEY'}, 'params': {'page[size]': 250, 'page[number]': 2, 'filter[lastModifiedDate][ge]': '2024-04-15 00:00:00', 'filter[lastModifiedDate][le]': '2024-05-12 23:59:59'}, 'verify': True})
+    ]
+    mock_get.assert_has_calls(expected_calls, any_order=True)
