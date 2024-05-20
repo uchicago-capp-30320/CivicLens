@@ -48,14 +48,16 @@ def api_date_format_params(start_date=None, end_date=None):
         date_param (dict): dict containing the right formatted date calls
     """
     date_param = {}
-    if start_date:
+    if start_date is not None:
         date_param.update(
             {"filter[lastModifiedDate][ge]": f"{start_date} 00:00:00"}
         )
-    if end_date:
+        print(f"{start_date=}")
+    if end_date is not None:
         date_param.update(
             {"filter[lastModifiedDate][le]": f"{end_date} 23:59:59"}
         )
+        print(f"{end_date=}")
 
     return date_param
 
@@ -251,13 +253,18 @@ def pull_reg_gov_data(  # noqa: C901,E501
                     params.update(
                         {
                             "filter[lastModifiedDate][ge]": last_modified_date,
-                            "filter[lastModifiedDate][le]": f"{end_date} 23:59:59",  # noqa: E501
                             "page[size]": 250,
                             "sort": "lastModifiedDate,documentId",
                             "page[number]": 1,
                             "api_key": api_key,
                         }
                     )
+                    if end_date:
+                        params.update(
+                            {
+                                "filter[lastModifiedDate][le]": f"{end_date} 23:59:59"  # noqa: E501
+                            }
+                        )
                     print(f"Fetching more data from {last_modified_date}")
             else:
                 print("Failed to fetch data")
