@@ -7,7 +7,7 @@ from civiclens.nlp import comments, titles
 from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
 from civiclens.nlp.tools import sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
-from civiclens.utils.database_access import Database, pull_data, upload_comments
+from civiclens.utils.database_access import Database, pull_data
 
 
 parser = argparse.ArgumentParser()
@@ -100,7 +100,8 @@ if __name__ == "__main__":
         sentiment_analysis, pipeline=sentiment_pipeline
     )
 
-    for _ in range(len(docs_to_update)):
+    # for _ in range(len(docs_to_update)):
+    for _ in range(2):
         try:
             # do rep comment nlp
             doc_id = next(doc_gen)[0]
@@ -125,7 +126,7 @@ if __name__ == "__main__":
             )
 
             # TODO logging for upload errors
-            upload_comments(Database(), comment_data)
+            # upload_comments(Database(), comment_data)
 
         except StopIteration:
             print("NLP Update Completed")
