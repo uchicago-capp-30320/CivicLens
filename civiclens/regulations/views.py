@@ -124,7 +124,10 @@ def search_results(request):  # noqa: C901
 
         if query:
             vector = (
-                SearchVector("title", weight="A")
+                SearchVector("nlpoutput__doc_plain_english_title", weight="A")
+                + SearchVector("nlpoutput__topics", weight="A")
+                + SearchVector("nlpoutput__search_topics", weight="A")
+                + SearchVector("title", weight="A")
                 + SearchVector("summary", weight="B")
                 + SearchVector("agency_id", weight="D")
                 + SearchVector("agency_type", weight="D")
@@ -141,18 +144,43 @@ def search_results(request):  # noqa: C901
                 .order_by("-rank")
             )
             if not documents.exists():
+                weight_a = 1.0
+                weight_b = 0.75
+                weight_d = 0.25
+
                 documents = (
                     Document.objects.annotate(
-                        rank=TrigramSimilarity("title", query)
-                        + TrigramSimilarity("summary", query)
-                        + TrigramSimilarity("agency_id", query)
-                        + TrigramSimilarity("agency_type", query)
+                        rank=TrigramSimilarity("title", query) * weight_a
+                        # + TrigramSimilarity(
+                        #     "nlpoutput__doc_plain_english_title", query
+                        #     ) * weight_a
+                        # + TrigramSimilarity("nlpoutput__topics", query
+                        #     ) * weight_a
+                        # + TrigramSimilarity("nlpoutput__search_topics", query
+                        #     ) * weight_a
+                        + TrigramSimilarity("summary", query) * weight_b
+                        + TrigramSimilarity("agency_id", query) * weight_d
+                        + TrigramSimilarity("agency_type", query) * weight_d
                     )
                     .annotate(comment_count=Count("comment"))
                     .filter(rank__gt=0.20)
                     .filter(comment_end_date__gte=today)
                     .order_by("-rank")
                 )
+
+            ############################################################
+            # documents = (
+            #     Document.objects.annotate(
+            #         rank=TrigramSimilarity("title", query)
+            #         + TrigramSimilarity("summary", query)
+            #         + TrigramSimilarity("agency_id", query)
+            #         + TrigramSimilarity("agency_type", query)
+            #     )
+            #     .annotate(comment_count=Count("comment"))
+            #     .filter(rank__gt=0.20)
+            #     .filter(comment_end_date__gte=today)
+            #     .order_by("-rank")
+            # )
             if sort_by == "most_recent":
                 documents = documents.order_by("-posted_date")
             elif sort_by == "most_comments":
@@ -198,9 +226,8 @@ def document(request, doc_id):  # noqa: E501
     today = timezone.now().date()
 
     doc = get_object_or_404(
-        Document.objects.filter(id=doc_id)
-        .filter(comment_end_date__gte=today)
-        .annotate(comment_count=Count("comment"))
+        Document.objects.filter(id=doc_id).filter(comment_end_date__gte=today)
+        # .annotate(comment_count=Count("comment"))
     )
 
     fed_register_url = {
@@ -217,89 +244,28 @@ def document(request, doc_id):  # noqa: E501
             .annotate(modify_date_only=TruncDate("modify_date"))
             .annotate(receive_date_only=TruncDate("receive_date"))
         )
-        comments_last_updated = comments_api.latest(
-            "modify_date_only"
-        ).modify_date_only
-        unique_comments = comments_api.distinct("comment").count()
+        # comments_last_updated = comments_api.latest(
+        #     "modify_date_only"
+        # ).modify_date_only
+        # unique_comments = comments_api.distinct("comment").count()
     except Comment.DoesNotExist:
         comments_api = None
-        unique_comments = 0
-        comments_last_updated = "No comments found."
+        # unique_comments = 0
 
-    # test data from jack
-    comments_nlp = {
-        "id": "7588edfc-4239-4970-970e-d080eecf4da7",
-        "rep_comments": [
-            {
-                "id": "ED-2023-OPE-0123-28272",
-                "text": """The more student loan debt that can be forgiven the
-                better. Over the years , I have had yo pause my student l9ans
-                because of financial hardships I was facing.The period of time
-                that loans were in repayment I had made my payments on time.
-                My loans are currently in repayment, and if that burden could
-                be lifted it would be life-changing for me. Right now. I find
-                it very difficult to pay off my student loan debt. It has been
-                following me for quite some time. Loan forgiveness would be
-                good if I can qualify for it. """,
-                "num_represented": 450,
-                "topic": "Debt Forgiveness",
-                "form_letter": True,
-            },
-            {
-                "id": "ED-2023-OPE-0123-28250",
-                "text": """Hello I am a current student who would greatly
-                appreciate the privilege of having my student loans forgiven.
-                Thank you so much in advance!""",
-                "num_represented": 231,
-                "topic": "Student Loans",
-                "form_letter": False,
-            },
-        ],
-        "doc_plain_english_title": """Student Loan Debt Waiver: Department Of
-        Education""",
-        "num_total_comments": 980,
-        "num_unique_comments": 762,
-        "num_rep_comments": 2,
-        "topics": [
-            {
-                "topic": "Debt Forgiveness",
-                "positive": 129,
-                "negative": 98,
-                "neutral": 32,
-            },
-            {
-                "topic": "Student Loans",
-                "positive": 123,
-                "negative": 32,
-                "neutral": 149,
-            },
-            {
-                "topic": "topic 3",
-                "positive": 103,
-                "negative": 32,
-                "neutral": 149,
-            },
-            {
-                "topic": "topic 4",
-                "positive": 903,
-                "negative": 32,
-                "neutral": 149,
-            },
-        ],
-        "num_topics": 2,
-        "last_updated": "May 6, 2024",
-        "document_id": "ED-2023-OPE-0123-26398",
-    }
-    # comments_nlp = {}
+    try:
+        nlp = NLPoutput.objects.get(document=doc_id)
+    except NLPoutput.DoesNotExist:
+        nlp = {}
+
     return render(
         request,
         "document.html",
         {
             "doc": doc,
-            "comments_nlp": comments_nlp,
+            "nlp": nlp,
             "comments_api": comments_api,
-            "unique_comments": unique_comments,
-            "comments_last_updated": comments_last_updated,
+            # "unique_comments": unique_comments,
             "fed_register_url": fed_register_url,
+            # "is_comments": is_comments,
         },
     )
