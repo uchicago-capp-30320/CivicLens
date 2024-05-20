@@ -35,7 +35,7 @@ def model_path(model: str, tokenizer: bool, model_func) -> str:
         relative_path = (
             Path(__file__).resolve().parent / "saved_models" / model / "model"
         )
-    # Check if the path exists
+    # if model isn't saved, download it and return its path
     if relative_path.exists():
         return relative_path
     else:
@@ -54,10 +54,8 @@ title_tokenizer_path = model_path(
 )
 title_tokenizer = T5Tokenizer.from_pretrained(title_tokenizer_path)
 
-# TODO confirm that these models work the same way with huggingface
 # topic models
-sentence_path = model_path("all-MiniLM-L6-v2", False, SentenceTransformer)
-sentence_transformer = SentenceTransformer(sentence_path)
+sentence_transformer = SentenceTransformer("all-MiniLM-L6-v2")
 
 label_token_path = model_path(
     "fabiochiu/t5-base-tag-generation", True, AutoTokenizer.from_pretrained
