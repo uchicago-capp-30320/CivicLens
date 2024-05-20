@@ -7,14 +7,18 @@ from django.contrib.postgres.search import (
     SearchVector,
     TrigramSimilarity,
 )
-from django.db.models import Count
+from django.db.models import Avg, Count
 from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+<<<<<<< 156-search_resultshtml-enhancements
 from .forms import SearchForm
 from .models import AgencyReference, Comment, Document
+=======
+from .models import AgencyReference, Comment, Document, NLPoutput
+>>>>>>> main
 
 
 logger = logging.getLogger("django")
@@ -25,7 +29,74 @@ def home(request):
 
 
 def search_page(request):
-    return render(request, "search_page.html")
+    today = timezone.now().date()
+
+    # find date for when one doc in the db was last updated (MVP technique)
+    last_updated = (
+        Document.objects.all()
+        .order_by(
+            "-last_modified_date",
+        )
+        .values("last_modified_date")[:1][0]["last_modified_date"]
+    )
+
+    # TOP 5 MOST COMMENTED ON WITH NLP ANALYSIS
+    # list of active documents open for comment
+    active_documents_ids = Document.objects.filter(
+        comment_end_date__gt=today
+    ).values("id")
+
+    # select top documents from NLP table where # of comments is highest
+    top_commented_documents = (
+        NLPoutput.objects.order_by("-num_total_comments")
+        .filter(document_id__in=active_documents_ids)
+        .values(
+            "doc_plain_english_title",
+            "num_total_comments",
+            "document_id",
+            "num_unique_comments",
+        )[:5]
+    )
+
+    # DATA FOR QUICK FACTS
+    active_documents_count = Document.objects.filter(
+        comment_end_date__gt=today
+    ).count()
+
+    # count by doc_id in comment table
+    comment_counts = Comment.objects.values("document_id").annotate(
+        comment_count=Count("id")
+    )
+
+    # join docs with comments, only on the docs open for comment
+    joined_table = (
+        Document.objects.all()
+        .select_related("comment_counts")
+        .filter(id__in=[item["document_id"] for item in comment_counts])
+    )
+    # count only the docs with any comments
+    active_documents_with_comments = joined_table.count()
+
+    # use NLP table to do the tallies
+    avg_comments = round(
+        comment_counts.aggregate(avg_comments=Avg("comment_count"))[
+            "avg_comments"
+        ]
+    )
+
+    return render(
+        request,
+        "search_page.html",
+        {
+            "top_commented_documents": top_commented_documents,
+            "active_documents_count": active_documents_count,
+            "active_documents_with_comments": active_documents_with_comments,
+            "active_documents_with_no_comments": active_documents_count
+            - active_documents_with_comments,
+            "avg_comments": avg_comments,
+            "last_updated": last_updated,
+        },
+    )
 
 
 @require_http_methods(["GET"])
