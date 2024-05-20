@@ -99,8 +99,7 @@ if __name__ == "__main__":
         sentiment_analysis, pipeline=sentiment_pipeline
     )
 
-    # for _ in range(len(docs_to_update)):
-    for _ in range(2):
+    for _ in range(len(docs_to_update)):
         try:
             # do rep comment nlp
             doc_id = next(doc_gen)[0]
@@ -127,7 +126,7 @@ if __name__ == "__main__":
             )
 
             # TODO logging for upload errors
-            # upload_comments(Database(), comment_data)
+            upload_comments(Database(), comment_data)
 
         except StopIteration:
             print("NLP Update Completed")
