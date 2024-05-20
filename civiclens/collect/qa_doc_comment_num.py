@@ -15,7 +15,7 @@ def pull_list_of_doc_info() -> list[tuple[str]]:
         with cursor:
             query = "SELECT id, object_id, rin \
                     FROM regulations_document \
-                    WHERE open_for_comment = True;"
+                    WHERE comment_end_date > NOW();"
             cursor.execute(query)
             response = cursor.fetchall()
 
@@ -118,6 +118,7 @@ def fetch_comment_count_for_docs_in_db():
         counter += 1
 
     results_df = pl.DataFrame(ret_lst)
+    print("finished!")
 
     return results_df
 
@@ -125,3 +126,7 @@ def fetch_comment_count_for_docs_in_db():
 def main():
     df = fetch_comment_count_for_docs_in_db()
     df.write_csv("comment_num_api_and_db.csv")
+
+
+if __name__ == "__main__":
+    main()

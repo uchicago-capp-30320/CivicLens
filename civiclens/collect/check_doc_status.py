@@ -54,9 +54,8 @@ def check_current_status(open_docs: list) -> None:
     """
     Check the closing date of each document in the database. Then:
     - if the closing date has passed, update the status to closed
-    - if the closing date is in the future, call the regulations.gov API to get
-        the current status
-
+    - if the closing date is in the future, call the regulations.gov API to
+    get the current status
     Inputs:
         open_docs (list): a list of tuples of the form (id, docket_id,
         closing_date)
@@ -64,7 +63,8 @@ def check_current_status(open_docs: list) -> None:
     for id, closing_date in open_docs:
         if closing_date < datetime.now().date():
             print(
-                f"Document {id} has passed its closing date. Closing the comment period."  # noqa: E501
+                f"""Document {id} has passed its closing date.
+                Closing the comment period."""
             )
             close_doc_comment(id)
         # if the closing date is in the future or null, call the
