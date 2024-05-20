@@ -226,7 +226,7 @@ def topic_comment_analysis(
         comment.topic_label = topic_labels[comment_topics[comment.id]]
         comment.topic = comment_topics[comment.id]
         comment.sentiment = sentiment_analyzer(comment)
-        if comment.representative:
+        if comment.representative or not comment_data.representative:
             rep_comments.append(comment)
 
     rep_comments = sorted(
