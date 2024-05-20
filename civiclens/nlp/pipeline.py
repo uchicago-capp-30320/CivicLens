@@ -1,4 +1,7 @@
 import argparse
+import logging
+import os
+from datetime import datetime
 from functools import partial
 
 import polars as pl
@@ -10,6 +13,14 @@ from civiclens.nlp.tools import sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
 
+
+logger = logging.getLogger(__name__)
+os.makedirs("nlp_logs", exist_ok=True)
+logging.basicConfig(
+    filename=f'nlp_logs/{datetime.now().strftime("%Y-%m-%d")}_run.log',
+    encoding="utf-8",
+    level=logging.WARNING,
+)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--refresh", action="store_true", required=False)
@@ -104,7 +115,7 @@ if __name__ == "__main__":
         try:
             # do rep comment nlp
             doc_id = next(doc_gen)[0]
-            print(doc_id)
+            logger.warning(f"Proccessed document: {doc_id}")
             comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
 
             # generate title if there is not already one
@@ -126,6 +137,7 @@ if __name__ == "__main__":
             )
 
             # TODO logging for upload errors
+            logger.warning(f"Proccessed document: {doc_id}")
             upload_comments(Database(), comment_data)
 
         except StopIteration:
