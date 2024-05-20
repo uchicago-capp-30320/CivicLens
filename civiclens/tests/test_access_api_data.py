@@ -72,8 +72,13 @@ def test_pagination_handling():
             status_code=200,
             json=lambda: {
                 "data": [
-                    {"attributes": {"lastModifiedDate": "2024-04-15T12:00:00Z"}}
-                    for _ in range(250)
+                    {
+                        "id": f"data{i}",
+                        "attributes": {
+                            "lastModifiedDate": "2024-04-15T12:00:00Z"
+                        },
+                    }
+                    for i in range(250)
                 ],
                 "meta": {"hasNextPage": True},
             },
@@ -82,8 +87,13 @@ def test_pagination_handling():
             status_code=200,
             json=lambda: {
                 "data": [
-                    {"attributes": {"lastModifiedDate": "2024-04-16T12:00:00Z"}}
-                    for _ in range(250)
+                    {
+                        "id": f"data{i+250}",
+                        "attributes": {
+                            "lastModifiedDate": "2024-04-16T12:00:00Z"
+                        },
+                    }
+                    for i in range(250)
                 ],
                 "meta": {"hasNextPage": True},
             },
@@ -92,13 +102,19 @@ def test_pagination_handling():
             status_code=200,
             json=lambda: {
                 "data": [
-                    {"attributes": {"lastModifiedDate": "2024-04-17T12:00:00Z"}}
-                    for _ in range(100)
+                    {
+                        "id": f"data{i+500}",
+                        "attributes": {
+                            "lastModifiedDate": "2024-04-17T12:00:00Z"
+                        },
+                    }
+                    for i in range(100)
                 ],
                 "meta": {"hasNextPage": False},
             },
         ),
     ]
+
     mock_get.side_effect = responses
 
     # Inject mock session into your function
