@@ -3,7 +3,7 @@ from django.db import models
 
 class Docket(models.Model):
     "Model representing a docket."
-    id = models.CharField(max_length=255, primary_key=True)
+    id = models.TextField(primary_key=True)
     docket_type = models.CharField(max_length=255, blank=True, null=True)
     last_modified_date = models.DateTimeField(null=True)
     agency_id = models.CharField(max_length=100, blank=True, null=True)
@@ -100,7 +100,7 @@ class AgencyReference(models.Model):
 class NLPoutput(models.Model):
     "Model representing NLP output at the document level."
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
-    rep_comments = models.TextField(null=True)
+    comments = models.TextField(null=True)
     doc_plain_english_title = models.CharField(
         max_length=255, blank=True, null=True
     )
@@ -112,3 +112,14 @@ class NLPoutput(models.Model):
     last_updated = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     search_topics = models.TextField(null=True)
+    is_representative = models.BooleanField(default=False, null=True)
+
+
+class DataQA(models.Model):
+    """Model representing dockets, documents, and comments that were
+    flagged for QA issues"""
+
+    added_at = models.DateTimeField(auto_now_add=True)
+    data_id = models.CharField(max_length=255, blank=True, null=True)
+    data_type = models.CharField(max_length=255, blank=True, null=True)
+    error_message = models.TextField(null=True)
