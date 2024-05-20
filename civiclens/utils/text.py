@@ -2,8 +2,22 @@ import re
 from typing import Optional
 
 
-def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
+def regex_tokenize(text: str, pattern: str = r"\W+"):
     """
+    Splits strings into tokens base on regular expression.
+
+    Inputs:
+        text: string to tokenize
+        pattern: regular expression to split tokens on, defaults to white space
+
+    Returns:
+        List of strings represented tokens
+    """
+    return re.split(pattern, text)
+
+
+def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
+    r"""
     String cleaning function for comments.
 
     Inputs:
@@ -14,6 +28,9 @@ def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
     Returns:
         Cleaned verison of text
     """
+    if patterns is None:
+        patterns = []
+
     text = re.sub(r"<\s*br\s*/>", " ", text)
     text = re.sub(r"[^a-zA-Z0-9.'\"\?\: -]", "", text)
     text = re.sub(r"\w*ndash\w*", "", text)

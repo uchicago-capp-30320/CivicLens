@@ -17,14 +17,14 @@
     </p>
     <p>
     </p>
-    
+
     <div class="form-group">
-      <form action="/regulations/search/results/" method="GET">
+      <form action="/search/results/" method="GET">
         {{ form.as_p }}
         <div class="input-group mb-4">
           <input class="form-control" id="q" name="q" type="text" required
           placeholder="Search for topics like 'gun control' or 'reproductive health'...">
-          <button class="btn btn-primary">Search</button>
+          <button class="btn btn-secondary">Search</button>
         </div>
       </form>
     </div>
@@ -35,28 +35,79 @@
 <!-- trending -->
 <section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
   <div class="container">
-      <p class="font-italic">Common Search Terms</p>
-      
+      <h6>Common Search Terms</h6>
+
       <!-- potential refactor to not hard code these links and us a get request instead -->
-      <button class="badge">
-        <a href="/regulations/search/results?q=gun+control">gun control</a>
-      </button>
-
-      <button class="badge">
-        <a href="/regulations/search/results?q=reproductive+health">reproductive health</a>
-      </button>
-
-      <button class="badge">
-        <a href="/regulations/search/results?q=COVID-19">COVID-19</a>
-      </button>
-
-      <button class="badge">
-        <a href="/regulations/search/results?q=universal+healthcare">universal healthcare</a>
-      </button>
-
-      <button class="badge">
-        <a href="/regulations/search/results?q=climate+change">climate change</a>
-      </button>
+      <a class="badge btn-secondary m-1" href="/search/results?q=gun+control">
+        gun control
+      </a>
+      <a class="badge btn-secondary m-1" href="/search/results?q=reproductive+health">
+        reproductive health
+      </a>
+      <a class="badge btn-secondary m-1" href="/search/results?q=COVID-19">
+        COVID-19
+      </a>
+      <a class="badge btn-secondary m-1" href="/search/results?q=universal+healthcare">
+        universal healthcare
+      </a>
+      <a class="badge btn-secondary m-1" href="/search/results?q=climate+change">
+        climate change
+      </a>
+  </div>
+  <div class="container">
+    <p></p>
+    <h6 class="pt-5">Quick Facts</h6>
+    <div class="card">
+      <div class="card-body m-3">
+        <h6 class="card-subtitle" style="color:#B43F37">What is currently open for comment?</h6>
+        <p class="card-text mb-0">
+          As of {{last_updated}}, there are:
+          <ul>
+            <li><strong>{{active_documents_count}}</strong> proposed rules, rules, public notices, or other documents <strong>open for comment</strong>.</li>
+            <li><strong>{{active_documents_with_comments}}</strong> proposed rules, rules, public notices, or other documents <strong>with at least one comment</strong>.</li>
+            <li><strong>{{active_documents_with_no_comments}}</strong> proposed rules, rules, public notices, or other documents <strong>with no existing comments</strong>.</li>
+          </ul>
+        </p>
+        <p class="card-text mb-0">
+          Of the proposed rules, rules, public notices, or other documents that have comments, there are <strong>on average</strong>:
+          <ul>
+            <li><strong>{{avg_comments}}</strong> total comments per document.</li>
+            <!-- <li><strong>{avg_unique_comments}</strong> unique comments per document.
+              <br>
+              <i>This figure consolidates "form letters" submitted by multiple commenters
+                using identical language, leaving only the distinct comments.
+              </i>
+            </li> -->
+          </ul>
+        </p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body m-3">
+        <h6 class="card-subtitle" style="color:#B43F37">Which documents currently open for comment in the federal register have the most comments?</h6>
+        <div class="card-text">
+          {% if top_commented_documents %}
+            <p class="pb-0">
+              The following proposed rules, rules, or notices are the currently most commented on of all current opportunities for public comment.
+            </p>
+            <ul>
+              {% for document in top_commented_documents %}
+              <li>
+                <a class="btn-link" href="{% url 'document' document.document_id %}">
+                  <strong>{{document.doc_plain_english_title}}</strong>
+                   ({{document.num_total_comments}} total comments, {{document.num_unique_comments}} unique comments)
+                  </a>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="pb-0">
+              There are currently no proposed rules, rules, or notices open for public comment.
+            </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 

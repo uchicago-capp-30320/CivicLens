@@ -1,10 +1,18 @@
-import datetime
+import argparse
+from functools import partial
 
 import polars as pl
 from sentence_transformers import SentenceTransformer
 
-from ..utils.database_access import Database, pull_data
-from . import comments, titles
+from civiclens.nlp import comments, titles
+from civiclens.nlp.models import sentiment_pipeline
+from civiclens.nlp.tools import sentiment_analysis
+from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
+from civiclens.utils.database_access import Database, pull_data, upload_comments
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--refresh", action="store_true", required=False)
 
 
 def doc_generator(df: pl.DataFrame):
@@ -15,6 +23,7 @@ def doc_generator(df: pl.DataFrame):
 
 def get_last_update():
     """gets the timestamp of last update"""
+    new_date = None
     nlp_updated_query = """SELECT last_updated
                         FROM regulations_nlpoutput
                         ORDER BY last_updated ASC LIMIT 1"""
@@ -24,12 +33,15 @@ def get_last_update():
         connection=db_date,
         schema=["last_updated"],
     )
-    if not last_updated.is_empty():
-        last_updated = last_updated[0, "last_updated"]
-        last_updated = last_updated.strftime("%Y-%m-%d %H:%M:%S")
-    else:
-        last_updated = None
-    return last_updated
+
+    if last_updated.is_empty():
+        return new_date
+
+    last_updated = last_updated[0, "last_updated"]
+    if last_updated:
+        new_date = last_updated.strftime("%Y-%m-%d %H:%M:%S")
+
+    return new_date
 
 
 def docs_have_titles():
@@ -46,6 +58,7 @@ def docs_have_titles():
 
 
 if __name__ == "__main__":
+    args = parser.parse_args()
     last_updated = get_last_update()
     docs_with_titles = docs_have_titles()
 
@@ -60,9 +73,13 @@ if __name__ == "__main__":
             SELECT COUNT(*)
             FROM regulations_comment rc2
             WHERE rc2.document_id = rc1.document_id
-            GROUP BY document_id
-            HAVING COUNT(*) > 20
-        )
+            GROUP BY document_id HAVING COUNT(*) > 20;
+            """
+    if args.refresh:
+        print("here!")
+        docs_to_update = """SELECT document_id
+        FROM regulations_comment
+        GROUP BY document_id;
         """
     else:
         docs_to_update = """SELECT document_id
@@ -78,7 +95,11 @@ if __name__ == "__main__":
     doc_gen = doc_generator(df_docs_to_update)
 
     title_creator = titles.TitleChain()
+    labeler = LabelChain()
     sbert_model = SentenceTransformer("all-mpnet-base-v2")
+    sentiment_analyzer = partial(
+        sentiment_analysis, pipeline=sentiment_pipeline
+    )
 
     for _ in range(len(docs_to_update)):
         try:
@@ -87,18 +108,26 @@ if __name__ == "__main__":
             comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
 
             # generate title if there is not already one
-            if doc_id not in docs_with_titles:
-                doc_summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
-                if doc_summary is not None:
-                    new_title = title_creator.invoke(paragraph=doc_summary)
-                    comment_data.doc_plain_english_title = new_title
+            comment_data.summary = titles.get_doc_summary(id=doc_id)[
+                0, "summary"
+            ]
+            if (
+                doc_id not in docs_with_titles and comment_data.summary
+            ) or args.refresh:
+                new_title = title_creator.invoke(paragraph=comment_data.summary)
+                comment_data.doc_plain_english_title = new_title
 
-            # TODO call topic code
-            # Get the current timestamp of nlp update
-            updated = datetime.datetime.now()
-            # TODO update nlp table with comment_data, updated time, and topic
-            # code
-            # TODO update document table with topic search terms
+            topic_model = HDAModel()
+            comment_data = topic_comment_analysis(
+                comment_data,
+                model=topic_model,
+                labeler=labeler,
+                sentiment_analyzer=sentiment_analyzer,
+            )
+
+            # TODO logging for upload errors
+            upload_comments(Database(), comment_data)
+
         except StopIteration:
             print("NLP Update Completed")
             break

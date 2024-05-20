@@ -10,7 +10,7 @@
 
 {% block content %}
 <div class="form-group">
-  <form action="/regulations/search/results/" method="GET">
+  <form action="/search/results/" method="GET">
     <input type="hidden" name="source" value="search_results">
     {% csrf_token %}
     {{ form.as_p }}
@@ -20,7 +20,7 @@
       <div class="container-sm py-0">
         <div class="input-group mb-4">
           <input class="form-control" id="q" name="q" type="text" value="{{Search.search_term}}">
-          <button class="btn btn-primary">Search</button>
+          <button class="btn btn-secondary">Search</button>
         </div>
       </div>
     </section>
