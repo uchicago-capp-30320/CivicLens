@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.postgres.search import (
     SearchHeadline,
     SearchQuery,
@@ -9,8 +11,13 @@ from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods
 
+from .forms import SearchForm
 from .models import AgencyReference, Comment, Document
+
+
+logger = logging.getLogger("django")
 
 
 def home(request):
@@ -21,26 +28,29 @@ def search_page(request):
     return render(request, "search_page.html")
 
 
-# require method decorqator to only allow GET requests
+@require_http_methods(["GET"])
 def search_results(request):  # noqa: C901
     today = timezone.now().date()
     context = {}
 
-    if request.method == "GET":
-        query = request.GET.get("q", "")
-        sort_by = request.GET.get("sort_by", "most_relevant")
-        selected_agencies = request.GET.getlist("selected_agencies", "")
-        search_results = request.GET.get("source", False)
+    form = SearchForm(request.GET)
+    if form.is_valid():
+        query = form.cleaned_data.get("q", "")
+        sort_by = form.cleaned_data.get("sort_by", "most_relevant")
+        selected_agencies = form.cleaned_data.get("selected_agencies", [])
+        search_results = form.cleaned_data.get("source", False)
         if search_results:
-            comments_any = request.GET.get("comments_any")
-            comments_over_hundred = request.GET.get("comments_over_hundred")
-            category_rule = request.GET.get("rule")
-            category_proprosed_rule = request.GET.get("proposed_rule")
-            category_notice = request.GET.get("notice")
-            category_other = request.GET.get("other")
+            comments_any = form.cleaned_data.get("comments_any")
+            comments_over_hundred = form.cleaned_data.get(
+                "comments_over_hundred"
+            )
+            category_rule = form.cleaned_data.get("rule", "")
+            category_proposed_rule = form.cleaned_data.get("proposed_rule", "")
+            category_notice = form.cleaned_data.get("notice", "")
+            category_other = form.cleaned_data.get("other", "")
             category_lst = [
                 category_rule,
-                category_proprosed_rule,
+                category_proposed_rule,
                 category_notice,
                 category_other,
             ]
@@ -63,7 +73,6 @@ def search_results(request):  # noqa: C901
                 .filter(comment_end_date__gte=today)
                 .order_by("-rank")
             )
-
             if not documents.exists():
                 documents = (
                     Document.objects.annotate(
@@ -95,10 +104,18 @@ def search_results(request):  # noqa: C901
                     documents = documents.filter(comment_count__gte=100)
 
             context["documents"] = documents
+
+        else:
+            query = ""
+            context["documents"] = None
+
     else:
+        logger.error("Form validation failed: %s", form.errors)
+        query = ""
         context["documents"] = None
 
     context["search"] = query
+    context["form"] = form
 
     return render(
         request,
@@ -206,7 +223,7 @@ def document(request, doc_id):  # noqa: E501
         "last_updated": "May 6, 2024",
         "document_id": "ED-2023-OPE-0123-26398",
     }
-    comments_nlp = {}
+    # comments_nlp = {}
     return render(
         request,
         "document.html",
