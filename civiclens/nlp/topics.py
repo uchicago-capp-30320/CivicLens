@@ -48,7 +48,7 @@ class HDAModel:
             docs.append(self.tokenizer(clean_text(comment.text).lower()))
             document_ids[idx] = comment.id
 
-        # remove numbers, tokens 2 character tokens, and stop words, lemmatize
+        # remove numbers, 2 character tokens, and stop words
         docs = [
             [
                 token
