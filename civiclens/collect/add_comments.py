@@ -51,7 +51,7 @@ def add_comments_for_existing_docs(df):
             print(f"no usable object id found for doc {document_id}")
 
 
-def main(doc_to_start=None):
+def main(doc_to_start):
     """
     This is a quick and dirty (hopefully one-time function) to add comments for
     docs that show fewer comments in the regulations_comment table than the API
@@ -83,8 +83,9 @@ if __name__ == "__main__":
         description="Input doc in the table that we left off on"
     )
     parser.add_argument(
-        "doc_to_start",
+        "--doc_to_start",
         type=str,
+        default=None,
         help="document we left off on",
     )
     args = parser.parse_args()
