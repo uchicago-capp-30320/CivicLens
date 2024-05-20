@@ -56,44 +56,56 @@
   </div>
   <div class="container">
     <p></p>
-    <h6 class="pt-4">Things to keep in mind</h6>
+    <h6 class="pt-5">Quick Facts</h6>
     <div class="card">
       <div class="card-body m-3">
         <h6 class="card-subtitle" style="color:#B43F37">What is currently open for comment?</h6>
         <p class="card-text mb-0">
-          As of {date}, there are:
+          As of {{last_updated}}, there are:
           <ul>
-            <li><strong>{total_docs_open}</strong> proposed rules, rules, or public notices <strong>open for comment</strong>.</li>
-            <li><strong>{total_docs_with_comments}</strong> proposed rules, rules, or public notices <strong>with at least one comment</strong>.</li>
-            <li><strong>{total_docs_with_no_comments}</strong> proposed rules, rules, or public notices <strong>with no existing comments</strong>.</li>
+            <li><strong>{{active_documents_count}}</strong> proposed rules, rules, public notices, or other documents <strong>open for comment</strong>.</li>
+            <li><strong>{{active_documents_with_comments}}</strong> proposed rules, rules, public notices, or other documents <strong>with at least one comment</strong>.</li>
+            <li><strong>{{active_documents_with_no_comments}}</strong> proposed rules, rules, public notices, or other documents <strong>with no existing comments</strong>.</li>
           </ul>
         </p>
         <p class="card-text mb-0">
-          Of the proposed rules, rules, or public notices that have comments, there are:
+          Of the proposed rules, rules, public notices, or other documents that have comments, there are <strong>on average</strong>:
           <ul>
-            <li><strong>{avg_comments}</strong>average total comments per document.</li>
-            <li><strong>{avg_unique_comments}</strong>average unique comments per document
+            <li><strong>{{avg_comments}}</strong> total comments per document.</li>
+            <!-- <li><strong>{avg_unique_comments}</strong> unique comments per document.
               <br>
-              <i>This figure collapses "form letters" that are submitted by multiple
-              commenters with the exact same langauge.</i>
-            </li>
+              <i>This figure consolidates "form letters" submitted by multiple commenters
+                using identical language, leaving only the distinct comments.
+              </i>
+            </li> -->
           </ul>
         </p>
       </div>
     </div>
     <div class="card">
       <div class="card-body m-3">
-        <h6 class="card-subtitle" style="color:#B43F37">Which  are have the most comments?</h6>
-        <p class="card-text">
-          The following proposed rules, rules, or notices are the currently most commented on of all current opportunities for public comment.
-          <ul>
-            {% for document in {{top_commented_documents}} %}
-            <li>
-              <a class="btn-link" href="{% url 'document' doc_id={{document.document_id}}%}">{{document.doc_plain_english_title}}</a>
-            </li>
-            {% endfor %}
-          </ul>
-        </p>
+        <h6 class="card-subtitle" style="color:#B43F37">Which documents currently open for comment in the federal register have the most comments?</h6>
+        <div class="card-text">
+          {% if top_commented_documents %}
+            <p class="pb-0">
+              The following proposed rules, rules, or notices are the currently most commented on of all current opportunities for public comment.
+            </p>
+            <ul>
+              {% for document in top_commented_documents %}
+              <li>
+                <a class="btn-link" href="{% url 'document' document.document_id %}">
+                  <strong>{{document.doc_plain_english_title}}</strong>
+                   ({{document.num_total_comments}} total comments, {{document.num_unique_comments}} unique comments)
+                  </a>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="pb-0">
+              There are currently no proposed rules, rules, or notices open for public comment.
+            </p>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
