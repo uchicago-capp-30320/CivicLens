@@ -104,8 +104,9 @@ if __name__ == "__main__":
         try:
             # do rep comment nlp
             doc_id = next(doc_gen)[0]
-            comment_data = comments.rep_comment_analysis(doc_id, 
-                                                         sentence_transformer)
+            comment_data = comments.rep_comment_analysis(
+                doc_id, sentence_transformer
+            )
 
             # generate title if there is not already one
             comment_data.summary = titles.get_doc_summary(id=doc_id)[
