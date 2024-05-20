@@ -14,13 +14,19 @@ from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
 
 
+# config logging
 logger = logging.getLogger(__name__)
 os.makedirs("nlp_logs", exist_ok=True)
+logging.getLogger("gensim").setLevel(logging.WARNING)
+logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
 logging.basicConfig(
+    format="%(asctime)s %(levelname)s %(message)s",
     filename=f'nlp_logs/{datetime.now().strftime("%Y-%m-%d")}_run.log',
     encoding="utf-8",
-    level=logging.WARNING,
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO,
 )
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--refresh", action="store_true", required=False)
@@ -84,7 +90,8 @@ if __name__ == "__main__":
             SELECT COUNT(*)
             FROM regulations_comment rc2
             WHERE rc2.document_id = rc1.document_id
-            GROUP BY document_id HAVING COUNT(*) > 20;"""  # noqa: E702, E231
+            GROUP BY document_id HAVING COUNT(*) > 20;
+            """  # noqa: E702, E231, E241
     if args.refresh:
         docs_to_update = """SELECT document_id
         FROM regulations_comment
@@ -111,7 +118,6 @@ if __name__ == "__main__":
 
     for doc_id in documents:
         # do rep comment nlp
-        logger.warning(f"Proccessed document: {doc_id}")
         comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
 
         # generate title if there is not already one
@@ -131,5 +137,5 @@ if __name__ == "__main__":
         )
 
         # TODO logging for upload errors
-        logger.warning(f"Proccessed document: {doc_id}")
+        logger.info(f"Proccessed document: {doc_id}")
         upload_comments(Database(), comment_data)
