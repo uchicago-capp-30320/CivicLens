@@ -95,7 +95,6 @@ if __name__ == "__main__":
 
     title_creator = titles.TitleChain()
     labeler = LabelChain()
-    sbert_model = sentence_transformer
     sentiment_analyzer = partial(
         sentiment_analysis, pipeline=sentiment_pipeline
     )
@@ -105,7 +104,8 @@ if __name__ == "__main__":
         try:
             # do rep comment nlp
             doc_id = next(doc_gen)[0]
-            comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
+            comment_data = comments.rep_comment_analysis(doc_id, 
+                                                         sentence_transformer)
 
             # generate title if there is not already one
             comment_data.summary = titles.get_doc_summary(id=doc_id)[
