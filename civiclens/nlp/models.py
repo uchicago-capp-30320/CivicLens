@@ -37,16 +37,16 @@ def model_path(model: str, tokenizer: bool, sbert: bool, model_func) -> str:
         )
     # if model isn't saved, download it and return its path
     if relative_path.exists():
-        return relative_path
+        return str(relative_path)
     else:
         if sbert:
-            model_download = model_func(
-                model_name_or_path=model, cache_folder=relative_path
-            )
+            print(relative_path, type(relative_path))
+            model_download = model_func(model_name_or_path=model)
+            model_download.save(path=str(relative_path))
         else:
             model_download = model_func(model)
             model_download.save_pretrained(relative_path, from_pt=True)
-        return relative_path
+        return str(relative_path)
 
 
 # title models
@@ -66,12 +66,13 @@ title_tokenizer_path = model_path(
 title_tokenizer = T5Tokenizer.from_pretrained(title_tokenizer_path)
 
 # topic models
-sentence_transformer = model_path(
+sentence_transformer_path = model_path(
     model="all-MiniLM-L6-v2",
     tokenizer=False,
     sbert=True,
     model_func=SentenceTransformer,
 )
+sentence_transformer = SentenceTransformer(sentence_transformer_path)
 
 label_token_path = model_path(
     model="fabiochiu/t5-base-tag-generation",
