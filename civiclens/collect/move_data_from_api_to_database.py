@@ -215,13 +215,13 @@ def add_data_quality_flag(
                     "data_type",
                     "error_message",
                     "added_at"
-                ) VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                ) VALUES (%s, %s, %s, %s)
                 ON CONFLICT (id) DO UPDATE SET
                     data_id = EXCLUDED.data_id,
                     data_type = EXCLUDED.data_type,
                     error_message = EXCLUDED.error_message,
                     added_at = EXCLUDED.added_at;""",
-                (data_id, data_type, str(error_message)),
+                (data_id, data_type, str(error_message), datetime.now()),
             )
         connection.commit()
 
