@@ -139,6 +139,8 @@ def test_pagination_handling():
     last_call_params = mock_get.call_args[1]["params"]
     assert "filter[lastModifiedDate][ge]" in last_call_params
     assert (
-        last_call_params["filter[lastModifiedDate][ge]"]
-        == "2024-04-17T12:00:00Z"
+        aad.format_datetime_for_api(
+            last_call_params["filter[lastModifiedDate][ge]"]
+        )
+        == "2024-04-12 12:00:00"
     )
