@@ -26,10 +26,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--refresh", action="store_true", required=False)
 
 
-def doc_generator(df: pl.DataFrame):
+def doc_generator(df: pl.DataFrame, doc_idx: int = 0):
     """creates a doc generator"""
     for row in df.iter_rows():
-        yield (row)
+        yield row[doc_idx]
 
 
 def get_last_update():
@@ -84,8 +84,7 @@ if __name__ == "__main__":
             SELECT COUNT(*)
             FROM regulations_comment rc2
             WHERE rc2.document_id = rc1.document_id
-            GROUP BY document_id HAVING COUNT(*) > 20;
-            """
+            GROUP BY document_id HAVING COUNT(*) > 20;"""  # noqa: E702, E231
     if args.refresh:
         docs_to_update = """SELECT document_id
         FROM regulations_comment
@@ -102,8 +101,7 @@ if __name__ == "__main__":
     df_docs_to_update = pull_data(
         query=docs_to_update, connection=db_docs, schema=["document"]
     )
-    doc_gen = doc_generator(df_docs_to_update)
-
+    documents = doc_generator(df_docs_to_update)
     title_creator = titles.TitleChain()
     labeler = LabelChain()
     sbert_model = SentenceTransformer("all-mpnet-base-v2")
@@ -111,35 +109,27 @@ if __name__ == "__main__":
         sentiment_analysis, pipeline=sentiment_pipeline
     )
 
-    for _ in range(len(docs_to_update)):
-        try:
-            # do rep comment nlp
-            doc_id = next(doc_gen)[0]
-            logger.warning(f"Proccessed document: {doc_id}")
-            comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
+    for doc_id in documents:
+        # do rep comment nlp
+        logger.warning(f"Proccessed document: {doc_id}")
+        comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
 
-            # generate title if there is not already one
-            comment_data.summary = titles.get_doc_summary(id=doc_id)[
-                0, "summary"
-            ]
-            if (
-                doc_id not in docs_with_titles and comment_data.summary
-            ) or args.refresh:
-                new_title = title_creator.invoke(paragraph=comment_data.summary)
-                comment_data.doc_plain_english_title = new_title
+        # generate title if there is not already one
+        comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
+        if (
+            doc_id not in docs_with_titles and comment_data.summary
+        ) or args.refresh:
+            new_title = title_creator.invoke(paragraph=comment_data.summary)
+            comment_data.doc_plain_english_title = new_title
 
-            topic_model = HDAModel()
-            comment_data = topic_comment_analysis(
-                comment_data,
-                model=topic_model,
-                labeler=labeler,
-                sentiment_analyzer=sentiment_analyzer,
-            )
+        topic_model = HDAModel()
+        comment_data = topic_comment_analysis(
+            comment_data,
+            model=topic_model,
+            labeler=labeler,
+            sentiment_analyzer=sentiment_analyzer,
+        )
 
-            # TODO logging for upload errors
-            logger.warning(f"Proccessed document: {doc_id}")
-            upload_comments(Database(), comment_data)
-
-        except StopIteration:
-            print("NLP Update Completed")
-            break
+        # TODO logging for upload errors
+        logger.warning(f"Proccessed document: {doc_id}")
+        upload_comments(Database(), comment_data)
