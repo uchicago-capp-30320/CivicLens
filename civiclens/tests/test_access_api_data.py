@@ -140,5 +140,5 @@ def test_pagination_handling():
     assert "filter[lastModifiedDate][ge]" in last_call_params
     assert (
         last_call_params["filter[lastModifiedDate][ge]"]
-        == "2024-04-17T12:00:00Z"
+        == "2024-04-16 08:00:00"
     )
