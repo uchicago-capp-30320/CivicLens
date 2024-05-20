@@ -13,12 +13,8 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-<<<<<<< 156-search_resultshtml-enhancements
 from .forms import SearchForm
-from .models import AgencyReference, Comment, Document
-=======
 from .models import AgencyReference, Comment, Document, NLPoutput
->>>>>>> main
 
 
 logger = logging.getLogger("django")
