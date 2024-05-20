@@ -5,7 +5,6 @@ from django.contrib.postgres.search import (
     SearchVector,
     TrigramSimilarity,
 )
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, render
@@ -120,6 +119,13 @@ def document(request, doc_id):  # noqa: E501
         .annotate(comment_count=Count("comment"))
     )
 
+    fed_register_url = {
+        "doc_posted_month": doc.posted_date.strftime("%m"),
+        "doc_posted_day": doc.posted_date.strftime("%d"),
+        "doc_posted_year": doc.posted_date.strftime("%Y"),
+        "doc_name_url": doc.title.replace(" ", "-").lower(),
+    }
+
     try:
         comments_api = (
             Comment.objects.filter(document=doc_id)
@@ -134,14 +140,6 @@ def document(request, doc_id):  # noqa: E501
     except Comment.DoesNotExist:
         comments_api = None
         unique_comments = 0
-
-    if comments_api:
-        try:
-            latest_comment = comments_api.latest("modify_date_only")
-            comments_last_updated = latest_comment.modify_date_only
-        except ObjectDoesNotExist:
-            comments_last_updated = "No comments found."
-    else:
         comments_last_updated = "No comments found."
 
     # test data from jack
@@ -208,7 +206,7 @@ def document(request, doc_id):  # noqa: E501
         "last_updated": "May 6, 2024",
         "document_id": "ED-2023-OPE-0123-26398",
     }
-    # comments_nlp = {}
+    comments_nlp = {}
     return render(
         request,
         "document.html",
@@ -218,9 +216,6 @@ def document(request, doc_id):  # noqa: E501
             "comments_api": comments_api,
             "unique_comments": unique_comments,
             "comments_last_updated": comments_last_updated,
+            "fed_register_url": fed_register_url,
         },
     )
-
-
-def comment(request):
-    return render(request, "comment.html")

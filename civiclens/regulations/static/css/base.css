@@ -3541,6 +3541,30 @@ input[type="button"].btn-block {
   padding: 1.75rem;
   color: #718096; }
 
+  .card-sm-custom {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: lightgray;
+    background-clip: border-box;
+    border: 1px solid #eaecf3;
+    background-color: lightgrey;
+    margin-bottom: 8px;
+    font-size: medium;
+    border-radius: 0.75rem;
+}
+
+.card-sm-custom > p {
+    margin-bottom: 0;
+}
+
+.card-sm-custom:hover .card-body .card-text {
+  color: #008AFF; /* #718096 */
+}
+
+
 .card-title {
   margin-bottom: 1.25rem; }
 
