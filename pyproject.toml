@@ -48,5 +48,5 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 env = [
-    "DJANGO_SETTINGS_MODULE=civiclens.website.test_settings"
+    "D:DATABASE_TEST=True"
 ]

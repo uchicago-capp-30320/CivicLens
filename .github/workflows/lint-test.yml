@@ -57,11 +57,11 @@ jobs:
     - name: run tests with pytest
       env:
         DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-        DATABASE_NAME: postgres
-        DATABASE_USER: postgres
-        DATABASE_PASSWORD: postgres
-        DATABASE_HOST: localhost
-        DATABASE_PORT: 5432
+        DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+        DATABASE_USER: ${{ secrets.DATABASE_USER }}
+        DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+        DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+        DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
         DJANGO_SETTINGS_MODULE: civiclens.website.test_settings
       run: poetry run pytest civiclens/tests
 
