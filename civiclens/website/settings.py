@@ -24,7 +24,7 @@ DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
 DATABASE_HOST = os.getenv("DATABASE_HOST")
 DATABASE_PORT = os.getenv("DATABASE_PORT")
 DATABASE_SSLMODE = os.getenv("DATABASE_SSLMODE")
-DATABASE_TEST = os.getenv("TEST")
+DATABASE_MODE = os.getenv("DATABASE_MODE")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -88,7 +88,7 @@ WSGI_APPLICATION = "website.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-if DATABASE_TEST:
+if DATABASE_MODE == "TEST":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",

@@ -48,5 +48,5 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 env = [
-    "D:DATABASE_TEST=True"
+    "DATABASE_MODE=TEST",
 ]
