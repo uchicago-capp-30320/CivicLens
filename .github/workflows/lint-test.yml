@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+env:
+  DJANGO_SETTINGS_MODULE: civiclens.website.settings
+
 permissions:
   contents: read
 
