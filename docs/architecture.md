@@ -6,7 +6,7 @@ At a modular level the application contains:
 
 - `/collect`: Contains library with functions to make calls to the regulations.gov API, data pipeline to run nightly chronjobs to collect newly posted data, and SQL files to create the tables that comprise our Postgres database.
 - `/nlp`: Models to generate representative comments, topic modeling, and sentiment analysis. Also holds scripts to run NLP jobs upon new data intake, along with updating the results of the analysis within the database.
-- `/regualtions`: Django backend hosting CivicLens. Models, views, and endpoints live here.
+- `/regulations`: Django backend hosting CivicLens. Models, views, and endpoints live here.
 - `/templates`: HTML for the website's pages, along with layouts and other HTML objects (navigational bars, footers).
 - `/tests`: Main testing suite for data intake, updating databases, NLP models, and helper functions.
 - `/utils`: Miscellaneous collection of helper functions and constants.

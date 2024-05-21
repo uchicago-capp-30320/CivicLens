@@ -18,9 +18,9 @@ class BulkDl:
             api_key (str): Stored API key for requests.
             base_url (str): Base URL for the API endpoint.
             headers (dict): Headers to include in API requests, containing API
-            key and content type.
+                key and content type.
             agencies (list[str]): List of agency identifiers (aggregated from
-            https://www.regulations.gov/agencies) to be used in API calls.
+                https://www.regulations.gov/agencies) to be used in API calls.
         """
         self.api_key = api_key
         self.base_url = "https://api.regulations.gov/v4"
@@ -287,7 +287,7 @@ class BulkDl:
 
         Returns:
             list: A list of items (dictionaries) fetched from all pages of the
-            API endpoint.
+                API endpoint.
         """
         items = []
         page = 1
@@ -436,7 +436,7 @@ class BulkDl:
 
         Yields:
             tuple: A tuple of (start_date, end_date) for each week within the
-            specified range.
+                specified range.
         """
         current_date = start_date
         while current_date < end_date:
@@ -457,7 +457,7 @@ class BulkDl:
 
         Returns:
             None: Results are saved directly to a csv file specified by
-            file_output_path.
+                file_output_path.
         """
         base_url = f"{self.base_url}/comments"
         results = []

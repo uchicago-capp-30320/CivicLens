@@ -6,7 +6,7 @@ def regex_tokenize(text: str, pattern: str = r"\W+"):
     """
     Splits strings into tokens base on regular expression.
 
-    Inputs:
+    Args:
         text: string to tokenize
         pattern: regular expression to split tokens on, defaults to white space
 
