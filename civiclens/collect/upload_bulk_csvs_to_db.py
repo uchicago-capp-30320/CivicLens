@@ -31,8 +31,9 @@ def get_document_objectId(doc_id: str) -> str:
     """
     Fetches the document objectId from the regulations.gov API
 
-    Input: doc_id (str): the id of a document
-    (the id you search with on regulations.gov)
+    Args:
+        doc_id (str): the id of a document
+        (the id you search with on regulations.gov)
 
     Returns: objectId (str): the objectId, which we use to link database tables
     """
@@ -72,7 +73,7 @@ def extract_fields_from_row(
     """
     Takes a polars row and outputs it in properly formatted dict
 
-    Inputs:
+    Args:
         df_row (polars df): a polars row representing a comment
         doc_objectId (str): the object id for the doc the comment is on.
         Not included in the csv, but necessary to insert into the db

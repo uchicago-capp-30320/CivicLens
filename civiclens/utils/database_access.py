@@ -78,9 +78,12 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
     """
     Uploads comment data to database.
 
-    Inputs:
+    Args:
         connection: Postgres client
         comments: comments to be uploaded
+
+    Returns:
+        None, uploads comments to database
     """
     query = """
     INSERT INTO regulations_nlpoutput (
