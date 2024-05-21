@@ -9,8 +9,5 @@ DATABASES = {
         "PASSWORD": DATABASE_PASSWORD,  # noqa: F405
         "HOST": DATABASE_HOST,  # noqa: F405
         "PORT": DATABASE_PORT,  # noqa: F405
-        "OPTIONS": {
-            "sslmode": DATABASE_SSLMODE,  # noqa: F405
-        },
     }
 }

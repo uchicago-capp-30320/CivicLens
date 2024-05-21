@@ -11,13 +11,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      DJANGO_SETTINGS_MODULE: civiclens.website.test_settings
-      POSTGRES_USER: ${{ secrets.DATABASE_USER }}
-      POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-      POSTGRES_HOST: ${{ secrets.DATABASE_HOST }}
-      POSTGRES_PORT: ${{ secrets.DATABASE_PORT }}
-      DATABASE_SSLMODE: ${{ secrets.DATABASE_SSLMODE }}
+    services:
+      postgres:
+        image: postgres:12.5
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 25060:25060
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
 
     strategy:
       matrix:
@@ -52,6 +56,14 @@ jobs:
     - run: poetry install
 
     - name: run tests with pytest
+      env:
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        DATABASE_HOST: ${{ secrets.POSTGRES_HOST }}
+        DATBASE_NAME: ${{ secrets.DATABASE_NAME }}
+        DATABASE_USER: ${{ secrets.DATABASE_USER }}
+        DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+        DJANGO_SETTINGS_MODULE: civiclens.website.test_settings
+        DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
       run: poetry run pytest civiclens/tests
 
   pre-commit:
