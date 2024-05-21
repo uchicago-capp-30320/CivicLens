@@ -72,7 +72,7 @@
           </div>
         </div>
 
-        <p class="text-right text-muted small">
+        <p class="text-right small">
           <a class="font-italic">comments last updated:</a> {{ comments_last_updated }}
         </p>
 
@@ -80,40 +80,65 @@
         <span class="h6 font-weight-bold">In the Weeds</span>
 
         <p></p>
-        <div class="card-sm" style="background-color: lightgrey;">
-          <div class="card-body py-2 px-3">
-            <p class="card-text">
-              <a class="font-weight-bold">Document ID</a>
-              <a class="font-weight-normal">{{ doc.id }}</a>
-            </p>
-          </div>
-        </div>
 
-        <div class="card-sm" style="background-color: lightgrey;">
+        <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank"
+        class="card-sm-custom">
           <div class="card-body py-2 px-3">
             <p class="card-text">
-              <a class="font-weight-bold">Federal Register ID</a>
-              <a class="font-weight-normal">{{ doc.fr_doc_num }}</a>
+              <span class="font-weight-bold">Document ID</span>
+              <span class="font-weight-normal">{{ doc.id }}</span>
             </p>
           </div>
-        </div>
+        </a>
 
-        <div class="card-sm" style="background-color: lightgrey;">
-          <div class="card-body py-2 px-3">
-            <p class="card-text">
-              <a class="font-weight-bold">Docket ID</a>
-              <a class="font-weight-normal">{{ doc.docket_id }}</a>
-            </p>
+        {% if doc.fr_doc_num %}
+          <a href="https://www.federalregister.gov/documents/{{fed_register_url.doc_posted_year}}/{{fed_register_url.doc_posted_month}}/{{fed_register_url.doc_posted_day}}/{{doc.fr_doc_num}}/{{fed_register_url.doc_name_url}}" target="_blank"
+          class="card-sm-custom">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <span class="font-weight-bold">Federal Register ID</span>
+                <span class="font-weight-normal">{{ doc.fr_doc_num }}</span>
+              </p>
+            </div>
+          </a>
+        {% else %}
+          <div class="card-sm" style="background-color: lightgrey;">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <a class="font-weight-bold">Federal Register ID</a>
+                <a class="font-weight-normal">{{ doc.fr_doc_num }}</a>
+              </p>
+            </div>
           </div>
-        </div>
+        {% endif %}
+        {% if doc.docket_id %}
+          <a href="https://www.regulations.gov/docket/{{doc.docket_id}}" target="_blank"
+          class="card-sm-custom">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <span class="font-weight-bold">Docket ID</span>
+                <span class="font-weight-normal">{{ doc.docket_id }}</span>
+              </p>
+            </div>
+          </a>
+        {% else %}
+          <div class="card-sm" style="background-color: lightgrey;">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <a class="font-weight-bold">Docket ID</a>
+                <a class="font-weight-normal">{{ doc.docket_id }}</a>
+              </p>
+            </div>
+          </div>
+        {% endif %}
 
         <p></p>
         <p class="small"> Want to get even more in the weeds? </p>
-        <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7;">
-          <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
-            Explore supplementary materials on regulations.gov
-          </a>
-        </button>
+        <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank"
+          class="btn btn-sm font-weight-normal text-white"
+          style="background-color:#B42F37; color:#FDFFF7;">
+          Explore supplementary materials on regulations.gov
+        </a>
       </div>
 
       <!-- container for the document summary, NLP results -->
@@ -145,7 +170,7 @@
             <p></p>
             <script type="text/javascript" src="{% static '/js/graph.js' %}"></script>
           </div>
-          <p class="text-right text-muted small">
+          <p class="text-right small">
             <a class="font-italic">topics last updated:</a> {{ comments_nlp.last_updated }}
           </p>
 
@@ -155,7 +180,7 @@
           <p>The following comments capture the core themes of the comments received.
             [potentially include some clarity on the methods used here].
           </p>
-          {% for rep_comment in comments_nlp.rep_comments %}
+          {% for rep_comment in comments_nlp.rep_comments|slice:":5" %}
           <!-- cards for each representative comment -->
             <div class="card p-0">
               <div class="card-body">
@@ -172,9 +197,9 @@
                 </div>
                 <div class="text-right">
                   {% if rep_comment.form_letter %}
-                    <p class="text-muted text-right mb-0">Form letter</p>
+                    <p class="text-right mb-0">Form letter</p>
                   {% else %}
-                    <p class="text-muted text-right mb-0">Unique comment</p>
+                    <p class="text-right mb-0">Unique comment</p>
                   {% endif %}
                 </div>
               </div>
@@ -186,7 +211,7 @@
           <p></p>
           <span class="h6">{{ doc.comment_count }} Total Comments</span>
           <p></p>
-          {% for comment in comments_api %}
+          {% for comment in comments_api|slice:":5" %}
           <!-- cards for each representative comment -->
             <div class="card p-0">
               <div class="card-body">
@@ -207,17 +232,17 @@
 
         {% if comments_nlp or comments_api  %}
           <div style="text-align: center;">
-            <button class="btn btn-sm" style="background-color:#21315C; color:#FDFFF7;">
-              <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
-                Add your own comment!
-              </a>
-            </button>
+            <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank"
+              class="btn btn-sm font-weight-normal text-white"
+              style="background-color:#21315C; color:#FDFFF7;">
+              Add your own comment!
+            </a>
 
-            <button class="btn btn-sm btn-outline-primary" style="background-color:white; color:#21315C;">
-              <a href="https://www.regulations.gov/document/{{doc.id}}/comment" target="_blank" class="font-weight-normal">
-                Browse all existing comments
-              </a>
-            </button>
+            <a href="https://www.regulations.gov/commenton/{{doc.id}}/comment" target="_blank"
+              class="btn btn-sm btn-outline-primary font-weight-normal"
+              style="background-color:white; color:#21315C;">
+              Browse all existing comments
+            </a>
           </div>
 
         {% else %}

@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.postgres.search import (
     SearchHeadline,
     SearchQuery,
@@ -5,13 +7,17 @@ from django.contrib.postgres.search import (
     SearchVector,
     TrigramSimilarity,
 )
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count
+from django.db.models import Avg, Count
 from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods
 
-from .models import AgencyReference, Comment, Document
+from .forms import SearchForm
+from .models import AgencyReference, Comment, Document, NLPoutput
+
+
+logger = logging.getLogger("django")
 
 
 def home(request):
@@ -19,29 +25,99 @@ def home(request):
 
 
 def search_page(request):
-    return render(request, "search_page.html")
+    today = timezone.now().date()
+
+    # find date for when one doc in the db was last updated (MVP technique)
+    last_updated = (
+        Document.objects.all()
+        .order_by(
+            "-last_modified_date",
+        )
+        .values("last_modified_date")[:1][0]["last_modified_date"]
+    )
+
+    # TOP 5 MOST COMMENTED ON WITH NLP ANALYSIS
+    # list of active documents open for comment
+    active_documents_ids = Document.objects.filter(
+        comment_end_date__gt=today
+    ).values("id")
+
+    # select top documents from NLP table where # of comments is highest
+    top_commented_documents = (
+        NLPoutput.objects.order_by("-num_total_comments")
+        .filter(document_id__in=active_documents_ids)
+        .values(
+            "doc_plain_english_title",
+            "num_total_comments",
+            "document_id",
+            "num_unique_comments",
+        )[:5]
+    )
+
+    # DATA FOR QUICK FACTS
+    active_documents_count = Document.objects.filter(
+        comment_end_date__gt=today
+    ).count()
+
+    # count by doc_id in comment table
+    comment_counts = Comment.objects.values("document_id").annotate(
+        comment_count=Count("id")
+    )
+
+    # join docs with comments, only on the docs open for comment
+    joined_table = (
+        Document.objects.all()
+        .select_related("comment_counts")
+        .filter(id__in=[item["document_id"] for item in comment_counts])
+    )
+    # count only the docs with any comments
+    active_documents_with_comments = joined_table.count()
+
+    # use NLP table to do the tallies
+    avg_comments = round(
+        comment_counts.aggregate(avg_comments=Avg("comment_count"))[
+            "avg_comments"
+        ]
+    )
+
+    return render(
+        request,
+        "search_page.html",
+        {
+            "top_commented_documents": top_commented_documents,
+            "active_documents_count": active_documents_count,
+            "active_documents_with_comments": active_documents_with_comments,
+            "active_documents_with_no_comments": active_documents_count
+            - active_documents_with_comments,
+            "avg_comments": avg_comments,
+            "last_updated": last_updated,
+        },
+    )
 
 
-# require method decorqator to only allow GET requests
+@require_http_methods(["GET"])
 def search_results(request):  # noqa: C901
     today = timezone.now().date()
     context = {}
 
-    if request.method == "GET":
-        query = request.GET.get("q", "")
-        sort_by = request.GET.get("sort_by", "most_relevant")
-        selected_agencies = request.GET.getlist("selected_agencies", "")
-        search_results = request.GET.get("source", False)
+    form = SearchForm(request.GET)
+    if form.is_valid():
+        query = form.cleaned_data.get("q", "")
+        sort_by = form.cleaned_data.get("sort_by", "most_relevant")
+        selected_agencies = form.cleaned_data.get("selected_agencies", [])
+        search_results = form.cleaned_data.get("source", False)
         if search_results:
-            comments_any = request.GET.get("comments_any")
-            comments_over_hundred = request.GET.get("comments_over_hundred")
-            category_rule = request.GET.get("rule")
-            category_proprosed_rule = request.GET.get("proposed_rule")
-            category_notice = request.GET.get("notice")
-            category_other = request.GET.get("other")
+            comments_any = form.cleaned_data.get("comments_any")
+            comments_over_hundred = form.cleaned_data.get(
+                "comments_over_hundred"
+            )
+            category_rule = form.cleaned_data.get("rule", "")
+            category_proposed_rule = form.cleaned_data.get("proposed_rule", "")
+            category_notice = form.cleaned_data.get("notice", "")
+            category_other = form.cleaned_data.get("other", "")
             category_lst = [
                 category_rule,
-                category_proprosed_rule,
+                category_proposed_rule,
                 category_notice,
                 category_other,
             ]
@@ -64,7 +140,6 @@ def search_results(request):  # noqa: C901
                 .filter(comment_end_date__gte=today)
                 .order_by("-rank")
             )
-
             if not documents.exists():
                 documents = (
                     Document.objects.annotate(
@@ -96,10 +171,18 @@ def search_results(request):  # noqa: C901
                     documents = documents.filter(comment_count__gte=100)
 
             context["documents"] = documents
+
+        else:
+            query = ""
+            context["documents"] = None
+
     else:
+        logger.error("Form validation failed: %s", form.errors)
+        query = ""
         context["documents"] = None
 
     context["search"] = query
+    context["form"] = form
 
     return render(
         request,
@@ -120,6 +203,13 @@ def document(request, doc_id):  # noqa: E501
         .annotate(comment_count=Count("comment"))
     )
 
+    fed_register_url = {
+        "doc_posted_month": doc.posted_date.strftime("%m"),
+        "doc_posted_day": doc.posted_date.strftime("%d"),
+        "doc_posted_year": doc.posted_date.strftime("%Y"),
+        "doc_name_url": doc.title.replace(" ", "-").lower(),
+    }
+
     try:
         comments_api = (
             Comment.objects.filter(document=doc_id)
@@ -134,14 +224,6 @@ def document(request, doc_id):  # noqa: E501
     except Comment.DoesNotExist:
         comments_api = None
         unique_comments = 0
-
-    if comments_api:
-        try:
-            latest_comment = comments_api.latest("modify_date_only")
-            comments_last_updated = latest_comment.modify_date_only
-        except ObjectDoesNotExist:
-            comments_last_updated = "No comments found."
-    else:
         comments_last_updated = "No comments found."
 
     # test data from jack
@@ -218,9 +300,6 @@ def document(request, doc_id):  # noqa: E501
             "comments_api": comments_api,
             "unique_comments": unique_comments,
             "comments_last_updated": comments_last_updated,
+            "fed_register_url": fed_register_url,
         },
     )
-
-
-def comment(request):
-    return render(request, "comment.html")

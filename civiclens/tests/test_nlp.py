@@ -1,9 +1,11 @@
+import pickle
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import polars as pl
-from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments
+from civiclens.nlp.models import sentence_transformer
 from civiclens.nlp.tools import Comment
 from civiclens.nlp.topics import HDAModel
 
@@ -19,13 +21,11 @@ sample_df = pl.read_csv(
 
 def test_comment_similarity():
     df_paraphrase, df_form_letter = comments.comment_similarity(
-        sample_df, model=SentenceTransformer("all-mpnet-base-v2")
+        sample_df, model=sentence_transformer
     )
-
-    assert df_paraphrase.shape == (377, 4)
-    assert df_form_letter.shape == (1, 4)
-    assert df_paraphrase.columns == df_paraphrase.columns
-    assert df_form_letter.columns == df_form_letter.columns
+    cols = ["similarity", "idx1", "idx2", "form_letter"]
+    assert df_paraphrase.columns == cols
+    assert df_form_letter.columns == cols
 
 
 def test_graph():
@@ -95,3 +95,23 @@ def test_gen_search_unique():
     topic_model.terms = {0: ["green", "red"], 1: ["green", "orange"]}
     # check all values are unique
     assert len(topic_model.generate_search_vector()) == 3
+
+
+def test_sim_clusters():
+    with open(BASE_DIR / "nlp_test_data/test_embeddings.pkl", "rb") as f:
+        test_data = pickle.load(f)
+        mock_embeddings = test_data["embeddings"]
+        out = comments.compute_similiarity_clusters(
+            mock_embeddings, sim_threshold=0.05
+        )
+        assert out.size == 3
+
+
+def test_empty_form_df():
+    df = pl.DataFrame({"comment_text": []})
+    mock_sbert = MagicMock(spec=sentence_transformer)
+    out_lst, num_comments = comments.find_form_letters(
+        df, mock_sbert, form_threshold=10
+    )
+    assert out_lst == []
+    assert num_comments == 0

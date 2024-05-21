@@ -2,7 +2,9 @@ import polars as pl
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
+from transformers import pipeline
 
+from civiclens.nlp.models import title_model, title_tokenizer
 from civiclens.utils.database_access import Database, pull_data
 
 
@@ -39,11 +41,15 @@ class TitleChain:
 
             Answer:"""
         self.prompt = PromptTemplate.from_template(self.template)
-        self.hf_pipeline = HuggingFacePipeline.from_model_id(
-            model_id="google/flan-t5-base",
-            task="text2text-generation",
-            pipeline_kwargs={"max_length": 20},
+        self.model = title_model
+        self.tokenizer = title_tokenizer
+        self.pipe = pipeline(
+            "text2text-generation",
+            model=self.model,
+            tokenizer=self.tokenizer,
+            max_length=20,
         )
+        self.hf_pipeline = HuggingFacePipeline(pipeline=self.pipe)
         self.parse = StrOutputParser()
         self.chain = self.prompt | self.hf_pipeline | self.parse
 

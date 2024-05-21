@@ -1,13 +1,17 @@
+import argparse
 from functools import partial
 
 import polars as pl
-from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments, titles
-from civiclens.nlp.models import sentiment_pipeline
+from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
 from civiclens.nlp.tools import sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--refresh", action="store_true", required=False)
 
 
 def doc_generator(df: pl.DataFrame):
@@ -53,6 +57,7 @@ def docs_have_titles():
 
 
 if __name__ == "__main__":
+    args = parser.parse_args()
     last_updated = get_last_update()
     docs_with_titles = docs_have_titles()
 
@@ -67,8 +72,13 @@ if __name__ == "__main__":
             SELECT COUNT(*)
             FROM regulations_comment rc2
             WHERE rc2.document_id = rc1.document_id
-            GROUP BY document_id
-            HAVING COUNT(*) > 20 )
+            GROUP BY document_id HAVING COUNT(*) > 20;
+            """
+    if args.refresh:
+        print("here!")
+        docs_to_update = """SELECT document_id
+        FROM regulations_comment
+        GROUP BY document_id;
         """
     else:
         docs_to_update = """SELECT document_id
@@ -85,7 +95,6 @@ if __name__ == "__main__":
 
     title_creator = titles.TitleChain()
     labeler = LabelChain()
-    sbert_model = SentenceTransformer("all-mpnet-base-v2")
     sentiment_analyzer = partial(
         sentiment_analysis, pipeline=sentiment_pipeline
     )
@@ -94,13 +103,17 @@ if __name__ == "__main__":
         try:
             # do rep comment nlp
             doc_id = next(doc_gen)[0]
-            comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
+            comment_data = comments.rep_comment_analysis(
+                doc_id, sentence_transformer
+            )
 
             # generate title if there is not already one
             comment_data.summary = titles.get_doc_summary(id=doc_id)[
                 0, "summary"
             ]
-            if doc_id not in docs_with_titles and comment_data.summary:
+            if (
+                doc_id not in docs_with_titles and comment_data.summary
+            ) or args.refresh:
                 new_title = title_creator.invoke(paragraph=comment_data.summary)
                 comment_data.doc_plain_english_title = new_title
 
