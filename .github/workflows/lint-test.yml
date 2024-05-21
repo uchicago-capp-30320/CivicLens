@@ -43,7 +43,7 @@ jobs:
     - run: poetry install
 
     - name: run tests with pytest
-      run: poetry run pytest
+      run: poetry run pytest civiclens/tests
 
   pre-commit:
     runs-on: ubuntu-latest
