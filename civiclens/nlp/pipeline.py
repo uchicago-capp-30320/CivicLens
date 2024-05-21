@@ -5,10 +5,9 @@ from datetime import datetime
 from functools import partial
 
 import polars as pl
-from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments, titles
-from civiclens.nlp.models import sentiment_pipeline
+from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
 from civiclens.nlp.tools import sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
@@ -111,14 +110,15 @@ if __name__ == "__main__":
     documents = doc_generator(df_docs_to_update)
     title_creator = titles.TitleChain()
     labeler = LabelChain()
-    sbert_model = SentenceTransformer("all-mpnet-base-v2")
     sentiment_analyzer = partial(
         sentiment_analysis, pipeline=sentiment_pipeline
     )
 
     for doc_id in documents:
         # do rep comment nlp
-        comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
+        comment_data = comments.rep_comment_analysis(
+            doc_id, sentence_transformer
+        )
 
         # generate title if there is not already one
         comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
