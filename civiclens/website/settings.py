@@ -98,7 +98,6 @@ DATABASES = {
         "OPTIONS": {
             "sslmode": DATABASE_SSLMODE,
         },
-        "TEST": {"NAME": "test_civiclens"},
     }
 }
 
