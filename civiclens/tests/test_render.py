@@ -1,4 +1,12 @@
 import pytest
+from regulations.models import Document
+
+
+@pytest.mark.django_db()
+def test_hit_db():
+    """Make sure test database is working"""
+    doc = Document.objects.get(id="HHS-OMH-2024-0004-0001")
+    assert doc.id == "HHS-OMH-2024-0004-0001"
 
 
 @pytest.mark.django_db
@@ -19,9 +27,9 @@ def test_404(client):
 @pytest.mark.django_db
 def test_document_renders(client):
     """Document summary renders for random document"""
-    full_url = "/docs/CMS-2024-0131-0025"
+    full_url = "/docs/HHS-OMH-2024-0004-0001"
     response = client.get(full_url)
-    assert response.status_code == 404
+    assert response.status_code == 200
 
 
 @pytest.mark.django_db
