@@ -14,19 +14,16 @@ jobs:
 
     services:
       postgres:
-        image: postgres:13
+        image: postgres
         env:
-          POSTGRES_USER: ${{ secrets.DATABASE_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
-          POSTGRES_HOST: ${{ secrets.DATABASE_HOST }}
-          POSTGRES_PORT: ${{ secrets.DATABASE_PORT }}
-          POSTGRES_OPTS: >-
-            -c sslmode=${{ secrets.DATABASE_SSLMODE }}
-
-    env:
-      DJANGO_SETTINGS_MODULE: civiclens.website.settings
-      DATABASE_URL: postgres://${{ secrets.DATABASE_USER }}:${{ secrets.DATABASE_PASSWORD }}@${{ secrets.DATABASE_HOST }}:${{ secrets.DATABASE_PORT }}/${{ secrets.DATABASE_NAME }}
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     strategy:
       matrix:
@@ -58,10 +55,16 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-poetry-
 
-    # - run: poetry install
+    - run: poetry install
 
-    # - name: run tests with pytest
-    #   run: poetry run pytest civiclens/tests
+    - name: run tests with pytest
+      run: poetry run pytest civiclens/tests
+      env:
+        DATABASE_NAME: postgres
+        DATABASE_USER: postgres
+        DATABASE_PASS: postgres
+        DATABASE_HOST: postgres
+        DATABASE_PORT: 5432
 
   pre-commit:
     runs-on: ubuntu-latest
