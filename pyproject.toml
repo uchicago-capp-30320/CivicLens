@@ -47,4 +47,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "civiclens.website.settings"
-python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]
+python_files = ["tests/test_*.py"]
