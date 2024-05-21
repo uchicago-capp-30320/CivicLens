@@ -1,0 +1,55 @@
+site_name: CivicLens DOCS
+repo_url: https://github.com/uchicago-capp-30320/CivicLens
+repo_name: uchicago-capp-30320/CivicLens
+
+theme:
+  name: material
+
+plugins:
+- search
+- autorefs
+- mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [civclens]
+          options:
+            show_source: True
+            show_root_full_path: false
+            show_root_toc_entry: false
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - tables
+  - pymdownx.highlight
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+nav:
+  - "index.md"
+  - "models.md"
+  - "architecture.md"
+  - "collect.md"
+  - "nlp.md"
+  - API Reference:
+    - "collect.md"
+    - "nlp.md"
+  - Endpoints:
+    - "endpoints/regulations.md"
+    - "endpoints/search.md"
+    - "endpoints/document.md"

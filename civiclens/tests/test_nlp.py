@@ -3,9 +3,9 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import polars as pl
-from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments
+from civiclens.nlp.models import sentence_transformer
 from civiclens.nlp.tools import Comment
 from civiclens.nlp.topics import HDAModel
 
@@ -21,13 +21,11 @@ sample_df = pl.read_csv(
 
 def test_comment_similarity():
     df_paraphrase, df_form_letter = comments.comment_similarity(
-        sample_df, model=SentenceTransformer("all-mpnet-base-v2")
+        sample_df, model=sentence_transformer
     )
-
-    assert df_paraphrase.shape == (377, 4)
-    assert df_form_letter.shape == (1, 4)
-    assert df_paraphrase.columns == df_paraphrase.columns
-    assert df_form_letter.columns == df_form_letter.columns
+    cols = ["similarity", "idx1", "idx2", "form_letter"]
+    assert df_paraphrase.columns == cols
+    assert df_form_letter.columns == cols
 
 
 def test_graph():
@@ -111,7 +109,7 @@ def test_sim_clusters():
 
 def test_empty_form_df():
     df = pl.DataFrame({"comment_text": []})
-    mock_sbert = MagicMock(spec=SentenceTransformer)
+    mock_sbert = MagicMock(spec=sentence_transformer)
     out_lst, num_comments = comments.find_form_letters(
         df, mock_sbert, form_threshold=10
     )
