@@ -228,22 +228,13 @@
         {% elif nlp.comments %}
           <hr>
           <p></p>
-          <span class="h6">{{ doc.comment_count }} Total Comments</span>
+          <span class="h6">Comments</span>
           <p></p>
           {% for comment in nlp.comments|slice:":5" %}
           <!-- cards for each representative comment -->
             <div class="card p-0">
               <div class="card-body">
-                <p class="card-text p-2">{{ comment.comment }}</p>
-              </div>
-              <div class="card-footer p-2">
-                {% comment %} {% if comment.organization %}
-                  <p class="text-muted text-right mb-0">comment.commenter_name</p>
-                {% elif comment.last_name %}
-                  <p class="text-muted text-right mb-0">{{comment.first_name}} {{comment.last_name}}</p>
-                {% endif %} {% endcomment %}
-                <p class="text-muted text-right">commented on {{ comment.posted_date_only }}.</p>
-
+                <p class="card-text p-2">{{ comment.text }}</p>
               </div>
             </div>
           {% endfor %}
