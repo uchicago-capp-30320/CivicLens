@@ -11,28 +11,26 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.11', '3.12']
 
     services:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          POSTGRES_USER: ${{ secrets.DATABASE_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
+          POSTGRES_HOST: ${{ secrets.DATABASE_HOST }}
+          POSTGRES_PORT: ${{ secrets.DATABASE_PORT }}
+          POSTGRES_OPTS: >-
+            -c sslmode=${{ secrets.DATABASE_SSLMODE }}
 
     env:
-      DJANGO_SETTINGS_MODULE: civiclens.website.settings
-      DATABASE_URL: postgres://postgres:postgres@localhost/test_db
+      DJANGO_SETTINGS_MODULE: myproject.settings_test
+      DATABASE_URL: postgres://${{ secrets.DATABASE_USER }}:${{ secrets.DATABASE_PASSWORD }}@${{ secrets.DATABASE_HOST }}:${{ secrets.DATABASE_PORT }}/${{ secrets.DATABASE_NAME }}
+
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
 
     steps:
     - uses: actions/checkout@v4
