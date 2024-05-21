@@ -208,7 +208,7 @@ def add_data_quality_flag(
 ) -> None:
     """Add data to the regulations_dataqa table is qa assert statements flag
 
-    Inputs:
+    Args:
         data_id (str): id field of the data in question
         data_type (str): whether docket, document, or comment
         error_message (Error): the error and message raised by the assert
@@ -393,7 +393,7 @@ def add_dockets_to_db(
 
     Args:
         doc_list (list of json objects): what is returned from an API call
-        for documents
+            for documents
         print_statements (boolean): whether to print info on progress
 
     """
@@ -436,7 +436,7 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
 
     Returns:
         merged_doc (json): the json with fields for text from federal register
-        API
+            API
     """
 
     # extract the document text using the general register API
@@ -715,7 +715,7 @@ def add_documents_to_db(
 
     Args:
         doc_list (list of json objects): what is returned from an API call for
-        documents
+            documents
         print_statements (boolean): whether to print info on progress
 
     """
@@ -1115,7 +1115,7 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
 
     Args:
         document_object_id (str): the object id for the document we want
-        comments for (comes from the document json object)
+            comments for (comes from the document json object)
 
     Returns: nothing; adds comments, if available, to the db
     """
@@ -1198,7 +1198,7 @@ def add_comments_to_db(
 
     Args:
         doc_list (list of json objects): what is returned from an API call for
-        documents
+            documents
         print_statements (boolean): whether to print info on progress
 
     """
@@ -1240,9 +1240,9 @@ def add_comments_based_on_comment_date_range(
 
     Args:
         start_date (str): the date in YYYY-MM-DD format to pull data from
-        (inclusive)
+            (inclusive)
         end_date (str): the date in YYYY-MM-DD format to stop the data pull
-        (inclusive)
+            (inclusive)
 
     Returns: nothing; adds comments, if available, to the db
     """
@@ -1286,9 +1286,9 @@ def pull_all_api_data_for_date_range(
 
     Args:
         start_date (str): the date in YYYY-MM-DD format to pull data from
-        (inclusive)
+            (inclusive)
         end_date (str): the date in YYYY-MM-DD format to stop the data pull
-        (inclusive)
+            (inclusive)
         pull_dockets (boolean):
 
     Returns:

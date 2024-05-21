@@ -1,3 +1,5 @@
+"""Pipeline for running all NLP analysis and updating the database
+"""
 import argparse
 from functools import partial
 
