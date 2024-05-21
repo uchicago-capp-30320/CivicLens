@@ -181,9 +181,13 @@ def search_results(request):  # noqa: C901
             if search_results:
                 documents = documents.filter(document_type__in=category_lst)
                 if comments_any:
-                    documents = documents.filter(comment_count__gte=1)
+                    documents = documents.filter(
+                        nlpoutput__num_total_comments__gte=1
+                    )
                 if comments_over_hundred:
-                    documents = documents.filter(comment_count__gte=100)
+                    documents = documents.filter(
+                        nlpoutput__num_total_comments__gte=100
+                    )
 
             paginator = Paginator(documents, 20)
             page_number = request.GET.get("page")
