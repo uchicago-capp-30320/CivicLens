@@ -7,8 +7,8 @@ from typing import Callable
 import gensim.corpora as corpora
 from gensim.corpora import Dictionary
 from gensim.models import HdpModel, Phrases
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
+from civiclens.nlp.models import label_model, label_tokenizer
 from civiclens.nlp.tools import Comment, RepComments
 from civiclens.utils.text import clean_text, regex_tokenize
 
@@ -149,12 +149,8 @@ class HDAModel:
 
 class LabelChain:
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "fabiochiu/t5-base-tag-generation"
-        )
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(
-            "fabiochiu/t5-base-tag-generation"
-        )
+        self.tokenizer = label_tokenizer
+        self.model = label_model
 
     def generate_label(self, terms: list[str]) -> tuple:
         """
