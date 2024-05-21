@@ -61,7 +61,7 @@ def check_current_status(open_docs: list) -> None:
 
     Args:
         open_docs (list): a list of tuples of the form (id, docket_id,
-        closing_date)
+            closing_date)
     """
     for id, closing_date in open_docs:
         if closing_date < datetime.now().date():
