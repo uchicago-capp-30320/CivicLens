@@ -15,9 +15,13 @@ jobs:
       postgres:
         image: postgres
         env:
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DATABASE_NAME: postgres
           DATABASE_USER: postgres
           DATABASE_PASSWORD: postgres
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 5432
+          DJANGO_SETTINGS_MODULE: civiclens.website.test_settings
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
