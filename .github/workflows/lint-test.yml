@@ -5,7 +5,14 @@ on:
   pull_request:
 
 env:
-  DJANGO_SETTINGS_MODULE: civiclens.website.settings
+  DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+  DJANGO_SETTINGS_MODULE: ${{ secrets.DJANGO_SETTINGS_MODULE }}
+  DATABASE: ${{ secrets.DATABASE }}
+  DATABASE_USER: ${{ secrets.DATABASE_USER }}
+  DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+  DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+  DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+  DATABASE_SSLMODE: ${{ secrets.DATABASE_SSLMODE }}
 
 permissions:
   contents: read
