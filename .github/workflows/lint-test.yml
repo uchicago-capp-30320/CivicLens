@@ -4,7 +4,6 @@ on:
   push:
   pull_request:
 
-
 permissions:
   contents: read
 
@@ -12,21 +11,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: ${{ secrets.DATABASE_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
-          POSTGRES_HOST: ${{ secrets.DATABASE_HOST }}
-          POSTGRES_PORT: ${{ secrets.DATABASE_PORT }}
-          POSTGRES_OPTS: >-
-            -c sslmode=${{ secrets.DATABASE_SSLMODE }}
-
     env:
-      DJANGO_SETTINGS_MODULE: myproject.settings_test
-      DATABASE_URL: postgres://${{ secrets.DATABASE_USER }}:${{ secrets.DATABASE_PASSWORD }}@${{ secrets.DATABASE_HOST }}:${{ secrets.DATABASE_PORT }}/${{ secrets.DATABASE_NAME }}
+      DJANGO_SETTINGS_MODULE: civiclens.website.test_settings
+      POSTGRES_USER: ${{ secrets.DATABASE_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      POSTGRES_HOST: ${{ secrets.DATABASE_HOST }}
+      POSTGRES_PORT: ${{ secrets.DATABASE_PORT }}
+      DATABASE_SSLMODE: ${{ secrets.DATABASE_SSLMODE}}
 
     strategy:
       matrix:
@@ -61,7 +52,7 @@ jobs:
     - run: poetry install
 
     - name: run tests with pytest
-      run: poetry run pytest civiclens/tests
+      run: poetry run pytest
 
   pre-commit:
     runs-on: ubuntu-latest
