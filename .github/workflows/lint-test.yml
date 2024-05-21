@@ -17,7 +17,7 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       POSTGRES_HOST: ${{ secrets.DATABASE_HOST }}
       POSTGRES_PORT: ${{ secrets.DATABASE_PORT }}
-      DATABASE_SSLMODE: ${{ secrets.DATABASE_SSLMODE}}
+      DATABASE_SSLMODE: ${{ secrets.DATABASE_SSLMODE }}
 
     strategy:
       matrix:
@@ -52,7 +52,7 @@ jobs:
     - run: poetry install
 
     - name: run tests with pytest
-      run: poetry run pytest
+      run: poetry run pytest civiclens/tests
 
   pre-commit:
     runs-on: ubuntu-latest
