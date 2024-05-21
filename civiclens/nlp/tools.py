@@ -94,7 +94,7 @@ def sentiment_analysis(comment: Comment, pipeline: pipeline) -> str:
     """
     Analyze sentiment of a comment.
 
-    Inputs:
+    Args:
         comment: Comment object
         pipeline: Hugging Face pipeline for conducting sentiment analysis
 
