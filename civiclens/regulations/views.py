@@ -24,6 +24,10 @@ def home(request):
     return render(request, "home.html")
 
 
+def about(request):
+    return render(request, "about.html")
+
+
 def search_page(request):
     today = timezone.now().date()
 
