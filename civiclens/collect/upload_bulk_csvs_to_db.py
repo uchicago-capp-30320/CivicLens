@@ -31,8 +31,9 @@ def get_document_objectId(doc_id: str) -> str:
     """
     Fetches the document objectId from the regulations.gov API
 
-    Input: doc_id (str): the id of a document
-    (the id you search with on regulations.gov)
+    Args:
+        doc_id (str): the id of a document
+        (the id you search with on regulations.gov)
 
     Returns: objectId (str): the objectId, which we use to link database tables
     """
