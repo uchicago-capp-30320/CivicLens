@@ -33,8 +33,7 @@ def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
 
     text = re.sub(r"&#39;", "'", text)  # this replaces html entity with '
     text = re.sub(r"&rdquo;", '"', text)  # this replaces html entity with "
-    text = re.sub(r"&rdquo;", '"', text)  # this replaces html entity with "
-    text = re.sub(r"&amp;", '"', text)  # this replaces html entity with &
+    text = re.sub(r"&amp;", "&", text)  # this replaces html entity with &
     text = re.sub(r"â", "", text)
     text = re.sub(r"<br\s*/?>", "", text)
 

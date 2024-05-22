@@ -5,8 +5,12 @@ from typing import List, Optional, Tuple
 
 import polars as pl
 import psycopg2
+from dotenv import load_dotenv
 
 from civiclens.nlp.tools import RepComments
+
+
+load_dotenv()
 
 
 class Database:

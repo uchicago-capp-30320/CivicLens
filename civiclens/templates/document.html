@@ -182,9 +182,8 @@
             with each topic.
 
           </p>
-          <div class="row pt-2 pb-2" style="background-color: #FDFFF7; height: 250px;" id="chart">
-            <!-- hacky way to get comments.topics into the script -->
-            <!-- this is where we might be able to do alt text -->
+          <div class="row pt-2 pb-2" style="background-color: #FDFFF7; height: 250px;" id="chart"
+            title='{% for topic in nlp.topics %}{% for topic_0 in topic.topic|slice:":1" %}The topic {{topic_0}} had {{topic.total}} total comments.{% endfor %}{% endfor %}'>
             <div id="topics" style="display: none;">
               {{nlp.topics}}
             </div>
