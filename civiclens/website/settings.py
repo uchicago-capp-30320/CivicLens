@@ -42,7 +42,7 @@ ALLOWED_HOSTS = [
     "civic-lens.org",
     "127.0.0.1",
     "localhost",
-    "www.civic-lens.org"
+    "www.civic-lens.org",
 ]
 
 # Application definition
