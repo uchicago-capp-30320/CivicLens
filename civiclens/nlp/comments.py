@@ -23,7 +23,7 @@ def get_doc_comments(id: str) -> pl.DataFrame:
         SELECT id, document_id, comment
         FROM regulations_comment
         WHERE document_id = '{id}';
-        """
+        """  # noqa: E702, E231, E241
     # filter out attached files
     db = Database()
     df = pull_data(
@@ -364,9 +364,12 @@ def rep_comment_analysis(id: str, model: SentenceTransformer) -> RepComments:
         comment_data.rep_comments = form_letters + df_rep_paraphrase.to_dicts()
         comment_data.num_representative_comment = len(comment_data.rep_comments)
 
+    num_paraphrased = count_unique_comments(df_paraphrases)
     comment_data.num_total_comments = df.shape[0]
     comment_data.num_unique_comments = (
-        count_unique_comments(df_paraphrases) + num_form_letters
+        num_paraphrased + num_form_letters
+        if num_paraphrased < comment_data.num_total_comments
+        else num_paraphrased
     )
 
     return comment_data
