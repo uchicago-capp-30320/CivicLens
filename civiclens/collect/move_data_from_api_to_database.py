@@ -29,7 +29,6 @@ logging.basicConfig(
     handlers=[logging.FileHandler("pull_data.log"), logging.StreamHandler()],
 )
 
-
 def fetch_fr_document_details(fr_doc_num: str) -> str:
     """
     Retrieves xml url for document text from federal register.
