@@ -1252,26 +1252,27 @@ def add_comments_based_on_comment_date_range(
         start_date=start_date,
         end_date=end_date,
     )
+
     for comment in comment_data:
-        object_id = comment["attributes"]["objectId"]
-        if verify_database_existence(
-            "regulations_document", object_id, "object_id"
-        ):
-            all_comment_data = merge_comment_text_and_data(
+        print(f"processing comment {comment['id']} ")
+        all_comment_data = merge_comment_text_and_data(
                 REG_GOV_API_KEY, comment
             )
 
-            # clean
-            clean_comment_data(all_comment_data)
+        # clean
+        print("cleaning comment")
+        clean_comment_data(all_comment_data)
 
-            # qa
-            qa_comment_data(all_comment_data)
+        # qa
+        print("qa-ing comment")
+        qa_comment_data(all_comment_data)
 
-            # insert
-            insert_response = insert_comment_into_db(all_comment_data)
-            if insert_response["error"]:
-                print(insert_response["description"])
-                # would want to add logging here
+        # insert
+        insert_response = insert_comment_into_db(all_comment_data)
+        if insert_response["error"]:
+            print(insert_response["description"])
+        else:
+            print(f"added comment {all_comment_data['id']} to the db")
 
 
 def pull_all_api_data_for_date_range(
