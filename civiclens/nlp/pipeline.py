@@ -1,11 +1,12 @@
+"""Pipeline for running all NLP analysis and updating the database
+"""
 import argparse
 from functools import partial
 
 import polars as pl
-from sentence_transformers import SentenceTransformer
 
 from civiclens.nlp import comments, titles
-from civiclens.nlp.models import sentiment_pipeline
+from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
 from civiclens.nlp.tools import sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
@@ -96,7 +97,6 @@ if __name__ == "__main__":
 
     title_creator = titles.TitleChain()
     labeler = LabelChain()
-    sbert_model = SentenceTransformer("all-mpnet-base-v2")
     sentiment_analyzer = partial(
         sentiment_analysis, pipeline=sentiment_pipeline
     )
@@ -105,15 +105,17 @@ if __name__ == "__main__":
         try:
             # do rep comment nlp
             doc_id = next(doc_gen)[0]
-            comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
+            comment_data = comments.rep_comment_analysis(
+                doc_id, sentence_transformer
+            )
 
             # generate title if there is not already one
             comment_data.summary = titles.get_doc_summary(id=doc_id)[
                 0, "summary"
             ]
-            if (
-                doc_id not in docs_with_titles and comment_data.summary
-            ) or args.refresh:
+            if (doc_id not in docs_with_titles and comment_data.summary) or (
+                args.refresh and comment_data.summary
+            ):
                 new_title = title_creator.invoke(paragraph=comment_data.summary)
                 comment_data.doc_plain_english_title = new_title
 

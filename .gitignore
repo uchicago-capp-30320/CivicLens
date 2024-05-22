@@ -282,3 +282,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# nlp models
+civiclens/nlp/saved_models/

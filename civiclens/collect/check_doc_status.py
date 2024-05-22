@@ -17,7 +17,8 @@ from civiclens.utils.constants import REG_GOV_API_KEY
 def get_open_docs() -> list:
     """
     Get all documents that are open in the database.
-    Outputs:
+
+    Returns:
         open_docs (list): a list of tuples of the form (id, closing_date)
     """
     conn, cur = connect_db_and_get_cursor()
@@ -35,7 +36,8 @@ def get_open_docs() -> list:
 def close_doc_comment(doc_id: str) -> None:
     """
     Update the status of a document in the database to closed.
-    Inputs:
+
+    Args:
         doc_id (int): the id of the document to update
 
     """
@@ -56,9 +58,10 @@ def check_current_status(open_docs: list) -> None:
     - if the closing date has passed, update the status to closed
     - if the closing date is in the future, call the regulations.gov API to
     get the current status
-    Inputs:
+
+    Args:
         open_docs (list): a list of tuples of the form (id, docket_id,
-        closing_date)
+            closing_date)
     """
     for id, closing_date in open_docs:
         if closing_date < datetime.now().date():
