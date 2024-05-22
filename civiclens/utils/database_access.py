@@ -87,7 +87,8 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
     """
     query = """
     INSERT INTO regulations_nlpoutput (
-            rep_comments,
+            comments,
+            is_representative,
             doc_plain_english_title,
             num_total_comments,
             num_unique_comments,
@@ -98,23 +99,26 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
             created_at,
             search_topics,
             document_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT(document_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (document_id)
         DO UPDATE SET
-            rep_comments = EXCLUDED.rep_comments,
+            comments = EXCLUDED.comments,
+            is_representative = EXCLUDED.is_representative,
             doc_plain_english_title = EXCLUDED.doc_plain_english_title,
             num_total_comments = EXCLUDED.num_total_comments,
             num_unique_comments = EXCLUDED.num_unique_comments,
             num_representative_comment = EXCLUDED.num_representative_comment,
             topics = EXCLUDED.topics,
-            last_updated = EXCLUDED.last_updated,
+            num_topics = EXCLUDED.num_topics,
+            last_updated = NOW(),
             search_topics = EXCLUDED.search_topics
-        WHERE (regulations_nlpoutput.last_updated < EXCLUDED.last_updated
-                or regulations_nlpoutput.last_updated IS NULL);
+        WHERE regulations_nlpoutput.last_updated IS NULL
+            OR regulations_nlpoutput.last_updated < EXCLUDED.last_updated;
             """
 
     values = (
         json.dumps(comments.rep_comments),
+        comments.representative,
         comments.doc_plain_english_title,
         comments.num_total_comments,
         comments.num_unique_comments,

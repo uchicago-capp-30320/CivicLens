@@ -1,6 +1,9 @@
 """Pipeline for running all NLP analysis and updating the database
 """
 import argparse
+import logging
+import os
+from datetime import datetime
 from functools import partial
 
 import polars as pl
@@ -12,14 +15,28 @@ from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
 
 
+# config logging
+logger = logging.getLogger(__name__)
+os.makedirs("nlp_logs", exist_ok=True)
+logging.getLogger("gensim").setLevel(logging.WARNING)
+logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s %(message)s",
+    filename=f'nlp_logs/{datetime.now().strftime("%Y-%m-%d")}_run.log',
+    encoding="utf-8",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO,
+)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--refresh", action="store_true", required=False)
 
 
-def doc_generator(df: pl.DataFrame):
+def doc_generator(df: pl.DataFrame, doc_idx: int = 0):
     """creates a doc generator"""
     for row in df.iter_rows():
-        yield (row)
+        yield row[doc_idx]
 
 
 def get_last_update():
@@ -60,76 +77,69 @@ def docs_have_titles():
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    last_updated = get_last_update()
-    docs_with_titles = docs_have_titles()
 
-    # what docs need comment nlp update
-    if last_updated is not None:
-        docs_to_update = f"""SELECT document_id
-        FROM regulations_comment rc1
-        WHERE posted_date >= TIMESTAMP '{last_updated}'
-        GROUP BY document_id
-        HAVING COUNT(*) > 20
-        AND COUNT(*) >= 0.1 * (
-            SELECT COUNT(*)
-            FROM regulations_comment rc2
-            WHERE rc2.document_id = rc1.document_id
-            GROUP BY document_id HAVING COUNT(*) > 20;
-            """
     if args.refresh:
-        print("here!")
         docs_to_update = """SELECT document_id
         FROM regulations_comment
         GROUP BY document_id;
         """
     else:
-        docs_to_update = """SELECT document_id
-        FROM regulations_comment rc1
-        GROUP BY document_id
-        HAVING COUNT(*) > 20;
-        """
+        args = parser.parse_args()
+        last_updated = get_last_update()
+        docs_with_titles = docs_have_titles()
+        # what docs need comment nlp update
+        if last_updated is not None:
+            docs_to_update = f"""SELECT document_id
+            FROM regulations_comment rc1
+            WHERE posted_date >= TIMESTAMP '{last_updated}'
+            GROUP BY document_id
+            HAVING COUNT(*) > 20
+            AND COUNT(*) >= 0.1 * (
+                SELECT COUNT(*)
+                FROM regulations_comment rc2
+                WHERE rc2.document_id = rc1.document_id
+                GROUP BY document_id HAVING COUNT(*) > 20;
+                """  # noqa: E702, E231, E241
+        else:
+            docs_to_update = """SELECT document_id
+            FROM regulations_comment rc1
+            GROUP BY document_id
+            HAVING COUNT(*) > 20;
+            """
 
     db_docs = Database()
     df_docs_to_update = pull_data(
         query=docs_to_update, connection=db_docs, schema=["document"]
     )
-    doc_gen = doc_generator(df_docs_to_update)
-
+    documents = doc_generator(df_docs_to_update)
     title_creator = titles.TitleChain()
     labeler = LabelChain()
     sentiment_analyzer = partial(
         sentiment_analysis, pipeline=sentiment_pipeline
     )
 
-    for _ in range(len(docs_to_update)):
-        try:
-            # do rep comment nlp
-            doc_id = next(doc_gen)[0]
-            comment_data = comments.rep_comment_analysis(
-                doc_id, sentence_transformer
-            )
+    for doc_id in documents:
+        # do rep comment nlp
+        comment_data = comments.rep_comment_analysis(
+            doc_id, sentence_transformer
+        )
 
-            # generate title if there is not already one
-            comment_data.summary = titles.get_doc_summary(id=doc_id)[
-                0, "summary"
-            ]
-            if (doc_id not in docs_with_titles and comment_data.summary) or (
-                args.refresh and comment_data.summary
-            ):
-                new_title = title_creator.invoke(paragraph=comment_data.summary)
-                comment_data.doc_plain_english_title = new_title
+        # generate title if there is not already one
+        comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
+        if (doc_id not in docs_with_titles and comment_data.summary) or (
+            args.refresh and comment_data.summary
+        ):
+            new_title = title_creator.invoke(paragraph=comment_data.summary)
+            comment_data.doc_plain_english_title = new_title
 
-            topic_model = HDAModel()
-            comment_data = topic_comment_analysis(
-                comment_data,
-                model=topic_model,
-                labeler=labeler,
-                sentiment_analyzer=sentiment_analyzer,
-            )
+        topic_model = HDAModel()
+        comment_data = topic_comment_analysis(
+            comment_data,
+            model=topic_model,
+            labeler=labeler,
+            sentiment_analyzer=sentiment_analyzer,
+        )
 
-            # TODO logging for upload errors
-            upload_comments(Database(), comment_data)
-
-        except StopIteration:
-            print("NLP Update Completed")
-            break
+        # TODO logging for upload errors
+        logger.info(f"Proccessed document: {doc_id}")
+        upload_comments(Database(), comment_data)

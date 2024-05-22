@@ -24,6 +24,7 @@ class RepComments:
     uuid: int = uuid4().int
     search_vector: list = Field(default=[])
     summary: str = ""
+    representative: bool = True
 
     # test this!
     def get_nonrepresentative_comments(self):
