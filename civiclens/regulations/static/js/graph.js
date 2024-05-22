@@ -87,7 +87,7 @@ const drawOneHorizonalStackedBarGraph = function(){
 
     const data = raw_data.map(d => {
         let ret = {}
-        ret.topic = d.topic[1]
+        ret.topic = d.topic[0]
         if (d.negative){
             ret.negative = d.negative
         }
