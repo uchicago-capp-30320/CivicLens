@@ -120,12 +120,10 @@
           <!-- container for the actual Documents -->
           <div class="col-md-8 order-md-2">
             {% if context.documents_page %}
-              {% if context.documents_page.paginator.count == context.documents_page.end_index and context.documents_page.number == context.documents_page.paginator.num_pages %}
+              {% if context.documents_page.paginator.num_pages == 1 %}
                 <span class="h6 font-weight-normal font-italic">Displaying {{ context.documents_page.paginator.count }} results for "{{ context.search }}".</span>
-              {% elif context.documents_page.end_index %}
-                <span class="h6 font-weight-normal font-italic">Displaying results {{ context.documents_page.start_index }} - {{ context.documents_page.end_index }} of {{ context.documents_page.paginator.count }} for "{{ context.search }}".</span>
               {% else %}
-                <span class="h6 font-weight-normal font-italic">Displaying results {{ context.documents_page.start_index }} of {{ context.documents_page.paginator.count }} for "{{ context.search }}".</span>
+                <span class="h6 font-weight-normal font-italic">Displaying results {{ context.documents_page.start_index }} - {{ context.documents_page.end_index }} of {{ context.documents_page.paginator.count }} for "{{ context.search }}".</span>
               {% endif %}
             {% else %}
               <span class="h6 font-weight-normal font-italic">Displaying {{ context.documents_page.paginator.count }} results for "{{ context.search }}".</span>
@@ -135,7 +133,7 @@
               {% for doc in context.documents_page %}
                 <div class="card p-3 mb-3">
                   <div class="card-body">
-                  {% if doc.nlpoutput.doc_plain_english_title %}
+                  {% if doc.nlpoutput.doc_plain_english_title and doc.nlpoutput.doc_plain_english_title != "Regulation: No regulation" %}
                     <p class="text-left font-weight-bolder mb-0">
                       <a href="{% url 'document' doc.id %}"> {{ doc.nlpoutput.doc_plain_english_title }}</a>
                     </p>
