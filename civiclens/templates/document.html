@@ -167,11 +167,18 @@
           </div>
         {% if nlp.is_representative %}
           <span class="h6">{{ nlp.num_topics }} topics emerged from {{ doc.comment_count }} total comments.</span>
-          <p></p>
-          <span class="p">[methods here...]</span>
-          <span class="p">[methods here...]</span>
-          <span class="p">[methods here...]</span>
-          <div class="container-fluid p-1 h-25" style="background-color: #FDFFF7;" id="chart">
+          <p class="mb-0">
+            The
+            {% if nlp.num_topics > 5 %}
+              top 5
+            {% elif nlp.num_topics > 0 %}
+              {{nlp.num_topics}}
+            {% endif %}
+            topics that emerged from all comments are below, as well as the sentiment of the comments associated
+            with each topic.
+
+          </p>
+          <div class="row pt-2 pb-2" style="background-color: #FDFFF7; height: 250px;" id="chart">
             <!-- hacky way to get comments.topics into the script -->
             <!-- this is where we might be able to do alt text -->
             <div id="topics" style="display: none;">
@@ -181,11 +188,16 @@
             <p></p>
             <script type="text/javascript" src="{% static '/js/graph.js' %}"></script>
           </div>
-          <p class="text-right small">
+          <p class="text-right small mb-0 pb-0">
             <a class="font-italic">topics last updated:</a> {{ nlp.last_updated|date:"F j, Y" }}
           </p>
-
-          <hr>
+          <p class="text-right small font-italic p-0 m-0">
+            For more information on how the human-readable titles and topics were created, visit our
+            <a class="font-weight-bold" href="{% url 'about' %}">
+              About page.
+            </a>
+          </p>
+          <hr class="m-2">
           <p></p>
           {% if nlp.num_representative_comment == 1 %}
             {% if nlp.num_total_comments == 1 %}
@@ -196,8 +208,14 @@
           {% else %}
             <span class="h6">{{ nlp.num_representative_comment }} representative comments representing {{ nlp.num_total_comments }} total comments.</span>
           {% endif %}
-          <p>The following comments capture the core themes of the comments received.
-            [potentially include some clarity on the methods used here].
+          <p>
+            The following comments capture the core themes of the comments received.
+          </p>
+          <p class="text-right small font-italic p-0 m-0">
+            For more information on how representative comments were selected, visit our
+            <a class="font-weight-bold" href="{% url 'about' %}">
+              About page.
+            </a>
           </p>
           {% for rep_comment in nlp.comments|slice:":5" %}
           <!-- cards for each representative comment -->
