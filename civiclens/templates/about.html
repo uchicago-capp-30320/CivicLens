@@ -6,44 +6,210 @@
 
 {% block content %}
 
-<section class="slice py-5" style="background-color:#FDFFF7" id="core-block">
+<section class="slice pt-5 pb-0" style="background-color:#FDFFF7" id="core-block">
     <div class="row">
-        <div class="container">
+        <div class="container" id="about">
             <h4>
             About <a style="color:#B42F37">Civic</a>Lens.
             </h4>
-            <div class="card">
-                <div class="card-body m-3">
-                    <h6 class="card-subtitle" style="color:#B43F37">
-                        Why does a tool like CivicLens fill an existing gap? Why should it exist?
+            <p>
+                CivicLens has a goal of putting the public back in public commenting.
+                Our aim is to make public commenting opportunities more
+                <strong>accessible </strong>
+                and <strong>approachable</strong> for the public.
+            </p>
+            <h6 style="color:#B43F37">
+                How CivicLens Works
+            </h6>
+            <div class="card mb-3">
+                <div class="card-body mt-3 ml-3">
+                    <h6 class="card-subtitle text-black">
+                        How we find existing public commenting opportunities
                     </h6>
                     <div class="card-text">
                         <p class="pb-0">
-                            [text text text]
+                            <a class="link-underline-primary" href="http://regulations.gov">
+                                Regulations.gov
+                            </a>
+                            is a federal government site that allows
+                            individuals to understand and comment on federal proposed
+                            rules, rules, public notices, or other documents.
+                            <br>
+                            <br>
+                            We pull data on all public commenting opportunities from
+                            the regulations.gov API on a nightly basis. We were inspired
+                            by a couple of prior projects (
+                                <a class="link-underline-primary"
+                                href="https://github.com/willjobs/regulations-public-comments">
+                                    regulations-public-comments
+                                </a>
+                            and
+                                <a class="link-underline-primary"
+                                href="https://github.com/jacobfeldgoise/regulations-comments-downloader">
+                                    regulations-comments-downloader
+                                </a>
+                            ) and we build on their work by:
+                            <ol>
+                                <li>
+                                    adding a guide to how the commenting process works, and
+                                </li>
+                                <li>
+                                    making data from regulations.gov more understandable by
+                                    improving the search functionality and providing
+                                    meaningful analysis on existing comments.
+                                </li>
+                            </ol>
                         </p>
                     </div>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-body m-3">
-                    <h6 class="card-subtitle" style="color:#B43F37">
-                        How did we build CivicLens?
+            <div class="card mb-3">
+                <div class="card-body mt-3 ml-3">
+                    <h6 class="card-subtitle text-black">
+                        How we make public commenting more accessible
                     </h6>
                     <div class="card-text">
                         <p class="pb-0">
-                            [text text text]
+                            We seek to make public commenting easier to understand by synthesizing
+                            information from the <a href="http://regulations.gov"
+                            class="link-underline-primary">
+                                regulations.gov
+                            </a>, including:
+                            <ul>
+                                <li>
+                                    <strong>Document titles:</strong> We make regulation document titles more readable
+                                    and easier to understand, cutting out confusing government jargon.
+                                </li>
+                                <li>
+                                    <strong>Unique comments and form letters:</strong> We compare all comments posted on
+                                    a document and identify which comments are unique and which appear
+                                    to come from form letters.
+                                </li>
+                                <li>
+                                    <strong>Representative comments:</strong> We group similar comments together and
+                                    identify comments which “represent” that group. Our goal is to make
+                                    it easier to understand these groups of comments.
+                                </li>
+                                <li>
+                                    <strong>Comment topics and sentiment:</strong> We identify the topics addressed in
+                                    different groups of comments as well as the sentiment (how
+                                    positive or negative the tone) of all comments.
+                                </li>
+                            </ul>
+                            We explain our <strong>specific methodology</strong> in the section below.
                         </p>
                     </div>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-body m-3">
-                    <h6 class="card-subtitle" style="color:#B43F37">
-                        What machine learning did we use? Why did we use machine learning?
+            <div class="card" id="ai">
+                <div class="card-body mt-3 ml-3">
+                    <h6 class="card-subtitle text-black">
+                        How we use AI
                     </h6>
                     <div class="card-text">
                         <p class="pb-0">
-                            [text text text]
+                            CivicLens uses natural language processing and Large Language Models
+                            (LLMs), to make finding and commenting on regulations more accessible.
+                            These techniques generate useful content and information but they can
+                            be imperfect.
+                            <br><br>
+                            The models we are using are “unsupervised”, meaning that there is no
+                            built-in method to verify their accuracy. We have built in safeguards to
+                            ensure the content and information we provide is as reliable as possible,
+                            but some errors or mis-generated text could occur.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <h6 style="color:#B43F37">
+                Methodology
+            </h6>
+            <div class="card" id="methodology">
+                <div class="card-body mt-3 ml-3">
+                    <h6 class="card-subtitle text-black">
+                        Document titles
+                    </h6>
+                    <div class="card-text">
+                        <p class="pb-0">
+                            When you search CivicLens for regulations to comment on, the titles
+                            you see for popular regulations are generated by natural language
+                            processing. We found that document titles on regulations.gov can be
+                            hard to understand and full of government jargon, so we used Google's
+                            <a href="https://huggingface.co/google/flan-t5-base" class="link-underline-primary">
+                                flan base model
+                            </a>
+                            to create more understandable titles in plain
+                            english based on the document summary.
+                        </p>
+                    </div>
+                    <br>
+                    <h6 class="card-subtitle text-black">
+                        Unique comments and form letters
+                    </h6>
+                    <div class="card-text">
+                        <p class="pb-0">
+                            When searching for a document or looking at a specific document page,
+                            you'll see numbers indicating how many unique comments versus form
+                            letter submissions there are. These numbers are estimates created
+                            by comparing the semantic similarity of comments. If lots of
+                            comments are 99% similar, we assume they are form letters.
+                            If not, we count them as unique comments. We measure this similarity
+                            using the
+                            <a href="https://sbert.net/examples/applications/paraphrase-mining/README.html"
+                            class="link-underline-primary">
+                                SBERT paraphrase mining model
+                            </a>
+                            that calculates the cosine
+                            similarity of comment pairs.
+                        </p>
+                    </div>
+                    <br>
+                    <h6 class="card-subtitle text-black">
+                        Representative comments
+                    </h6>
+                    <div class="card-text">
+                        <p class="pb-0">
+                            On popular document pages, you'll see a display of what we call "representative comments".
+                            We group similar comments together and identify comments which “represent”
+                            that group. To find these comments, we create a network graph of all the comments
+                            and connect them by their similarity score. Then we identify network clusters
+                            <a href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.community.louvain.louvain_communities.html"
+                            class="link-underline-primary">
+                                (Louvain Communities)
+                            </a>
+                            as groups of similar comments.
+                            The most central comment in the cluster is the one that is most semantically
+                            similar to all the comments in the cluster. We take all the central comments
+                            and display them as representative comments.
+                        </p>
+                    </div>
+                    <br>
+                    <h6 class="card-subtitle text-black">
+                        Content topics and sentiment
+                    </h6>
+                    <div class="card-text">
+                        <p class="pb-0">
+                            We identify the topics addressed and sentiment of representative comments. Any
+                            document with representative comments on CivicLens will also have a graph
+                            that shows the main commenting topics as well as the average sentiment
+                            used by commenters on the subject. The topics are created by first clustering
+                            common themes in comments through a Hierarchical Dirichlet Process. The
+                            highest probability terms for each topic are chosen to build a vector of strings
+                            to represent topics for a document. These terms are filtered through a version
+                            of Google's flan model fine-tuned to create labels for topics.
+
+                            Represented comments are additionally analyzed for sentiment, using a
+                            <a href="https://huggingface.co/FacebookAI/roberta-base"
+                            class="link-underline-primary">
+                             RoBERTa-base model.
+                            </a>
+                            Comments are classified as either positive, negative, or neutral based on their
+                            sentiment. Statistics on topics and their sentiments are calculated by counting
+                            the number of representative comments that correspond to a given topic, and
+                            cross referencing that with the representative comments sentiment. Document
+                            topics are used as additional search parameters which allows our site to have
+                            better search results for topics that users are interested in than are possible
+                            on regulations.gov.
                         </p>
                     </div>
                 </div>
@@ -54,17 +220,24 @@
             About <a style="color:#B42F37">us</a>.
             </h4>
             <p>
-                This project is the result of a masters course at the University of Chicago, called
+                We are a group of University of Chicago Master of Science in Computational Analysis and
+                Public Policy students. We made this site as a class project for
                 <a class="link-underline-primary" href="https://people.cs.uchicago.edu/~jturk/capp30320/">
                     Software Engineering for Civic Tech
                 </a>
-                taught by James Turk. We are a group of emerging software developers,
-                data scientists, and were excited to use our developing skills for work intended
-                to enrich the public sector.
-                <br>
-                <br>
-                If you have any ongoing questions about this project, please get in touch with us via... _____.
+                , taught by Professor James Turk.
+                <br><br>
+                We embarked on this project because we felt there was an opportunity to make public
+                commenting opportunities more accessible. We felt it was important to be faithful to
+                the underlying data; we have sought to summarize and communicate the documents and
+                comments available on regulations.gov as accurately as possible.
+                <br><br>
+                Our code lives on
+                <a class="link-underline-info" href="https://people.cs.uchicago.edu/~jturk/capp30320/">
+                    Github
+                </a>
 
+                . We welcome comments, bug reports, and feedback!
             </p>
             <div class="row card-group p-3">
                 <div class="card p-3" style="width: 18rem;">
@@ -115,40 +288,43 @@
             </div>
             <div class="row card-group p-3">
                 <div class="card p-3" style="width: 18rem;">
-                    <img class="card-img-top" src="" alt="Card image cap">
+                    <img class="card-img-top" src="/static/assets/img/headshots/andrew.jpeg" alt="Card image cap">
                     <div class="card-body pt-2">
-                        <h5 class="card-title pb-0">Person 3</h5>
-                        <p class="card-subtitle pb-2">Bio</p>
-                        <a href="" class="btn btn-neutral btn-link p-2">
+                        <h5 class="card-title pb-0">Andrew Dunn</h5>
+                        <p class="card-subtitle pb-2">Andrew Dunn is public sector consultant who enjoys solving new problems with data science.
+                        </p>
+                        <a href="https://github.com/andrewjtdunn" class="btn btn-neutral btn-link p-2">
                             <img alt="Image placeholder" src="/static/assets/img/github.png" width="25">
                         </a>
-                        <a href="" class="btn btn-neutral btn-link p-2">
+                        <a href="https://www.linkedin.com/in/andrewjtdunn/" class="btn btn-neutral btn-link p-2">
                             <img alt="Image placeholder" src="/static/assets/img/linkedin.png" width="25">
                         </a>
                     </div>
                 </div>
                 <div class="card p-3 ml-3" style="width: 18rem;">
-                    <img class="card-img-top" src="" alt="Card image cap">
+                    <img class="card-img-top" src="/static/assets/img/headshots/reza.jpg" alt="Card image cap">
                     <div class="card-body pt-2">
-                        <h5 class="card-title pb-0">Person 3</h5>
-                        <p class="card-subtitle pb-2">Bio</p>
-                        <a href="" class="btn btn-neutral btn-link p-2">
+                        <h5 class="card-title pb-0">Reza Pratama</h5>
+                        <p class="card-subtitle pb-2">Reza is an internal auditor skilled in data
+                            science and information systems audit.</p>
+                        <a href="https://github.com/rezarzky" class="btn btn-neutral btn-link p-2">
                             <img alt="Image placeholder" src="/static/assets/img/github.png" width="25">
                         </a>
-                        <a href="" class="btn btn-neutral btn-link p-2">
+                        <a href="https://www.linkedin.com/in/rezarzky/" class="btn btn-neutral btn-link p-2">
                             <img alt="Image placeholder" src="/static/assets/img/linkedin.png" width="25">
                         </a>
                     </div>
                 </div>
                 <div class="card p-3 ml-3" style="width: 18rem;">
-                    <img class="card-img-top" src="" alt="Card image cap">
+                    <img class="card-img-top" src="/static/assets/img/headshots/jack.jpeg" alt="Card image cap">
                     <div class="card-body pt-2">
-                        <h5 class="card-title pb-0">Person 3</h5>
-                        <p class="card-subtitle pb-2">Bio</p>
-                        <a href="" class="btn btn-neutral btn-link p-2">
+                        <h5 class="card-title pb-0">Jack Gibson</h5>
+                        <p class="card-subtitle pb-2">Jack is a technologist and public policy researcher
+                            with dreams of spending more time on his bicycle than his laptop.</p>
+                        <a href="https://github.com/jgibson517" class="btn btn-neutral btn-link p-2">
                             <img alt="Image placeholder" src="/static/assets/img/github.png" width="25">
                         </a>
-                        <a href="" class="btn btn-neutral btn-link p-2">
+                        <a href="https://www.linkedin.com/in/jackgibson17/" class="btn btn-neutral btn-link p-2">
                             <img alt="Image placeholder" src="/static/assets/img/linkedin.png" width="25">
                         </a>
                     </div>
@@ -156,14 +332,14 @@
             </div>
             <div class="row p-3">
                 <div class="card p-3" style="width: 33%;">
-                    <img class="card-img-top" src="" alt="Card image cap">
+                    <img class="card-img-top" src="/static/assets/img/headshots/john.jpeg" alt="Card image cap">
                     <div class="card-body pt-2">
-                        <h5 class="card-title pb-0">Person 3</h5>
+                        <h5 class="card-title pb-0">John Christenson</h5>
                         <p class="card-subtitle pb-2">Bio</p>
-                        <a href="" class="btn btn-neutral btn-link p-2">
+                        <a href="https://github.com/jchristensonCHI" class="btn btn-neutral btn-link p-2">
                             <img alt="Image placeholder" src="/static/assets/img/github.png" width="25">
                         </a>
-                        <a href="" class="btn btn-neutral btn-link p-2">
+                        <a href="https://www.linkedin.com/in/john-christenson-2891b391/" class="btn btn-neutral btn-link p-2">
                             <img alt="Image placeholder" src="/static/assets/img/linkedin.png" width="25">
                         </a>
                     </div>
