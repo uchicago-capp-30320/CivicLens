@@ -80,6 +80,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.refresh:
+        docs_with_titles = []
         docs_to_update = """SELECT document_id
         FROM regulations_comment
         GROUP BY document_id;
@@ -137,7 +138,7 @@ if __name__ == "__main__":
             continue
 
         comment_data = rep_comment_analysis(
-            doc_id, comment_df, sentence_transformer, comment_data
+            comment_data, comment_df, sentence_transformer
         )
 
         # topic modeling
