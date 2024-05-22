@@ -1,7 +1,7 @@
 {% extends "layouts/base.html" %}
 
 {% block title %}
-    {{doc.title}}
+    {{document_info.doc.title}}
 {% endblock title %}
 
 
@@ -11,11 +11,11 @@
 <section class="slice py-3 pb-10" style="background-color:#FDFFF7" id="core-block">
   <!-- title section -->
   <div class="container p-4 py-0" style="background-color: rgba(180, 47, 55, 0.15); border: 15px solid #FDFFF7;">
-    {% if nlp.doc_plain_english_title and nlp.doc_plain_english_title != "Regulation: No regulation" %}
-      <h5>{{ nlp.doc_plain_english_title }}</h5>
-      <h6 class="font-italic font-weight-normal">Original title: {{ doc.title }}</h6>
+    {% if document_info.doc.nlpoutput.doc_plain_english_title and document_info.doc.nlpoutput.doc_plain_english_title != "Regulation: No regulation" %}
+      <h5>{{ document_info.nlp.doc_plain_english_title }}</h5>
+      <h6 class="font-italic font-weight-normal">Original title: {{ document_info.doc.title }}</h6>
     {% else %}
-      <h5>{{ doc.title }}</h5>
+      <h5>{{ document_info.doc.title }}</h5>
     {% endif %}
   </div>
 
@@ -31,7 +31,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Comment by</a>
-              <a class="font-weight-normal">{{ doc.comment_end_date }}</a>
+              <a class="font-weight-normal">{{ document_info.doc.comment_end_date }}</a>
             </p>
           </div>
         </div>
@@ -40,7 +40,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Posted on</a>
-              <a class="font-weight-normal">{{ doc.posted_date }}</a>
+              <a class="font-weight-normal">{{ document_info.doc.posted_date }}</a>
             </p>
           </div>
         </div>
@@ -49,7 +49,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Agency</a>
-              <a class="font-weight-normal">{{ doc.agency_id }}</a>
+              <a class="font-weight-normal">{{ document_info.doc.agency_id }}</a>
             </p>
           </div>
         </div>
@@ -58,12 +58,11 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Comments received</a>
-              {% if nlp.num_total_comments %}
-                <a class="font-weight-normal">{{ nlp.num_total_comments }}</a>
+              {% if document_info.nlp.num_total_comments %}
+                <a class="font-weight-normal">{{ document_info.nlp.num_total_comments }}</a>
               {% else %}
                 <a class="font-weight-normal">0</a>
               {% endif %}
-              {% comment %} <a class="font-weight-normal">{{ nlp.num_total_comments }}</a> {% endcomment %}
             </p>
           </div>
         </div>
@@ -72,8 +71,8 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Unique comments received</a>
-              {% if nlp.num_unique_comments %}
-                <a class="font-weight-normal">{{ nlp.num_unique_comments }}</a>
+              {% if document_info.nlp.num_unique_comments %}
+                <a class="font-weight-normal">{{ document_info.nlp.num_unique_comments }}</a>
               {% else %}
                 <a class="font-weight-normal">0</a>
               {% endif %}
@@ -82,10 +81,10 @@
         </div>
 
         <p class="text-right small">
-          {% if nlp.last_updated %}
-            <a class="font-italic">comments last updated:</a> {{ nlp.last_updated|date:"F j, Y"  }}
+          {% if document_info.nlp.last_updated %}
+            <a class="font-italic">comments last updated:</a> {{ document_info.nlp.last_updated|date:"F j, Y"  }}
           {% else %}
-            <a class="font-italic">comments last updated:</a> {{ doc.last_modified_date|date:"F j, Y"  }}
+            <a class="font-italic">comments last updated:</a> {{ document_info.doc.last_modified_date|date:"F j, Y"  }}
           {% endif %}
         </p>
 
@@ -94,23 +93,23 @@
 
         <p></p>
 
-        <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank"
+        <a href="https://www.regulations.gov/document/{{document_info.doc.id}}" target="_blank"
         class="card-sm-custom">
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <span class="font-weight-bold">Document ID</span>
-              <span class="font-weight-normal">{{ doc.id }}</span>
+              <span class="font-weight-normal">{{ document_info.doc.id }}</span>
             </p>
           </div>
         </a>
 
-        {% if doc.fr_doc_num %}
-          <a href="https://www.federalregister.gov/documents/{{fed_register_url.doc_posted_year}}/{{fed_register_url.doc_posted_month}}/{{fed_register_url.doc_posted_day}}/{{doc.fr_doc_num}}/{{fed_register_url.doc_name_url}}" target="_blank"
+        {% if document_info.doc.fr_doc_num %}
+          <a href="https://www.federalregister.gov/documents/{{document_info.fed_register_url.doc_posted_year}}/{{document_info.fed_register_url.doc_posted_month}}/{{document_info.fed_register_url.doc_posted_day}}/{{document_info.doc.fr_doc_num}}/{{document_info.fed_register_url.doc_name_url}}" target="_blank"
           class="card-sm-custom">
             <div class="card-body py-2 px-3">
               <p class="card-text">
                 <span class="font-weight-bold">Federal Register ID</span>
-                <span class="font-weight-normal">{{ doc.fr_doc_num }}</span>
+                <span class="font-weight-normal">{{ document_info.doc.fr_doc_num }}</span>
               </p>
             </div>
           </a>
@@ -119,18 +118,18 @@
             <div class="card-body py-2 px-3">
               <p class="card-text">
                 <a class="font-weight-bold">Federal Register ID</a>
-                <a class="font-weight-normal">{{ doc.fr_doc_num }}</a>
+                <a class="font-weight-normal">{{ document_info.doc.fr_doc_num }}</a>
               </p>
             </div>
           </div>
         {% endif %}
-        {% if doc.docket_id %}
-          <a href="https://www.regulations.gov/docket/{{doc.docket_id}}" target="_blank"
+        {% if document_info.doc.docket_id %}
+          <a href="https://www.regulations.gov/docket/{{document_info.doc.docket_id}}" target="_blank"
           class="card-sm-custom">
             <div class="card-body py-2 px-3">
               <p class="card-text">
                 <span class="font-weight-bold">Docket ID</span>
-                <span class="font-weight-normal">{{ doc.docket_id }}</span>
+                <span class="font-weight-normal">{{ document_info.doc.docket_id }}</span>
               </p>
             </div>
           </a>
@@ -139,7 +138,7 @@
             <div class="card-body py-2 px-3">
               <p class="card-text">
                 <a class="font-weight-bold">Docket ID</a>
-                <a class="font-weight-normal">{{ doc.docket_id }}</a>
+                <a class="font-weight-normal">{{ document_info.doc.docket_id }}</a>
               </p>
             </div>
           </div>
@@ -147,7 +146,7 @@
 
         <p></p>
         <p class="small"> Want to get even more in the weeds? </p>
-        <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank"
+        <a href="https://www.regulations.gov/document/{{document_info.doc.id}}" target="_blank"
           class="btn btn-sm font-weight-normal text-white"
           style="background-color:#B42F37; color:#FDFFF7;">
           Explore supplementary materials on regulations.gov
@@ -160,39 +159,39 @@
         <p></p>
           <div class="card p-3">
             <div class="card-body">
-              {% if doc.summary %}
-                <p class="card-text">{{ doc.summary }}</p>
+              {% if document_info.doc.summary %}
+                <p class="card-text">{{ document_info.doc.summary }}</p>
               {% else %}
                 <p class="card-text">
-                  Regulations.gov has no summary for this document at this time. <a href="https://www.regulations.gov/document/{{ doc.id }}" target="_blank"><b>For relevant documentation, click here!</b></a>
+                  Regulations.gov has no summary for this document at this time. <a href="https://www.regulations.gov/document/{{ document_info.doc.id }}" target="_blank"><b>For relevant documentation, click here!</b></a>
                 </p>
               {% endif %}
             </div>
           </div>
-        {% if nlp.is_representative %}
-          <span class="h6">{{ nlp.num_topics }} topics emerged from {{ nlp.num_total_comments }} total comments.</span>
+        {% if document_info.nlp.is_representative %}
+          <span class="h6">{{ document_info.nlp.num_topics }} topics emerged from {{ document_info.doc.comment_count }} total comments.</span>
           <p class="mb-0">
             The
-            {% if nlp.num_topics > 5 %}
+            {% if document_info.nlp.num_topics > 5 %}
               top 5
-            {% elif nlp.num_topics > 0 %}
-              {{nlp.num_topics}}
+            {% elif document_info.nlp.num_topics > 0 %}
+              {{document_info.nlp.num_topics}}
             {% endif %}
             topics that emerged from all comments are below, as well as the sentiment of the comments associated
             with each topic.
 
           </p>
           <div class="row pt-2 pb-2" style="background-color: #FDFFF7; height: 250px;" id="chart"
-            title='{% for topic in nlp.topics %}{% for topic_0 in topic.topic|slice:":1" %}The topic {{topic_0}} had {{topic.total}} total comments.{% endfor %}{% endfor %}'>
+            title='{% for topic in document_info.nlp.topics %}{% for topic_0 in topic.topic|slice:":1" %}The topic {{topic_0}} had {{topic.total}} total comments.{% endfor %}{% endfor %}'>
             <div id="topics" style="display: none;">
-              {{nlp.topics}}
+              {{document_info.nlp.topics}}
             </div>
             {% load static %}
             <p></p>
             <script type="text/javascript" src="{% static '/js/graph.js' %}"></script>
           </div>
           <p class="text-right small mb-0 pb-0">
-            <a class="font-italic">topics last updated:</a> {{ nlp.last_updated|date:"F j, Y" }}
+            <a class="font-italic">topics last updated:</a> {{ document_info.nlp.last_updated|date:"F j, Y" }}
           </p>
           <p class="text-right small font-italic p-0 m-0">
             For more information on how the human-readable titles and topics were created, visit our
@@ -202,14 +201,14 @@
           </p>
           <hr class="m-2">
           <p></p>
-          {% if nlp.num_representative_comment == 1 %}
-            {% if nlp.num_total_comments == 1 %}
-              <span class="h6">{{ nlp.num_representative_comment }} representative comment representing {{ nlp.num_total_comments }} total comment.</span>
+          {% if document_info.nlp.num_representative_comment == 1 %}
+            {% if document_info.nlp.num_total_comments == 1 %}
+              <span class="h6">{{ document_info.nlp.num_representative_comment }} representative comment representing {{ document_info.nlp.num_total_comments }} total comment.</span>
             {% else %}
-              <span class="h6">{{ nlp.num_representative_comment }} representative comment representing {{ nlp.num_total_comments }} total comments.</span>
+              <span class="h6">{{ document_info.nlp.num_representative_comment }} representative comment representing {{ document_info.nlp.num_total_comments }} total comments.</span>
             {% endif %}
           {% else %}
-            <span class="h6">{{ nlp.num_representative_comment }} representative comments representing {{ nlp.num_total_comments }} total comments.</span>
+            <span class="h6">{{ document_info.nlp.num_representative_comment }} representative comments representing {{ document_info.nlp.num_total_comments }} total comments.</span>
           {% endif %}
           <p>
             The following comments capture the core themes of the comments received.
@@ -220,7 +219,7 @@
               About page.
             </a>
           </p>
-          {% for rep_comment in nlp.comments|slice:":5" %}
+          {% for rep_comment in document_info.nlp.comments|slice:":5" %}
           <!-- cards for each representative comment -->
             <div class="card p-0">
               <div class="card-body">
@@ -246,12 +245,12 @@
             </div>
           {% endfor %}
 
-        {% elif nlp.comments %}
+        {% elif document_info.nlp.comments %}
           <hr>
           <p></p>
           <span class="h6">Comments</span>
           <p></p>
-          {% for comment in nlp.comments|slice:":5" %}
+          {% for comment in document_info.nlp.comments|slice:":5" %}
           <!-- cards for each representative comment -->
             <div class="card p-0">
               <div class="card-body">
@@ -261,15 +260,15 @@
           {% endfor %}
         {% endif %}
 
-        {% if nlp.id or comments_api %}
+        {% if document_info.nlp or document_info.comments_api  %}
           <div style="text-align: center;">
-            <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank"
+            <a href="https://www.regulations.gov/commenton/{{document_info.doc.id}}" target="_blank"
               class="btn btn-sm font-weight-normal text-white"
               style="background-color:#21315C; color:#FDFFF7;">
               Add your own comment!
             </a>
 
-            <a href="https://www.regulations.gov/docket/{{doc.docket_id}}/comments" target="_blank"
+            <a href="https://www.regulations.gov/docket/{{document_info.doc.docket_id}}/comments" target="_blank"
               class="btn btn-sm btn-outline-primary font-weight-normal"
               style="background-color:white; color:#21315C;">
               Browse all existing comments
@@ -279,7 +278,7 @@
         {% else %}
           <div style="text-align: center;">
             <button class="btn btn-sm" style="background-color:#21315C; color:#FDFFF7;">
-              <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
+              <a href="https://www.regulations.gov/commenton/{{document_info.doc.id}}" target="_blank" class="font-weight-normal text-white">
                 Be the first to comment!
               </a>
             </button>
