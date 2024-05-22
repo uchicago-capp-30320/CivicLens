@@ -233,6 +233,7 @@ def add_data_quality_flag(
                 (data_id, data_type, str(error_message), datetime.now()),
             )
         connection.commit()
+        connection.close()
 
 
 def get_most_recent_doc_comment_date(doc_id: str) -> str:
@@ -689,6 +690,7 @@ def insert_document_into_db(document_data: json) -> dict:
                     fields_to_insert,
                 )
                 connection.commit()
+                connection.close()
 
     except Exception as e:
         error_message = f"""Error inserting document
@@ -1090,6 +1092,7 @@ def insert_comment_into_db(comment_data: json) -> dict:
                 ),
             )
             connection.commit()
+            connection.close()
 
     except Exception as e:
         error_message = f"""Error inserting comment {comment_data['id']} into
@@ -1178,6 +1181,19 @@ def add_comments_to_db_for_existing_doc(
     for comment in comment_data:
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
 
+        # if documumrnent is not in the db, add it
+        document_id = all_comment_data.get("commentOnDocumentId", "")
+        if not verify_database_existence(
+            "regulations_document", document_id, "id"
+        ):
+            # call the API to get the document info
+            doc_list = pull_reg_gov_data(
+                REG_GOV_API_KEY,
+                "documents",
+                params={"filter[objectId]": document_id},
+            )
+            add_documents_to_db(doc_list)
+
         # clean
         clean_comment_data(all_comment_data)
 
@@ -1257,20 +1273,28 @@ def add_comments_based_on_comment_date_range(
         print(f"processing comment {comment['id']} ")
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
 
-        # clean
-        print("cleaning comment")
-        clean_comment_data(all_comment_data)
+        document_id = all_comment_data["data"]["attributes"].get(
+            "commentOnDocumentId", ""
+        )
+        print(f"checking {document_id} is in the db")
+        if verify_database_existence(
+            "regulations_document",
+            document_id,
+            "id",
+        ):
+            print(f"{document_id} is in the db! begin processing comment")
+            # clean
+            clean_comment_data(all_comment_data)
 
-        # qa
-        print("qa-ing comment")
-        qa_comment_data(all_comment_data)
+            # qa
+            qa_comment_data(all_comment_data)
 
-        # insert
-        insert_response = insert_comment_into_db(all_comment_data)
-        if insert_response["error"]:
-            print(insert_response["description"])
-        else:
-            print(f"added comment {all_comment_data['id']} to the db")
+            # insert
+            insert_response = insert_comment_into_db(all_comment_data)
+            if insert_response["error"]:
+                print(insert_response["description"])
+            else:
+                print(f"added comment {all_comment_data['id']} to the db")
 
 
 def pull_all_api_data_for_date_range(
