@@ -242,9 +242,11 @@ def add_data_quality_flag(
                 (data_id, data_type, str(error_message), datetime.now()),
             )
         connection.commit()
+        
     if connection:
         connection.close()
     logging.info(f"Added data quality flag for {data_id} of type {data_type}.")
+
 
 
 def get_most_recent_doc_comment_date(doc_id: str) -> str:
@@ -1103,6 +1105,7 @@ def insert_comment_into_db(comment_data: json) -> dict:
                 ),
             )
             connection.commit()
+
         if connection:
             connection.close()
 
@@ -1281,21 +1284,27 @@ def add_comments_based_on_comment_date_range(
     )
 
     for comment in comment_data:
+
         logging.info(f"processing comment {comment['id']} ")
+
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
 
         document_id = all_comment_data["data"]["attributes"].get(
             "commentOnDocumentId", ""
         )
+
         logging.info(f"checking {document_id} is in the db")
+
         if verify_database_existence(
             "regulations_document",
             document_id,
             "id",
         ):
+
             logging.info(
                 f"{document_id} is in the db! begin processing comment"
             )
+
             # clean
             clean_comment_data(all_comment_data)
 
@@ -1305,6 +1314,7 @@ def add_comments_based_on_comment_date_range(
             # insert
             insert_response = insert_comment_into_db(all_comment_data)
             if insert_response["error"]:
+
                 logging.error(insert_response["description"])
             else:
                 logging.info(

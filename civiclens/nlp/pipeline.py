@@ -1,5 +1,6 @@
 """Pipeline for running all NLP analysis and updating the database
 """
+
 import argparse
 import logging
 import os
@@ -92,16 +93,15 @@ if __name__ == "__main__":
         # what docs need comment nlp update
         if last_updated is not None:
             docs_to_update = f"""SELECT document_id
-            FROM regulations_comment rc1
-            WHERE posted_date >= TIMESTAMP '{last_updated}'
-            GROUP BY document_id
-            HAVING COUNT(*) > 20
-            AND COUNT(*) >= 0.1 * (
+                FROM regulations_comment rc1
+                WHERE posted_date >= TIMESTAMP '{last_updated}'
+                GROUP BY document_id
+                HAVING COUNT(*) > 20
+                AND COUNT(*) >= 0.1 * (
                 SELECT COUNT(*)
                 FROM regulations_comment rc2
                 WHERE rc2.document_id = rc1.document_id
-                GROUP BY document_id HAVING COUNT(*) > 20;
-                """  # noqa: E702, E231, E241
+                );"""  # noqa: E702, E231, E241
         else:
             docs_to_update = """SELECT document_id
             FROM regulations_comment rc1
