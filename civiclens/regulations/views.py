@@ -113,7 +113,7 @@ def search_page(request):
 @require_http_methods(["GET"])
 def search_results(request):  # noqa: C901
     today = timezone.now().date()
-    context = {}
+    search_info = {}
 
     form = SearchForm(request.GET)
     if form.is_valid():
@@ -207,23 +207,23 @@ def search_results(request):  # noqa: C901
             page_number = request.GET.get("page")
             page = paginator.get_page(page_number)
 
-            context["documents_page"] = page
+            search_info["documents_page"] = page
         else:
             query = ""
-            context["documents_page"] = None
+            search_info["documents_page"] = None
     else:
         logger.error("Form validation failed: %s", form.errors)
         query = ""
-        context["documents_page"] = None
+        search_info["documents_page"] = None
 
-    context["search"] = query
-    context["form"] = form
+    search_info["search"] = query
+    search_info["form"] = form
 
     return render(
         request,
         "search_results.html",
         {
-            "context": context,
+            "search_info": search_info,
             "agencies": AgencyReference.objects.all().order_by("id"),
         },
     )
