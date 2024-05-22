@@ -123,7 +123,9 @@ if __name__ == "__main__":
         if comment_df.is_empty():
             continue
 
-        comment_data = rep_comment_analysis(doc_id, sentence_transformer)
+        comment_data = rep_comment_analysis(
+            doc_id, comment_df, sentence_transformer
+        )
 
         # generate title if there is not already one
         comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]

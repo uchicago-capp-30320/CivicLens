@@ -313,16 +313,19 @@ def find_form_letters(
     return form_letters, num_form_letters
 
 
-def rep_comment_analysis(id: str, model: SentenceTransformer) -> RepComments:
+def rep_comment_analysis(
+    id: str, df: pl.DataFrame, model: SentenceTransformer
+) -> RepComments:
     """Runs all representative comment code for a document
 
     Args:
-        id (str): document id for comment analysis
+        id (str): document id
+        df (dataframe): dataframe of comments pertaining to a document
+        model (SentenceTransformer): SBERT model for embeddings
 
     Returns:
         RepComment: dataclass with comment data
     """
-    df = get_doc_comments(id=id)
     df_paraphrases, df_form_letter = comment_similarity(df, model)
 
     try:
