@@ -96,27 +96,21 @@ def search_page(request):
         avg_comments = None
 
     # FACTS FOR THE SEARCH PAGE ABOUT THE DOCUMENTS AND COMMENTS
-    # doc_cmt_facts = {
-    #     "active_documents_count": active_documents_count,
-    #     "active_documents_with_comments": active_documents_with_comments,
-    #     "active_documents_with_no_comments": active_documents_count
-    #     - active_documents_with_comments,
-    #     "avg_comments": avg_comments,
-    #     "last_updated": last_updated,
-    #     "top_commented_documents": top_commented_documents,
-    # }
+    doc_cmt_facts = {
+        "active_documents_count": active_documents_count,
+        "active_documents_with_comments": active_documents_with_comments,
+        "active_documents_with_no_comments": active_documents_count
+        - active_documents_with_comments,
+        "avg_comments": avg_comments,
+        "last_updated": last_updated,
+        "top_commented_documents": top_commented_documents,
+    }
 
     return render(
         request,
         "search_page.html",
         {
-            "top_commented_documents": top_commented_documents,
-            "active_documents_count": active_documents_count,
-            "active_documents_with_comments": active_documents_with_comments,
-            "active_documents_with_no_comments": active_documents_count
-            - active_documents_with_comments,
-            "avg_comments": avg_comments,
-            "last_updated": last_updated,
+            "doc_cmt_facts": doc_cmt_facts,
         },
     )
 
