@@ -1181,19 +1181,6 @@ def add_comments_to_db_for_existing_doc(
     for comment in comment_data:
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
 
-        # if documumrnent is not in the db, add it
-        document_id = all_comment_data.get("commentOnDocumentId", "")
-        if not verify_database_existence(
-            "regulations_document", document_id, "id"
-        ):
-            # call the API to get the document info
-            doc_list = pull_reg_gov_data(
-                REG_GOV_API_KEY,
-                "documents",
-                params={"filter[objectId]": document_id},
-            )
-            add_documents_to_db(doc_list)
-
         # clean
         clean_comment_data(all_comment_data)
 
