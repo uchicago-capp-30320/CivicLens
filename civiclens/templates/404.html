@@ -1,0 +1,54 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+    404
+{% endblock title %}
+
+{% block content %}
+
+<section class="slice pt-5 pb-0" style="background-color:#FDFFF7" id="core-block">
+    <div class="container">
+      <h4>
+        404 | Page not found
+      </h4>
+      <p>
+        Congratulations! You've reached a page that doesn't exist!
+        <br>
+        <br>
+        There could be a few reasons for this:
+        <ul>
+            <li class="pb-3">
+                <strong>The document you searched for is no longer open for comment.</strong>
+                <br>
+                If this is you, we'd recommend heading to
+                <a class="link-underline-primary" href="https://www.regulations.gov/">
+                    <strong>regulations.gov</strong>
+                </a>
+                which keeps a historical record of opportunities
+                for comment that have closed.
+            </li>
+            <li class="pb-3">
+                <strong>The document you searched for does not exist.</strong>
+                <br>
+                If this is you, we'd recommend starting using our
+                <a class="link-underline-primary" href="{% url 'search' %}">
+                    <strong>search function</strong>
+                </a>
+                and looking for documents that exist and are open for public comment.
+            </li>
+            <li class="pb-3">
+                <strong>The url you entered does not exist.</strong>
+                <br>
+                If this is you, we'd recommend exploring our
+                <a class="link-underline-primary" href="{% url 'home' %}">
+                    <strong>home page</strong>
+                </a>
+                which gives a broader overview of what our site offers.
+            </li>
+        </ul>
+        Thanks for visiting CivicLens!
+      </p>
+    </div>
+  </section>
+
+{% endblock content %}
