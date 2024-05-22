@@ -19,6 +19,10 @@ def pull_list_of_doc_info() -> list[tuple[str]]:
             cursor.execute(query)
             response = cursor.fetchall()
 
+    if connection:
+        cursor.close()
+        connection.close()
+
     return response
 
 

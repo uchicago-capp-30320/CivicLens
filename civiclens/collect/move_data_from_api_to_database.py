@@ -200,6 +200,10 @@ def verify_database_existence(
             cursor.execute(query, (api_field_val,))
             response = cursor.fetchall()
 
+    if connection:
+        cursor.close()
+        connection.close()
+
     return bool(response)
 
 
@@ -234,6 +238,10 @@ def add_data_quality_flag(
             )
         connection.commit()
 
+    if connection:
+        cursor.close()
+        connection.close()
+
 
 def get_most_recent_doc_comment_date(doc_id: str) -> str:
     """
@@ -254,13 +262,15 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
             cursor.execute(query)
             response = cursor.fetchall()
 
+    if connection:
+        cursor.close()
+        connection.close()
+
     # format the text
     # it seems that the regulations.gov API returns postedDate rounded to the
-    # hour
-    # if we used that naively as the most recent date, we might miss some
-    # comments
-    # when we pull comments again. By backing up one hour, we trade off some
-    # unnecessary API calls for ensuring we don't miss anything
+    # hour. If we used that naively as the most recent date, we might miss some
+    # comments when we pull comments again. By backing up one hour, we trade
+    # off some unnecessary API calls for ensuring we don't miss anything
     date_dt = response[0][0]
     one_hour_prior = date_dt - dt.timedelta(hours=1)
     most_recent_date = one_hour_prior.strftime("%Y-%m-%d %H:%M:%S")
@@ -630,9 +640,6 @@ def insert_document_into_db(document_data: json) -> dict:
         document_data["supplementaryInformation"],
     )
 
-    # annoying quirk:
-    # https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-
-    # column-of-relation-does-not-exist
     query = """INSERT INTO regulations_document ("id",
                             "document_type",
                             "last_modified_date",
@@ -689,6 +696,9 @@ def insert_document_into_db(document_data: json) -> dict:
                     fields_to_insert,
                 )
                 connection.commit()
+        if connection:
+            cursor.close()
+            connection.close()
 
     except Exception as e:
         error_message = f"""Error inserting document
