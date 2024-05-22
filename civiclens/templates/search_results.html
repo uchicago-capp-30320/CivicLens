@@ -72,7 +72,6 @@
                 <option value="{{ agency.id }}" {% if agency.id|stringformat:"s" in context.form.selected_agencies.value %}selected{% endif %}>
                   {{ agency.id }}: {{ agency.name }}
                 </option>
-                  {% comment %} <option>{{ agency.id }}</option> {% endcomment %}
                 {% endfor %}
               </select>
               <button type="button" class="btn btn-secondary mt-2" style="padding: 2px 6px; font-size: 12px;" onclick="uncheckAgencies()">Deselect All Agencies</button>
@@ -118,34 +117,51 @@
             </div>
           </div>
 
-            <!-- container for the actual Documents -->
-
+          <!-- container for the actual Documents -->
           <div class="col-md-8 order-md-2">
-            <span class="h6 font-weight-normal font-italic">Displaying {{ context.documents.count }} results for "{{ context.search }}".</span>
+            {% if context.documents_page %}
+              {% if context.documents_page.paginator.count == context.documents_page.end_index and context.documents_page.number == context.documents_page.paginator.num_pages %}
+                <span class="h6 font-weight-normal font-italic">Displaying {{ context.documents_page.paginator.count }} results for "{{ context.search }}".</span>
+              {% elif context.documents_page.end_index %}
+                <span class="h6 font-weight-normal font-italic">Displaying results {{ context.documents_page.start_index }} - {{ context.documents_page.end_index }} of {{ context.documents_page.paginator.count }} for "{{ context.search }}".</span>
+              {% else %}
+                <span class="h6 font-weight-normal font-italic">Displaying results {{ context.documents_page.start_index }} of {{ context.documents_page.paginator.count }} for "{{ context.search }}".</span>
+              {% endif %}
+            {% else %}
+              <span class="h6 font-weight-normal font-italic">Displaying {{ context.documents_page.paginator.count }} results for "{{ context.search }}".</span>
+            {% endif %}
             <p></p>
-            {% if context.documents %}
-            {% for doc in context.documents %}
-              <div class="card p-3">
-                <div class="card-body">
-                {% if doc.ai_title %}
-                  <p class="text-left font-weight-bolder mb-0">
-                    <a href="{% url 'document' doc.id %}"> {{ doc.ai_title }}</a>
-                  </p>
-                  <p class="font-italic bodytext-muted">Original Title: {{ doc.title }}</p>
-                {% else %}
-                  <p class="text-left font-weight-bolder mb-0">
-                    <a href="{% url 'document' doc.id %}"> {{ doc.title }}</a>
-                  </p>
-                {% endif %}
-                {% if doc.summary %}
-                  <p class="card-text">{{ doc.summary|truncatewords:30 }}</p>
-                {% endif %}
-                  <button href="#" class="badge mb-2">doc.topic</button>
+            {% if context.documents_page %}
+              {% for doc in context.documents_page %}
+                <div class="card p-3">
+                  <div class="card-body">
+                  {% if doc.nlpoutput.doc_plain_english_title %}
+                    <p class="text-left font-weight-bolder mb-0">
+                      <a href="{% url 'document' doc.id %}"> {{ doc.nlpoutput.doc_plain_english_title }}</a>
+                    </p>
+                    <p class="font-italic bodytext-muted">Original Title: {{ doc.title }}</p>
+                  {% else %}
+                    <p class="text-left font-weight-bolder mb-0">
+                      <a href="{% url 'document' doc.id %}"> {{ doc.title }}</a>
+                    </p>
+                  {% endif %}
+                  {% if doc.summary %}
+                    <p class="card-text">{{ doc.summary|truncatewords:30 }}</p>
+                  {% endif %}
+                    {% if doc.nlpoutput.topics %}
+                      {% for topic_dict in doc.nlpoutput.topics|slice:":1"  %}
+                        {% for topic in topic_dict.topic|slice:":5" %}
+                          <a href="{% url 'search_results' %}?q={{ topic|urlencode }}">
+                            <button type="button" class="badge mb-2">{{ topic }}</button>
+                          </a>
+                        {% endfor %}
+                      {% endfor %}
+                    {% endif %}
+                  </div>
+                  <div class="card-footer text-muted p-0 text-right" >
+                    comment by {{ doc.comment_end_date }}
+                  </div>
                 </div>
-                <div class="card-footer text-muted p-0 text-right" >
-                  comment by {{ doc.comment_end_date }}
-                </div>
-              </div>
               {% endfor %}
             {% else %}
               Your search did not match any documents at this time.  Try adjusting your search query, or browse through agencies to find something similar.
@@ -156,5 +172,37 @@
     </section>
   </form>
 </div>
+
+<!-- Pagination controls -->
+<div class="pagination-container">
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+      {% if context.documents_page.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?q={{ context.search }}&page=1">&laquo; First</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?q={{ context.search }}&page={{ context.documents_page.previous_page_number }}">Previous</a>
+        </li>
+      {% endif %}
+
+      <li class="page-item disabled">
+        <span class="page-link">
+          Page {{ context.documents_page.number }} of {{ context.documents_page.paginator.num_pages }}
+        </span>
+      </li>
+
+      {% if context.documents_page.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?q={{ context.search }}&page={{ context.documents_page.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?q={{ context.search }}&page={{ context.documents_page.paginator.num_pages }}">Last &raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+
 
 {% endblock content %}

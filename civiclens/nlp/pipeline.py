@@ -1,3 +1,5 @@
+"""Pipeline for running all NLP analysis and updating the database
+"""
 import argparse
 import logging
 import os
@@ -124,9 +126,9 @@ if __name__ == "__main__":
 
         # generate title if there is not already one
         comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
-        if (
-            doc_id not in docs_with_titles and comment_data.summary
-        ) or args.refresh:
+        if (doc_id not in docs_with_titles and comment_data.summary) or (
+            args.refresh and comment_data.summary
+        ):
             new_title = title_creator.invoke(paragraph=comment_data.summary)
             comment_data.doc_plain_english_title = new_title
 
