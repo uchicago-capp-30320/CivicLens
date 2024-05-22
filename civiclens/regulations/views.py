@@ -31,7 +31,6 @@ def about(request):
 
 def search_page(request):
     today = timezone.now().date()
-
     # find date for when one doc in the db was last updated (MVP technique)
     try:
         last_updated = (
@@ -251,12 +250,12 @@ def document(request, doc_id):  # noqa: E501
             .annotate(receive_date_only=TruncDate("receive_date"))
         )
     except Comment.DoesNotExist:
-        comments_api = None
+        comments_api = Comment()
 
     try:
         nlp = NLPoutput.objects.get(document=doc_id)
     except NLPoutput.DoesNotExist:
-        nlp = {}
+        nlp = NLPoutput()
 
     return render(
         request,

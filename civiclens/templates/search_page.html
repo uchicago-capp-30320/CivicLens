@@ -21,7 +21,6 @@
     <div class="form-group">
       <form action="/search/results/" method="GET">
         {% csrf_token %}
-        {{ form.as_p }}
         <div class="input-group mb-4">
           <input class="form-control" id="q" name="q" type="text" required
           placeholder="Search for topics like 'healthcare' or 'immigration'...">
