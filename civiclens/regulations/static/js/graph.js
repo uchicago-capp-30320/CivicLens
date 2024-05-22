@@ -11,6 +11,26 @@ const reorderKeys = function(dict) {
     return orderedDict;
 }
 
+function filterKey(data, keyToRemove) {
+    return data.map(item => {
+        // Create a new object to avoid mutating the original one
+        const newItem = { ...item };
+        // Remove the specified key
+        delete newItem[keyToRemove];
+        return newItem;
+    });
+}
+
+function getAllValues(data) {
+    let values = [];
+
+    for (const key in data) {
+        values.push(data[key]);
+    };
+
+    return values;
+}
+
 const drawOneHorizonalStackedBarGraph = function(){
     // Clear existing content in the chart div
     if (!document.getElementById("chart")) {
@@ -103,23 +123,21 @@ const drawOneHorizonalStackedBarGraph = function(){
         return ret
     });
 
-    console.log(data);
-
-    const sentiment_counts = Object.keys(
-        data[0]
-        ).filter(d => (
-            (d != "topic") & (d != "source") & (d != "total")
-        ));
+    const sentiment_counts = ["positive", "neutral", "negative"];
 
     console.log("sentiment counts:", sentiment_counts);
 
     const topics = data.map(d => d.topic);
 
     const stackedData = d3.stack().keys(sentiment_counts)(data);
-    const xMax = d3.max(stackedData[stackedData.length - 1], d => d[1]);
+
+    const no_titles = filterKey(data, 'topic');
+    console.log(no_titles);
+
+    const xMax = d3.max(no_titles.map(d => getAllValues(d)))[0];
 
     // Scales
-    const x = d3.scaleLinear().domain([0, xMax]).nice().range([0, width]);
+    const x = d3.scaleLinear().domain([0, xMax]).range([0, width]);
     const y = d3.scaleBand().domain(topics).range([0, height]).padding(0.3);
     const color = d3.scaleOrdinal().domain(["negative","neutral","positive"]).range(["#EE6123", "#D9D9D9", "#00916E"]);
 
