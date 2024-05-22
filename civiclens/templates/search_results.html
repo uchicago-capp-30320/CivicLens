@@ -76,14 +76,6 @@
               </select>
               <button type="button" class="btn btn-secondary mt-2" style="padding: 2px 6px; font-size: 12px;" onclick="uncheckAgencies()">Deselect All Agencies</button>
             </div>
-            <script>
-              function uncheckAgencies() {
-                var agencySelect = document.getElementById('selected_agencies');
-                for (var i = 0; i < agencySelect.options.length; i++) {
-                  agencySelect.options[i].selected = false;
-                }
-              }
-            </script>
 
             <!-- filter by types of documents, default to all -->
             <div class="form-group" >
