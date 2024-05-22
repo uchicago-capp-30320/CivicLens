@@ -33,13 +33,16 @@ def search_page(request):
     today = timezone.now().date()
 
     # find date for when one doc in the db was last updated (MVP technique)
-    last_updated = (
-        Document.objects.all()
-        .order_by(
-            "-last_modified_date",
+    try:
+        last_updated = (
+            Document.objects.all()
+            .order_by(
+                "-last_modified_date",
+            )
+            .values("last_modified_date")[0:1][0]["last_modified_date"]
         )
-        .values("last_modified_date")[:1][0]["last_modified_date"]
-    )
+    except IndexError:
+        last_updated = None
 
     # TOP 5 MOST COMMENTED ON WITH NLP ANALYSIS
     # list of active documents open for comment
@@ -48,16 +51,19 @@ def search_page(request):
     ).values("id")
 
     # select top documents from NLP table where # of comments is highest
-    top_commented_documents = (
-        NLPoutput.objects.order_by("-num_total_comments")
-        .filter(document_id__in=active_documents_ids)
-        .values(
-            "doc_plain_english_title",
-            "num_total_comments",
-            "document_id",
-            "num_unique_comments",
-        )[:5]
-    )
+    try:
+        top_commented_documents = (
+            NLPoutput.objects.order_by("-num_total_comments")
+            .filter(document_id__in=active_documents_ids)
+            .values(
+                "doc_plain_english_title",
+                "num_total_comments",
+                "document_id",
+                "num_unique_comments",
+            )[:5]
+        )
+    except IndexError:
+        top_commented_documents = None
 
     # DATA FOR QUICK FACTS
     active_documents_count = Document.objects.filter(
@@ -79,11 +85,13 @@ def search_page(request):
     active_documents_with_comments = joined_table.count()
 
     # use NLP table to do the tallies
-    avg_comments = round(
-        comment_counts.aggregate(avg_comments=Avg("comment_count"))[
-            "avg_comments"
-        ]
-    )
+    counts = comment_counts.aggregate(avg_comments=Avg("comment_count"))[
+        "avg_comments"
+    ]
+    if counts:
+        avg_comments = round(counts)
+    else:
+        avg_comments = None
 
     return render(
         request,
