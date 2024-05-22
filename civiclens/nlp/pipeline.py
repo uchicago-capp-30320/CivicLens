@@ -6,7 +6,8 @@ from functools import partial
 
 import polars as pl
 
-from civiclens.nlp import comments, titles
+from civiclens.nlp import titles
+from civiclens.nlp.comments import get_doc_comments, rep_comment_analysis
 from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
 from civiclens.nlp.tools import sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
@@ -118,9 +119,11 @@ if __name__ == "__main__":
 
     for doc_id in documents:
         # do rep comment nlp
-        comment_data = comments.rep_comment_analysis(
-            doc_id, sentence_transformer
-        )
+        comment_df = get_doc_comments(doc_id)
+        if comment_df.is_empty():
+            continue
+
+        comment_data = rep_comment_analysis(doc_id, sentence_transformer)
 
         # generate title if there is not already one
         comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
