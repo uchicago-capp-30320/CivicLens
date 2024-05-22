@@ -59,7 +59,7 @@ def comment_similarity(
 
     Returns:
         df_paraphrase, df_form_letter (tuple[pl.DataFrame]): cosine
-        similarities for form letters and non form letters
+            similarities for form letters and non form letters
     """
     paraphrases = util.paraphrase_mining(
         model, df["comment"].to_list(), show_progress_bar=True
@@ -110,11 +110,11 @@ def build_graph(df: pl.DataFrame) -> nx.Graph:
 
     Args:
         df (pl.DataFrame): df with pairs of comment indices and a cosine
-        similarity
+            similarity
 
     Returns:
         nx.Graph:network graph with comments as nodes and their similarities as
-        weights
+            weights
     """
     graph_data = df.to_dicts()
     G = nx.Graph()
@@ -129,7 +129,7 @@ def get_clusters(G: nx.Graph) -> list[set[int]]:
 
     Args:
         G (nx.Graph): network graph with comments as nodes and their
-        similarities as weights
+            similarities as weights
 
     Returns:
         list[set[int]]: sets are clusters of comment nodes
@@ -166,12 +166,12 @@ def find_central_node(G: nx.Graph, clusters: list[set[int]]) -> dict:
 
     Args:
         G (nx.Graph): network graph with comments as nodes and their
-        similarities as weights
+            similarities as weights
         clusters (list[set[int]]): clusters from Louvain Communities
 
     Returns:
         dict: dictionary with the central comment id as the key and the degree
-        centrality as the value
+            centrality as the value
     """
     centrality_per_cluster = {}
     for cluster in clusters:
@@ -194,7 +194,7 @@ def representative_comments(
 
     Args:
         G (nx.Graph): network graph with comments as nodes and their
-        similarities as weights
+            similarities as weights
         clusters (list[set[int]]): clusters from Louvain Communities
         df (pl.DataFrame): df from initial pull with added cluster info
 
@@ -232,7 +232,7 @@ def compute_similiarity_clusters(
     """
     Extract form letters from corpus of comments.
 
-    Inputs:
+    Args:
         embeds: array of embeddings representing the documents
         sim_threshold: distance thresholds to divide clusters
 
@@ -257,7 +257,7 @@ def find_form_letters(
     Finds and extracts from letters by clustering, counts number of unique
     comments.
 
-    Inputs:
+    Args:
         df: dataframe of comments to extract form letters from
         model: vectorize model for text embeddings
         form_threshold: threshold to consider a comment a form letter

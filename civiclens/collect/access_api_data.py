@@ -40,9 +40,9 @@ def api_date_format_params(start_date=None, end_date=None):
 
     Args:
         start_date (str in YYYY-MM-DD format, optional): the inclusive start
-        date of our data pull
+            date of our data pull
         end_date (str in YYYY-MM-DD format, optional): the inclusive end date
-        of our data pull
+            of our data pull
 
     Returns:
         date_param (dict): dict containing the right formatted date calls
@@ -74,15 +74,15 @@ def format_datetime_for_api(dt_str):
 
     Args:
         dt_str (str): The UTC datetime string in ISO 8601 format (e.g.,
-        "2020-08-10T15:58:52Z").
+            "2020-08-10T15:58:52Z").
 
     Returns:
         str: The formatted datetime string in Eastern Time, formatted as
-        "YYYY-MM-DD HH:MM:SS".
+            "YYYY-MM-DD HH:MM:SS".
 
     Example:
         >>> format_datetime_for_api("2020-08-10T15:58:52Z")
-        '2020-08-10 11:58:52'
+            '2020-08-10 11:58:52'
     """
     utc_dt = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%SZ").replace(
         tzinfo=timezone.utc
@@ -110,24 +110,26 @@ def pull_reg_gov_data(  # noqa: C901,E501
 
     Args:
         data_type (str): 'dockets', 'documents', or 'comments' -- what kind of
-        data we want back from the API
+            data we want back from the API
         start_date (str in YYYY-MM-DD format, optional): the inclusive start
-        date of our data pull
+            date of our data pull
         end_date (str in YYYY-MM-DD format, optional): the inclusive end date
-        of our data pull
+            of our data pull
         params (dict, optional): Parameters to specify to the endpoint request.
-        Defaults to None.
-        If we are querying the non-details endpoint, we also append the
-        "page[size]" parameter so that we always get the maximum page size of
-        250 elements per page.
+            Defaults to None.
+            If we are querying the non-details endpoint, we also append the
+            "page[size]" parameter so that we always get the maximum page size
+            of 250 elements per page.
         print_remaining_requests (bool, optional): Whether to print out the
-        number of remaining requests this hour, based on the response headers.
-        Defaults to False.
+            number of remaining requests this hour, based on the response
+            headers.
+            Defaults to False.
         wait_for_rate_reset (bool, optional): Determines whether to wait to
-        re-try if we run out of requests in a given hour. Defaults to False.
+            re-try if we run out of requests in a given hour. Defaults to
+            False.
         skip_duplicates (bool, optional): If a request returns multiple items
-        when only 1 was expected, should we skip that request? Defaults to
-        False.
+            when only 1 was expected, should we skip that request? Defaults to
+            False.
 
     Returns:
         dict: JSON-ified request response

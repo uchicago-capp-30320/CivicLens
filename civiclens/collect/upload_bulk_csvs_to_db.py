@@ -33,7 +33,7 @@ def get_document_objectId(doc_id: str) -> str:
 
     Args:
         doc_id (str): the id of a document
-        (the id you search with on regulations.gov)
+            (the id you search with on regulations.gov)
 
     Returns: objectId (str): the objectId, which we use to link database tables
     """
@@ -79,7 +79,7 @@ def extract_fields_from_row(
         Not included in the csv, but necessary to insert into the db
 
     Returns: comment_data (json): formatted json with fields extracted from
-    the row,ready to be inserted into the comments db table
+        the row,ready to be inserted into the comments db table
     """
     if not df_row:
         return
@@ -152,7 +152,7 @@ def load_bulk_comments_csv_to_db(file_name: str) -> None:
     Takes a csv of bulk downloaded comments and puts them in the comments db
     table
 
-    Input: file_name (str): the filepath and name of the csv file, eg,
+    Args: file_name (str): the filepath and name of the csv file, eg,
         "~/Downloads/lve-blav-h8al.csv"
 
     Returns: nothing; adds the comments to the db

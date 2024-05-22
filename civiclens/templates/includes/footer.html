@@ -1,13 +1,7 @@
-    <footer class="position-relative" id="footer-main">
-        <div class="footer pt-lg-7">
-            <!-- SVG shape -->
-            <div class="shape-container shape-line shape-position-top shape-orientation-inverse">
-                <svg width="2560px" height="100px" preserveAspectRatio="none" x="0px" y="0px" viewBox="0 0 2560 100" xml:space="preserve">
-                    <polygon points="2560 0 2560 100 0 100" fill="#FDFFF7"></polygon>
-                </svg>
-            </div>
+    <footer class="position-relative pt-3" id="footer-main">
+        <div class="footer pt-0">
             <!-- Footer -->
-            <div class="container pt-4">
+            <div class="container pt-0">
                 <div class="row">
                     <div class="col-lg-4 mb-5 mb-lg-0">
                         <!-- Theme's logo -->
@@ -21,10 +15,11 @@
                     <div class="col-lg-2 col-6 col-sm-4 ml-lg-auto mb-5 mb-lg-0" >
                     </div>
                     <div class="col-lg-2 col-6 col-sm-4 mb-5 mb-lg-0">
-                        <h6 class="heading mb-3"><a href="">Home</a></h6>
+                        <h6 class="heading mb-3"><a href="{% url 'home' %}">Home</a></h6>
                         <ul class="list-unstyled">
                             <li><a href="{% url 'search' %}">Search</a></li>
                             <li><a href="{% url 'home' %}#learn">Learn</a></li>
+                            <li><a href="{% url 'about' %}">About</a></li>
                         </ul>
                     </div>
                 </div>
