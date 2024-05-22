@@ -11,7 +11,7 @@
 <section class="slice py-3 pb-10" style="background-color:#FDFFF7" id="core-block">
   <!-- title section -->
   <div class="container p-4 py-0" style="background-color: rgba(180, 47, 55, 0.15); border: 15px solid #FDFFF7;">
-    {% if nlp.doc_plain_english_title %}
+    {% if doc.nlpoutput.doc_plain_english_title and doc.nlpoutput.doc_plain_english_title != "Regulation: No regulation" %}
       <h5>{{ nlp.doc_plain_english_title }}</h5>
       <h6 class="font-italic font-weight-normal">Original title: {{ doc.title }}</h6>
     {% else %}
@@ -82,7 +82,11 @@
         </div>
 
         <p class="text-right small">
-          <a class="font-italic">comments last updated:</a> {{ doc.last_modified_date|date:"F j, Y"  }}
+          {% if nlp.last_updated %}
+            <a class="font-italic">comments last updated:</a> {{ nlp.last_updated|date:"F j, Y"  }}
+          {% else %}
+            <a class="font-italic">comments last updated:</a> {{ doc.last_modified_date|date:"F j, Y"  }}
+          {% endif %}
         </p>
 
         <!-- in the weeds section -->
