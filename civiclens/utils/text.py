@@ -2,11 +2,25 @@ import re
 from typing import Optional
 
 
-def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
+def regex_tokenize(text: str, pattern: str = r"\W+"):
     """
+    Splits strings into tokens base on regular expression.
+
+    Args:
+        text: string to tokenize
+        pattern: regular expression to split tokens on, defaults to white space
+
+    Returns:
+        List of strings represented tokens
+    """
+    return re.split(pattern, text)
+
+
+def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
+    r"""
     String cleaning function for comments.
 
-    Inputs:
+    Args:
         text (str): comment text
         patterns (list[str]): optional list of regular expression patterns
             to pass in (eg. [(r'\w+', "-")])
@@ -14,6 +28,15 @@ def clean_text(text: str, patterns: Optional[list[tuple]] = []) -> str:
     Returns:
         Cleaned verison of text
     """
+    if patterns is None:
+        patterns = []
+
+    text = re.sub(r"&#39;", "'", text)  # this replaces html entity with '
+    text = re.sub(r"&rdquo;", '"', text)  # this replaces html entity with "
+    text = re.sub(r"&amp;", "&", text)  # this replaces html entity with &
+    text = re.sub(r"â", "", text)
+    text = re.sub(r"<br\s*/?>", "", text)
+
     text = re.sub(r"<\s*br\s*/>", " ", text)
     text = re.sub(r"[^a-zA-Z0-9.'\"\?\: -]", "", text)
     text = re.sub(r"\w*ndash\w*", "", text)
@@ -30,7 +53,7 @@ def truncate(text: str, num_words: int) -> str:
     """
     Truncates commments:
 
-    Inputs:
+    Args:
         text (str): Text of the comment
         num_words (int): Number of words to keep
 
@@ -46,7 +69,7 @@ def sentence_splitter(text: str, sep: str = ".") -> list[str]:
     """
     Splits string into sentences.
 
-    Inputs:
+    Args:
         text: string to process
         sep: value to seperate string on, defaults to '.'
 

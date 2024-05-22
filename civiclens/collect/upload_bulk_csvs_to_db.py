@@ -1,18 +1,20 @@
-from datetime import datetime
-import polars as pl
+"""
+This code is for one-time and ad hoc bulk uploads of comments.
+Csv files are obtained for known documents here:
+https://www.regulations.gov/bulkdownload
+Adding comments to the db is faster with this method than via API
+"""
+
 import argparse
+from datetime import datetime
+
+import polars as pl
 
 from civiclens.collect.access_api_data import pull_reg_gov_data
 from civiclens.collect.move_data_from_api_to_database import (
     insert_comment_into_db,
 )
 from civiclens.utils.constants import REG_GOV_API_KEY
-
-"""
-This code is for one-time and ad hoc bulk uploads of comments.
-Csv files are obtained for known documents here: https://www.regulations.gov/bulkdownload
-Adding comments to the db is faster with this method than via API 
-"""
 
 
 def load_data(file_name: str) -> pl.DataFrame([]):
@@ -29,7 +31,9 @@ def get_document_objectId(doc_id: str) -> str:
     """
     Fetches the document objectId from the regulations.gov API
 
-    Input: doc_id (str): the id of a document (the id you search with on regulations.gov)
+    Args:
+        doc_id (str): the id of a document
+            (the id you search with on regulations.gov)
 
     Returns: objectId (str): the objectId, which we use to link database tables
     """
@@ -42,7 +46,8 @@ def get_document_objectId(doc_id: str) -> str:
 
 def format_date(datetime_str: str) -> str:
     """
-    Format a datetime string to the desired ISO 8601 format with UTC ('Z' timezone)
+    Format a datetime string to the desired ISO 8601 format with UTC
+    ('Z' timezone)
     """
     if not datetime_str:
         return ""
@@ -53,29 +58,28 @@ def format_date(datetime_str: str) -> str:
         parsed_datetime_dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%MZ")
 
         # Convert the parsed datetime object to the desired format string
-        formatted_datetime_str = parsed_datetime_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        formatted_datetime_str = parsed_datetime_dt.strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
         return formatted_datetime_str
     except Exception as e:
         print(f"Error parsing datetime string '{datetime_str}': {e}")
         raise e
 
 
-# Test the function
-formatted_date = format_date("2024-03-06T05:00Z")
-print(formatted_date)
-
-
-def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict:
+def extract_fields_from_row(
+    df_row: pl.DataFrame([]), doc_objectId: str
+) -> dict:
     """
     Takes a polars row and outputs it in properly formatted dict
 
-    Inputs:
+    Args:
         df_row (polars df): a polars row representing a comment
-        doc_objectId (str): the object id for the doc the comment is on. Not included
-            in the csv, but necessary to insert into the db
+        doc_objectId (str): the object id for the doc the comment is on.
+        Not included in the csv, but necessary to insert into the db
 
-    Returns: comment_data (json): formatted json with fields extracted from the row,
-        ready to be inserted into the comments db table
+    Returns: comment_data (json): formatted json with fields extracted from
+        the row,ready to be inserted into the comments db table
     """
     if not df_row:
         return
@@ -93,7 +97,9 @@ def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict
     ]  # this is the ID field, confusingly named
     attributes["objectId"] = doc_objectId
     comment_text_attributes["commentOn"] = None
-    comment_text_attributes["commentOnDocumentId"] = df_row["Comment on Document ID"]
+    comment_text_attributes["commentOnDocumentId"] = df_row[
+        "Comment on Document ID"
+    ]
     comment_text_attributes["duplicateComments"] = (
         df_row["Duplicate Comments"] if df_row["Duplicate Comments"] else 0
     )
@@ -118,16 +124,22 @@ def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict
         df_row["Page Count"] if df_row["Page Count"] else 0
     )
     comment_text_attributes["postedDate"] = format_date(df_row["Posted Date"])
-    comment_text_attributes["receiveDate"] = format_date(df_row["Received Date"])
+    comment_text_attributes["receiveDate"] = format_date(
+        df_row["Received Date"]
+    )
     attributes["title"] = df_row["Title"]
     comment_text_attributes["trackingNbr"] = df_row["Tracking Number"]
     comment_text_attributes["withdrawn"] = df_row["Is Withdrawn?"]
     comment_text_attributes["reasonWithdrawn"] = df_row["Reason Withdrawn"]
     comment_text_attributes["zip"] = df_row["Zip/Postal Code"]
     comment_text_attributes["restrictReason"] = df_row["Restrict Reason"]
-    comment_text_attributes["restrictReasonType"] = df_row["Restrict Reason Type"]
+    comment_text_attributes["restrictReasonType"] = df_row[
+        "Restrict Reason Type"
+    ]
     comment_text_attributes["submitterRep"] = df_row["Submitter Representative"]
-    comment_text_attributes["submitterRepAddress"] = df_row["Representative's Address"]
+    comment_text_attributes["submitterRepAddress"] = df_row[
+        "Representative's Address"
+    ]
     comment_text_attributes["submitterRepCityState"] = df_row[
         "Representative's City, State & Zip"
     ]
@@ -137,9 +149,10 @@ def extract_fields_from_row(df_row: pl.DataFrame([]), doc_objectId: str) -> dict
 
 def load_bulk_comments_csv_to_db(file_name: str) -> None:
     """
-    Takes a csv of bulk downloaded comments and puts them in the comments db table
+    Takes a csv of bulk downloaded comments and puts them in the comments db
+    table
 
-    Input: file_name (str): the filepath and name of the csv file, eg,
+    Args: file_name (str): the filepath and name of the csv file, eg,
         "~/Downloads/lve-blav-h8al.csv"
 
     Returns: nothing; adds the comments to the db

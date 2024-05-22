@@ -1,38 +1,25 @@
-    <footer class="position-relative" id="footer-main">
-        <div class="footer pt-lg-7">
-            <!-- SVG shape -->
-            <div class="shape-container shape-line shape-position-top shape-orientation-inverse">
-                <svg width="2560px" height="100px" preserveAspectRatio="none" x="0px" y="0px" viewBox="0 0 2560 100" xml:space="preserve">
-                    <polygon points="2560 0 2560 100 0 100" fill="#FDFFF7"></polygon>
-                </svg>
-            </div>
+    <footer class="position-relative pt-3" id="footer-main">
+        <div class="footer pt-0">
             <!-- Footer -->
-            <div class="container pt-4">
+            <div class="container pt-0">
                 <div class="row">
                     <div class="col-lg-4 mb-5 mb-lg-0">
                         <!-- Theme's logo -->
-                        <a href="/regulations/">
+                        <a href="{% url 'home' %}">
                             <img alt="Image placeholder" src="/static/assets/img/logo_white.png" width="200" id="footer-logo">
                         </a>
                         <!-- mission -->
                         <p></p>
                         <p style="color:#21315C;">Putting the public back in public commenting.</p>
-                        <!-- Social -->
-                        <ul class="nav mt-1">
-                            <li class="nav-item">
-                                <a class="nav-link" href="https://github.com/uchicago-capp-30320/CivicLens" target="_blank">
-                                    <i class="fab fa-github"></i>
-                                </a>
-                            </li>
-                        </ul>
                     </div>
                     <div class="col-lg-2 col-6 col-sm-4 ml-lg-auto mb-5 mb-lg-0" >
                     </div>
                     <div class="col-lg-2 col-6 col-sm-4 mb-5 mb-lg-0">
-                        <h6 class="heading mb-3"><a href="/regulations">Home</a></h6>
+                        <h6 class="heading mb-3"><a href="{% url 'home' %}">Home</a></h6>
                         <ul class="list-unstyled">
-                            <li><a href="/regulations/search">Search</a></li>
-                            <li><a href="/regulations#learn">Learn</a></li>
+                            <li><a href="{% url 'search' %}">Search</a></li>
+                            <li><a href="{% url 'home' %}#learn">Learn</a></li>
+                            <li><a href="{% url 'about' %}">About</a></li>
                         </ul>
                     </div>
                 </div>
@@ -40,7 +27,7 @@
                 <div class="row align-items-center justify-content-md-between pb-4 text-dark">
                     <div class="col-md-6">
                         <div class="copyright text-sm font-weight-bold text-center text-md-left">
-                            &copy; <a href="https://github.com/uchicago-capp-30320/CivicLens/?tab=AGPL-3.0-1-ov-file" class="font-weight-bold" target="_blank">GNU AFFERO GENERAL PUBLIC LICENSE</a> 
+                            &copy; <a href="https://github.com/uchicago-capp-30320/CivicLens/?tab=AGPL-3.0-1-ov-file" class="font-weight-bold" target="_blank">GNU AFFERO GENERAL PUBLIC LICENSE</a>
                             - coded by <a target="_blank" href="https://github.com/uchicago-capp-30320/CivicLens/">CivicLens</a>
                         </div>
                     </div>

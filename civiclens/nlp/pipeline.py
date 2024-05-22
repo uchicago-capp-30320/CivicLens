@@ -1,20 +1,49 @@
-import datetime
+"""Pipeline for running all NLP analysis and updating the database
+"""
+
+import argparse
+import logging
+import os
+from datetime import datetime
+from functools import partial
 
 import polars as pl
-from sentence_transformers import SentenceTransformer
 
-from ..utils.database_access import Database, pull_data
-from . import comments, titles
+from civiclens.nlp import titles
+from civiclens.nlp.comments import get_doc_comments, rep_comment_analysis
+from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
+from civiclens.nlp.tools import RepComments, sentiment_analysis
+from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
+from civiclens.utils.database_access import Database, pull_data, upload_comments
 
 
-def doc_generator(df: pl.DataFrame):
+# config logging
+logger = logging.getLogger(__name__)
+os.makedirs("nlp_logs", exist_ok=True)
+logging.getLogger("gensim").setLevel(logging.WARNING)
+logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s %(message)s",
+    filename=f'nlp_logs/{datetime.now().strftime("%Y-%m-%d")}_run.log',
+    encoding="utf-8",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO,
+)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--refresh", action="store_true", required=False)
+
+
+def doc_generator(df: pl.DataFrame, doc_idx: int = 0):
     """creates a doc generator"""
     for row in df.iter_rows():
-        yield (row)
+        yield row[doc_idx]
 
 
 def get_last_update():
     """gets the timestamp of last update"""
+    new_date = None
     nlp_updated_query = """SELECT last_updated
                         FROM regulations_nlpoutput
                         ORDER BY last_updated ASC LIMIT 1"""
@@ -24,12 +53,15 @@ def get_last_update():
         connection=db_date,
         schema=["last_updated"],
     )
-    if not last_updated.is_empty():
-        last_updated = last_updated[0, "last_updated"]
-        last_updated = last_updated.strftime("%Y-%m-%d %H:%M:%S")
-    else:
-        last_updated = None
-    return last_updated
+
+    if last_updated.is_empty():
+        return new_date
+
+    last_updated = last_updated[0, "last_updated"]
+    if last_updated:
+        new_date = last_updated.strftime("%Y-%m-%d %H:%M:%S")
+
+    return new_date
 
 
 def docs_have_titles():
@@ -46,59 +78,77 @@ def docs_have_titles():
 
 
 if __name__ == "__main__":
-    last_updated = get_last_update()
-    docs_with_titles = docs_have_titles()
+    args = parser.parse_args()
 
-    # what docs need comment nlp update
-    if last_updated is not None:
-        docs_to_update = f"""SELECT document_id
-        FROM regulations_comment rc1
-        WHERE posted_date >= TIMESTAMP '{last_updated}'
-        GROUP BY document_id
-        HAVING COUNT(*) > 20
-        AND COUNT(*) >= 0.1 * (
-            SELECT COUNT(*)
-            FROM regulations_comment rc2
-            WHERE rc2.document_id = rc1.document_id
-            GROUP BY document_id
-            HAVING COUNT(*) > 20
-        )
+    if args.refresh:
+        docs_with_titles = []
+        docs_to_update = """SELECT document_id
+        FROM regulations_comment
+        GROUP BY document_id;
         """
     else:
-        docs_to_update = """SELECT document_id
-        FROM regulations_comment rc1
-        GROUP BY document_id
-        HAVING COUNT(*) > 20;
-        """
+        args = parser.parse_args()
+        last_updated = get_last_update()
+        docs_with_titles = docs_have_titles()
+        # what docs need comment nlp update
+        if last_updated is not None:
+            docs_to_update = f"""SELECT document_id
+                FROM regulations_comment rc1
+                WHERE posted_date >= TIMESTAMP '{last_updated}'
+                GROUP BY document_id
+                HAVING COUNT(*) > 20
+                AND COUNT(*) >= 0.1 * (
+                SELECT COUNT(*)
+                FROM regulations_comment rc2
+                WHERE rc2.document_id = rc1.document_id
+                );"""  # noqa: E702, E231, E241
+        else:
+            docs_to_update = """SELECT document_id
+            FROM regulations_comment rc1
+            GROUP BY document_id
+            HAVING COUNT(*) > 20;
+            """
 
     db_docs = Database()
     df_docs_to_update = pull_data(
         query=docs_to_update, connection=db_docs, schema=["document"]
     )
-    doc_gen = doc_generator(df_docs_to_update)
-
+    documents = doc_generator(df_docs_to_update)
     title_creator = titles.TitleChain()
-    sbert_model = SentenceTransformer("all-mpnet-base-v2")
+    labeler = LabelChain()
+    sentiment_analyzer = partial(
+        sentiment_analysis, pipeline=sentiment_pipeline
+    )
 
-    for _ in range(len(docs_to_update)):
-        try:
-            # do rep comment nlp
-            doc_id = next(doc_gen)[0]
-            comment_data = comments.rep_comment_analysis(doc_id, sbert_model)
+    for doc_id in documents:
+        # generate title if there is not already one
+        comment_data = RepComments(document_id=doc_id)
 
-            # generate title if there is not already one
-            if doc_id not in docs_with_titles:
-                doc_summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
-                if doc_summary is not None:
-                    new_title = title_creator.invoke(paragraph=doc_summary)
-                    comment_data.doc_plain_english_title = new_title
+        comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
+        if (doc_id not in docs_with_titles and comment_data.summary) or (
+            args.refresh and comment_data.summary
+        ):
+            new_title = title_creator.invoke(paragraph=comment_data.summary)
+            comment_data.doc_plain_english_title = new_title
 
-            # TODO call topic code
-            # Get the current timestamp of nlp update
-            updated = datetime.datetime.now()
-            # TODO update nlp table with comment_data, updated time, and topic
-            # code
-            # TODO update document table with topic search terms
-        except StopIteration:
-            print("NLP Update Completed")
-            break
+        # do rep comment nlp
+        comment_df = get_doc_comments(doc_id)
+        if comment_df.is_empty():
+            upload_comments(Database(), comment_data)
+            continue
+
+        comment_data = rep_comment_analysis(
+            comment_data, comment_df, sentence_transformer
+        )
+
+        # topic modeling
+        topic_model = HDAModel()
+        comment_data = topic_comment_analysis(
+            comment_data,
+            model=topic_model,
+            labeler=labeler,
+            sentiment_analyzer=sentiment_analyzer,
+        )
+
+        logger.info(f"Proccessed document: {doc_id}")
+        upload_comments(Database(), comment_data)

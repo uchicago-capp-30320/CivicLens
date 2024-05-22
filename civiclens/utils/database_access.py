@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 from typing import List, Optional, Tuple
 
 import polars as pl
@@ -77,35 +78,56 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
     """
     Uploads comment data to database.
 
-    Inputs:
+    Args:
         connection: Postgres client
         comments: comments to be uploaded
+
+    Returns:
+        None, uploads comments to database
     """
-    query = """INSERT INTO regulations_nlpoutput (
-                    "id",
-                    "rep_comments",
-                    "doc_plain_english_title",
-                    "num_total_comments",
-                    "num_unique_comments",
-                    "num_representative_comment",
-                    "topics",
-                    "num_topics",
-                    "last_updated",
-                    "document_id"
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (id) DO NOTHING;
-                    """
+    query = """
+    INSERT INTO regulations_nlpoutput (
+            comments,
+            is_representative,
+            doc_plain_english_title,
+            num_total_comments,
+            num_unique_comments,
+            num_representative_comment,
+            topics,
+            num_topics,
+            last_updated,
+            created_at,
+            search_topics,
+            document_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (document_id)
+        DO UPDATE SET
+            comments = EXCLUDED.comments,
+            is_representative = EXCLUDED.is_representative,
+            doc_plain_english_title = EXCLUDED.doc_plain_english_title,
+            num_total_comments = EXCLUDED.num_total_comments,
+            num_unique_comments = EXCLUDED.num_unique_comments,
+            num_representative_comment = EXCLUDED.num_representative_comment,
+            topics = EXCLUDED.topics,
+            num_topics = EXCLUDED.num_topics,
+            last_updated = NOW(),
+            search_topics = EXCLUDED.search_topics
+        WHERE regulations_nlpoutput.last_updated IS NULL
+            OR regulations_nlpoutput.last_updated < EXCLUDED.last_updated;
+            """
 
     values = (
-        comments.uuid,
         json.dumps(comments.rep_comments),
+        comments.representative,
         comments.doc_plain_english_title,
         comments.num_total_comments,
         comments.num_unique_comments,
         comments.num_representative_comment,
         json.dumps(comments.topics),
         len(comments.topics),
+        datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
         comments.last_updated.strftime("%m/%d/%Y, %H:%M:%S"),
+        ", ".join(comments.search_vector),
         comments.document_id,
     )
 
@@ -115,7 +137,7 @@ def upload_comments(connection: Database, comments: RepComments) -> None:
         connection.commit()
 
     except Exception as e:
-        return f"Upload failed, error: {e}"
+        print(e)
 
     if connection:
         cursor.close()

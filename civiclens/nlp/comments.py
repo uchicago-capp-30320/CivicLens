@@ -1,10 +1,12 @@
 import networkx as nx
+import numpy as np
 import polars as pl
 from networkx.algorithms.community import louvain_communities
 from sentence_transformers import SentenceTransformer, util
+from sklearn.cluster import AgglomerativeClustering
 
-from ..utils.database_access import Database, pull_data
-from .tools import RepComments
+from civiclens.nlp.tools import RepComments
+from civiclens.utils.database_access import Database, pull_data
 
 
 def get_doc_comments(id: str) -> pl.DataFrame:
@@ -21,7 +23,7 @@ def get_doc_comments(id: str) -> pl.DataFrame:
         SELECT id, document_id, comment
         FROM regulations_comment
         WHERE document_id = '{id}';
-        """
+        """  # noqa: E702, E231, E241
     # filter out attached files
     db = Database()
     df = pull_data(
@@ -57,7 +59,7 @@ def comment_similarity(
 
     Returns:
         df_paraphrase, df_form_letter (tuple[pl.DataFrame]): cosine
-        similarities for form letters and non form letters
+            similarities for form letters and non form letters
     """
     paraphrases = util.paraphrase_mining(
         model, df["comment"].to_list(), show_progress_bar=True
@@ -89,17 +91,30 @@ def comment_similarity(
     return df_paraphrases, df_form_letter
 
 
+def count_unique_comments(df: pl.DataFrame) -> int:
+    """
+    Counts number of unique comments identified by performing paraphrasing
+    mining on a corpus of comments.
+
+    Args:
+        df: dataframe of similiar comments
+    """
+    indices = df["idx1"].to_list() + df["idx2"].to_list()
+
+    return len(set(indices))
+
+
 def build_graph(df: pl.DataFrame) -> nx.Graph:
     """Builds a network graph with comments as nodes and their similarities as
     weights
 
     Args:
         df (pl.DataFrame): df with pairs of comment indices and a cosine
-        similarity
+            similarity
 
     Returns:
         nx.Graph:network graph with comments as nodes and their similarities as
-        weights
+            weights
     """
     graph_data = df.to_dicts()
     G = nx.Graph()
@@ -114,7 +129,7 @@ def get_clusters(G: nx.Graph) -> list[set[int]]:
 
     Args:
         G (nx.Graph): network graph with comments as nodes and their
-        similarities as weights
+            similarities as weights
 
     Returns:
         list[set[int]]: sets are clusters of comment nodes
@@ -151,12 +166,12 @@ def find_central_node(G: nx.Graph, clusters: list[set[int]]) -> dict:
 
     Args:
         G (nx.Graph): network graph with comments as nodes and their
-        similarities as weights
+            similarities as weights
         clusters (list[set[int]]): clusters from Louvain Communities
 
     Returns:
         dict: dictionary with the central comment id as the key and the degree
-        centrality as the value
+            centrality as the value
     """
     centrality_per_cluster = {}
     for cluster in clusters:
@@ -179,7 +194,7 @@ def representative_comments(
 
     Args:
         G (nx.Graph): network graph with comments as nodes and their
-        similarities as weights
+            similarities as weights
         clusters (list[set[int]]): clusters from Louvain Communities
         df (pl.DataFrame): df from initial pull with added cluster info
 
@@ -211,18 +226,106 @@ def representative_comments(
         return output_df
 
 
+def compute_similiarity_clusters(
+    embeds: np.ndarray, sim_threshold: float
+) -> np.ndarray:
+    """
+    Extract form letters from corpus of comments.
+
+    Args:
+        embeds: array of embeddings representing the documents
+        sim_threshold: distance thresholds to divide clusters
+
+    Returns:
+        Array of docs by cluster
+    """
+    kmeans = AgglomerativeClustering(
+        n_clusters=None,
+        metric="cosine",
+        linkage="average",
+        distance_threshold=sim_threshold,
+    )
+    kmeans.fit(embeds)
+
+    return kmeans.labels_
+
+
+def find_form_letters(
+    df: pl.DataFrame, model: SentenceTransformer, form_threshold: int
+) -> tuple[list[dict], int]:
+    """
+    Finds and extracts from letters by clustering, counts number of unique
+    comments.
+
+    Args:
+        df: dataframe of comments to extract form letters from
+        model: vectorize model for text embeddings
+        form_threshold: threshold to consider a comment a form letter
+
+    Returns:
+        List of form letters, number of unique comments
+    """
+    # TODO clean strings
+    num_form_letters = 0
+    form_letters = []
+    docs = df["comment_text"].to_numpy()
+
+    if len(docs) <= 1:  # cannot cluster with less than 2 documents
+        return form_letters, num_form_letters
+
+    embeds = model.encode(docs, convert_to_numpy=True)
+    clusters = compute_similiarity_clusters(embeds, sim_threshold=0.025)
+    document_id = df.unique(subset="document_id").select("document_id").item()
+
+    num_form_letters += clusters.max() + 1
+    for cluster in range(num_form_letters):
+        cluster_docs = docs[np.where(clusters == cluster)]
+        if cluster_docs.size == 0:
+            continue
+
+        num_rep = (
+            df.filter(pl.col("comment_text").is_in(cluster_docs))
+            .select("comments_represented")
+            .sum()
+            .item()
+        )
+        letter_text = np.random.choice(cluster_docs, size=1).item()
+        letter_id = (
+            df.filter(pl.col("comment_text") == letter_text)
+            .select("comment_id")
+            .item()
+        )
+
+        form_letter = True
+        if num_rep <= form_threshold:
+            form_letter = False
+
+        form_letters.append(
+            {
+                "comments_represented": num_rep,
+                "comment_id": letter_id,
+                "document_id": document_id,
+                "comment_text": letter_text,
+                "form_letter": form_letter,
+            }
+        )
+
+    return form_letters, num_form_letters
+
+
 def rep_comment_analysis(
-    id: str, model: SentenceTransformer
-) -> tuple[pl.DataFrame]:
+    comment_data: RepComments, df: pl.DataFrame, model: SentenceTransformer
+) -> RepComments:
     """Runs all representative comment code for a document
 
     Args:
-        id (str): document id for comment analysis
+        comment_data (RepComment): empty RepComment object
+        df (dataframe): dataframe of comments pertaining to a document
+        model (SentenceTransformer): SBERT model for embeddings
 
     Returns:
         RepComment: dataclass with comment data
     """
-    df = get_doc_comments(id=id)
     df_paraphrases, df_form_letter = comment_similarity(df, model)
 
     try:
@@ -249,21 +352,27 @@ def rep_comment_analysis(
         print("Form Letter Clustering Not Possible: Empty DataFrame")
 
     # fill out comment class
-    comment_data = RepComments()
     comment_data.doc_comments = df
+    form_letters, num_form_letters = find_form_letters(
+        df_rep_form, model, form_threshold=10
+    )
 
     if df_rep_form.is_empty():
-        comment_data.rep_comments = df_rep_paraphrase.to_dict()
+        comment_data.rep_comments = df_rep_paraphrase.to_dicts()
         comment_data.num_representative_comment = df_rep_paraphrase.shape[0]
     elif df_rep_paraphrase.is_empty():
-        comment_data.rep_comments = df_rep_form.to_dict()
-        comment_data.num_representative_comment = df_rep_form.shape[0]
+        comment_data.rep_comments = form_letters
+        comment_data.num_representative_comment = num_form_letters
     else:
-        combined_data = pl.concat([df_rep_form, df_rep_paraphrase]).to_dict()
-        comment_data.rep_comments = combined_data
-        comment_data.num_representative_comment = combined_data.shape[0]
+        comment_data.rep_comments = form_letters + df_rep_paraphrase.to_dicts()
+        comment_data.num_representative_comment = len(comment_data.rep_comments)
 
+    num_paraphrased = count_unique_comments(df_paraphrases)
     comment_data.num_total_comments = df.shape[0]
-    comment_data.num_unique_comments = df_paraphrases.shape[0]
+    comment_data.num_unique_comments = (
+        num_paraphrased + num_form_letters
+        if num_paraphrased < comment_data.num_total_comments
+        else num_paraphrased
+    )
 
     return comment_data

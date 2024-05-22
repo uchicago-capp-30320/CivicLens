@@ -8,13 +8,17 @@
 {% block content %}
 
 <!-- whole page -->
-<section class="slice py-3" style="background-color:#FDFFF7" id="core-block">
+<section class="slice py-3 pb-10" style="background-color:#FDFFF7" id="core-block">
   <!-- title section -->
   <div class="container p-4 py-0" style="background-color: rgba(180, 47, 55, 0.15); border: 15px solid #FDFFF7;">
-    <h5>{{comments.doc_plain_english_title}}</h5>
-    <h6 class="font-italic font-weight-normal">Original title: {{doc.title}}</h6>
+    {% if doc.nlpoutput.doc_plain_english_title and doc.nlpoutput.doc_plain_english_title != "Regulation: No regulation" %}
+      <h5>{{ nlp.doc_plain_english_title }}</h5>
+      <h6 class="font-italic font-weight-normal">Original title: {{ doc.title }}</h6>
+    {% else %}
+      <h5>{{ doc.title }}</h5>
+    {% endif %}
   </div>
-    
+
   <!-- two sectioned part of the page -->
   <div class="container">
     <div class="input-group mb-3 order-md-1">
@@ -27,7 +31,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Comment by</a>
-              <a class="font-weight-normal">doc.comment_deadline</a>
+              <a class="font-weight-normal">{{ doc.comment_end_date }}</a>
             </p>
           </div>
         </div>
@@ -36,7 +40,7 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Posted on</a>
-              <a class="font-weight-normal">doc.comment_posted_date</a>
+              <a class="font-weight-normal">{{ doc.posted_date }}</a>
             </p>
           </div>
         </div>
@@ -44,8 +48,8 @@
         <div class="card-sm" style="background-color: lightgrey;">
           <div class="card-body py-2 px-3">
             <p class="card-text">
-              <a class="font-weight-bold">Agnecy</a> 
-              <a class="font-weight-normal">doc.agency</a>
+              <a class="font-weight-bold">Agency</a>
+              <a class="font-weight-normal">{{ doc.agency_id }}</a>
             </p>
           </div>
         </div>
@@ -54,7 +58,12 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Comments received</a>
-              <a class="font-weight-normal">doc.n_comments</a>
+              {% if nlp.num_total_comments %}
+                <a class="font-weight-normal">{{ nlp.num_total_comments }}</a>
+              {% else %}
+                <a class="font-weight-normal">0</a>
+              {% endif %}
+              {% comment %} <a class="font-weight-normal">{{ doc.comment_count }}</a> {% endcomment %}
             </p>
           </div>
         </div>
@@ -63,128 +72,224 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Unique comments received</a>
-              <a class="font-weight-normal">doc.n_unique_comments</a>
+              {% if nlp.num_unique_comments %}
+                <a class="font-weight-normal">{{ nlp.num_unique_comments }}</a>
+              {% else %}
+                <a class="font-weight-normal">0</a>
+              {% endif %}
             </p>
           </div>
         </div>
 
-        <p class="text-right text-muted small">
-          <a class="font-italic">comments last updated:</a> doc.comments_last_updated
+        <p class="text-right small">
+          {% if nlp.last_updated %}
+            <a class="font-italic">comments last updated:</a> {{ nlp.last_updated|date:"F j, Y"  }}
+          {% else %}
+            <a class="font-italic">comments last updated:</a> {{ doc.last_modified_date|date:"F j, Y"  }}
+          {% endif %}
         </p>
 
         <!-- in the weeds section -->
-        <span class="h6 font-weight-bold">In the weeds</span>
-        
+        <span class="h6 font-weight-bold">In the Weeds</span>
+
         <p></p>
-        <div class="card-sm" style="background-color: lightgrey;">
-          <div class="card-body py-2 px-3">
-            <p class="card-text">
-              <a class="font-weight-bold">Document ID</a>
-              <a class="font-weight-normal">{{doc.id}}</a>
-            </p>
-          </div>
-        </div>
 
-        <div class="card-sm" style="background-color: lightgrey;">
+        <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank"
+        class="card-sm-custom">
           <div class="card-body py-2 px-3">
             <p class="card-text">
-              <a class="font-weight-bold">Federal Register ID</a>
-              <a class="font-weight-normal">doc.federal_register_id</a>
+              <span class="font-weight-bold">Document ID</span>
+              <span class="font-weight-normal">{{ doc.id }}</span>
             </p>
           </div>
-        </div>
+        </a>
 
-        <div class="card-sm" style="background-color: lightgrey;">
-          <div class="card-body py-2 px-3">
-            <p class="card-text">
-              <a class="font-weight-bold">Docket ID</a>
-              <a class="font-weight-normal">doc.docket_id</a>
-            </p>
+        {% if doc.fr_doc_num %}
+          <a href="https://www.federalregister.gov/documents/{{fed_register_url.doc_posted_year}}/{{fed_register_url.doc_posted_month}}/{{fed_register_url.doc_posted_day}}/{{doc.fr_doc_num}}/{{fed_register_url.doc_name_url}}" target="_blank"
+          class="card-sm-custom">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <span class="font-weight-bold">Federal Register ID</span>
+                <span class="font-weight-normal">{{ doc.fr_doc_num }}</span>
+              </p>
+            </div>
+          </a>
+        {% else %}
+          <div class="card-sm" style="background-color: lightgrey;">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <a class="font-weight-bold">Federal Register ID</a>
+                <a class="font-weight-normal">{{ doc.fr_doc_num }}</a>
+              </p>
+            </div>
           </div>
-        </div>
+        {% endif %}
+        {% if doc.docket_id %}
+          <a href="https://www.regulations.gov/docket/{{doc.docket_id}}" target="_blank"
+          class="card-sm-custom">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <span class="font-weight-bold">Docket ID</span>
+                <span class="font-weight-normal">{{ doc.docket_id }}</span>
+              </p>
+            </div>
+          </a>
+        {% else %}
+          <div class="card-sm" style="background-color: lightgrey;">
+            <div class="card-body py-2 px-3">
+              <p class="card-text">
+                <a class="font-weight-bold">Docket ID</a>
+                <a class="font-weight-normal">{{ doc.docket_id }}</a>
+              </p>
+            </div>
+          </div>
+        {% endif %}
 
         <p></p>
         <p class="small"> Want to get even more in the weeds? </p>
-        <button class="btn btn-sm" style="background-color:#B42F37; color:#FDFFF7;">
-          <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
-            Explore supplementary materials on regulations.gov
-          </a>
-        </button>
+        <a href="https://www.regulations.gov/document/{{doc.id}}" target="_blank"
+          class="btn btn-sm font-weight-normal text-white"
+          style="background-color:#B42F37; color:#FDFFF7;">
+          Explore supplementary materials on regulations.gov
+        </a>
       </div>
 
       <!-- container for the document summary, NLP results -->
       <div class="col-md-8">
         <span class="h6">Summary</span>
         <p></p>
-        <div class="card p-3">
-          <div class="card-body">
-            <p class="card-text">doc.original_summary...</p>
+          <div class="card p-3">
+            <div class="card-body">
+              {% if doc.summary %}
+                <p class="card-text">{{ doc.summary }}</p>
+              {% else %}
+                <p class="card-text">
+                  Regulations.gov has no summary for this document at this time. <a href="https://www.regulations.gov/document/{{ doc.id }}" target="_blank"><b>For relevant documentation, click here!</b></a>
+                </p>
+              {% endif %}
+            </div>
           </div>
-        </div>
-        <span class="h6">doc.n_topics topics emerged from doc.n_comments.</span>
-        <p></p>
-        <span class="p">[methods here...]</span>
-        <span class="p">[methods here...]</span>
-        <span class="p">[methods here...]</span>
+        {% if nlp.is_representative %}
+          <span class="h6">{{ nlp.num_topics }} topics emerged from {{ doc.comment_count }} total comments.</span>
+          <p class="mb-0">
+            The
+            {% if nlp.num_topics > 5 %}
+              top 5
+            {% elif nlp.num_topics > 0 %}
+              {{nlp.num_topics}}
+            {% endif %}
+            topics that emerged from all comments are below, as well as the sentiment of the comments associated
+            with each topic.
 
-        <div class="container p-1 h-25" style="background-color: #FDFFF7;" id="chart">
-          <!-- hacky way to get comments.topics into the script -->
-          <!-- this is where we might be able to do alt text -->
-          <div id="topics" style="display: none;">
-            {{comments.topics}}
+          </p>
+          <div class="row pt-2 pb-2" style="background-color: #FDFFF7; height: 250px;" id="chart">
+            <!-- hacky way to get comments.topics into the script -->
+            <!-- this is where we might be able to do alt text -->
+            <div id="topics" style="display: none;">
+              {{nlp.topics}}
+            </div>
+            {% load static %}
+            <p></p>
+            <script type="text/javascript" src="{% static '/js/graph.js' %}"></script>
           </div>
-          {% load static %}
+          <p class="text-right small mb-0 pb-0">
+            <a class="font-italic">topics last updated:</a> {{ nlp.last_updated|date:"F j, Y" }}
+          </p>
+          <p class="text-right small font-italic p-0 m-0">
+            For more information on how the human-readable titles and topics were created, visit our
+            <a class="font-weight-bold" href="{% url 'about' %}">
+              About page.
+            </a>
+          </p>
+          <hr class="m-2">
           <p></p>
-          <script type="module">
-            import { drawGraph } from "{% static '/js/graph.js' %}";
-            drawGraph();
-          </script>
-        </div>
-        <p class="text-right text-muted small">
-          <a class="font-italic">topics last updated:</a> doc.topics_last_updated
-        </p>
+          {% if nlp.num_representative_comment == 1 %}
+            {% if nlp.num_total_comments == 1 %}
+              <span class="h6">{{ nlp.num_representative_comment }} representative comment representing {{ nlp.num_total_comments }} total comment.</span>
+            {% else %}
+              <span class="h6">{{ nlp.num_representative_comment }} representative comment representing {{ nlp.num_total_comments }} total comments.</span>
+            {% endif %}
+          {% else %}
+            <span class="h6">{{ nlp.num_representative_comment }} representative comments representing {{ nlp.num_total_comments }} total comments.</span>
+          {% endif %}
+          <p>
+            The following comments capture the core themes of the comments received.
+          </p>
+          <p class="text-right small font-italic p-0 m-0">
+            For more information on how representative comments were selected, visit our
+            <a class="font-weight-bold" href="{% url 'about' %}">
+              About page.
+            </a>
+          </p>
+          {% for rep_comment in nlp.comments|slice:":5" %}
+          <!-- cards for each representative comment -->
+            <div class="card p-0">
+              <div class="card-body">
+                <p class="card-text p-2">{{ rep_comment.text }}</p>
+              </div>
+              <div class="card-footer p-2 d-flex justify-content-between align-items-end">
+                <div>
+                  {% if rep_comment.topic_label %}
+                    <p class="card-text body font-weight-bold text-dark mb-0">Topic(s): {{ rep_comment.topic_label|slice:":3"|join:", " }}</p>
+                  {% endif %}
+                  {% if rep_comment.num_represented %}
+                    <p class="card-text body text-dark">{{ rep_comment.num_represented }} comments like this</p>
+                  {% endif %}
+                </div>
+                <div class="text-right">
+                  {% if rep_comment.form_letter %}
+                    <p class="text-right mb-0">Form letter</p>
+                  {% else %}
+                    <p class="text-right mb-0">Unique comment</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
 
-        <hr>
-        <p></p>
-        <span class="h6">doc.n_rep_comments representing doc.n_comments total comments.</span>
-        <p>The following comments capture the core themes of the comments received. 
-          [potentially include some clarity on the methods used here].
-        </p>
+        {% elif nlp.comments %}
+          <hr>
+          <p></p>
+          <span class="h6">Comments</span>
+          <p></p>
+          {% for comment in nlp.comments|slice:":5" %}
+          <!-- cards for each representative comment -->
+            <div class="card p-0">
+              <div class="card-body">
+                <p class="card-text p-2">{{ comment.text }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        {% endif %}
 
-        <!-- cards for each representative comment -->
-        <div class="card p-0">
-          <div class="card-body">
-            <p class="card-text p-2">comment.text...</p>
-          </div>
-          <div class="card-footer p-2">
-            <p class="text-muted text-right mb-0">[need to find some way to put these on the same line]</p>
-            <p class="card-text body font-weight-bold text-dark mb-0">Topic: comment.topic</p>
-            <p class="card-text body  text-dark">comment.n_like_this comments like this</p>
-            <p class="text-muted text-right mb-0">comment.TYPE_OF_COMMENTER</p>
-            <p class="text-muted text-right mb-0">comment.commenter_name</p>
-            <p class="text-muted text-right">commented on comment.date_received.</p>
-            
-          </div>
-        </div>
-
-        <div style="text-align: center;">
-          <button class="btn btn-sm" style="background-color:#21315C; color:#FDFFF7;">
-            <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
+        {% if nlp or comments_api  %}
+          <div style="text-align: center;">
+            <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank"
+              class="btn btn-sm font-weight-normal text-white"
+              style="background-color:#21315C; color:#FDFFF7;">
               Add your own comment!
             </a>
-          </button>
-      
-          <button class="btn btn-sm btn-outline-primary" style="background-color:white; color:#21315C;">
-            <a href="https://www.regulations.gov/document/{{doc.id}}/comment" target="_blank" class="font-weight-normal">
+
+            <a href="https://www.regulations.gov/docket/{{doc.docket_id}}/comments" target="_blank"
+              class="btn btn-sm btn-outline-primary font-weight-normal"
+              style="background-color:white; color:#21315C;">
               Browse all existing comments
             </a>
-          </button>
-        </div>
+          </div>
+
+        {% else %}
+          <div style="text-align: center;">
+            <button class="btn btn-sm" style="background-color:#21315C; color:#FDFFF7;">
+              <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank" class="font-weight-normal text-white">
+                Be the first to comment!
+              </a>
+            </button>
+          </div>
+
+        {% endif %}
       </div>
     </div>
   </div>
 </section>
 
 {% endblock content %}
-
-
