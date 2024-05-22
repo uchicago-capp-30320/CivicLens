@@ -10,6 +10,15 @@ from civiclens.utils.constants import REG_GOV_API_KEY
 
 
 def pull_list_of_doc_info() -> list[tuple[str]]:
+    """
+    Pulls fields to find right object id for all docs in regulations_document
+
+    Args: None
+
+    Returns: response (list of tuples of strings): the table fields of all
+        docs in regulations_document
+
+    """
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
@@ -27,6 +36,16 @@ def pull_list_of_doc_info() -> list[tuple[str]]:
 
 
 def find_object_id(object_id, rin):
+    """
+    Manages known bug in the table by finding the right object id
+
+    Args:
+        object_id (str): the object id field for a row
+        rin (str): the rin field for a row
+
+    Returns:
+        the field which matches the right format
+    """
     if object_id is not None and object_id[:2] == "09":
         return object_id
     elif rin is not None and rin[:2] == "09":
@@ -36,6 +55,14 @@ def find_object_id(object_id, rin):
 
 
 def get_doc_api_comment_count(object_id: str) -> int:
+    """
+    Pulls the comment count from the API for a given document
+
+    Args: object_id (str): the object id for a document
+
+    Returns: total_elements (int): the number of comments in the API for doc
+
+    """
     base_url = "https://api.regulations.gov/v4/comments"
 
     params = {"filter[commentOnId]": object_id}
@@ -71,6 +98,13 @@ def get_doc_api_comment_count(object_id: str) -> int:
 
 
 def get_doc_db_comment_count(document_id: str) -> int:
+    """
+    Get the count of number of comments on a doc in regulations_comment
+
+    Args: document_id (str): the id of a given document
+
+    Returns: db_count (int): the comment comment on doc in regulations_comment
+    """
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
@@ -80,6 +114,10 @@ def get_doc_db_comment_count(document_id: str) -> int:
             cursor.execute(query, (document_id,))
             response = cursor.fetchone()
 
+    if connection:
+        cursor.close()
+        connection.close()
+
     db_count = response[0]
     return db_count
 
@@ -87,6 +125,18 @@ def get_doc_db_comment_count(document_id: str) -> int:
 def diff_api_to_db_comment_count(
     document_id: str, object_id: str, rin: str
 ) -> dict:
+    """
+    Take the db fields and get the comment counts (and diff) from API and db
+
+    Args:
+        document_id (str): the document_id field for a row
+        object_id (str): the object id field for a row
+        rin (str): the rin field for a row
+
+    Returns:
+        dict with str keys and in vals: the database count of comments, API
+        count of comments, and difference between those numbers
+    """
     db_count = get_doc_db_comment_count(document_id)
 
     real_object_id = find_object_id(object_id, rin)
@@ -100,6 +150,15 @@ def diff_api_to_db_comment_count(
 
 
 def fetch_comment_count_for_docs_in_db():
+    """
+    Get the comment counts for all documents open for comment
+
+    Args: None
+
+    Returns: polars dataframe with columns: document_id, object_id, rin,
+        db_count, api_count, diff
+    """
+
     ret_lst = []
     doc_tup_list = pull_list_of_doc_info()
     print(f"{len(doc_tup_list)} documents in the database")
@@ -111,11 +170,6 @@ def fetch_comment_count_for_docs_in_db():
             {"document_id": document_id, "object_id": object_id, "rin": rin}
         )
         ret_lst.append(count_dict)
-
-        # END EARLY FOR TESTING
-        # if counter == 100:
-        #     results_df = pl.DataFrame(ret_lst)
-        #     return results_df
 
         if counter % 100 == 0:
             print(f"{counter} docs checked")
