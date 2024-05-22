@@ -41,6 +41,12 @@ def test_num_no_docs(client):
 @pytest.mark.django_db
 def test_render_graph(client):
     graph_resp = client.get("/docs/HHS-OMH-2024-0004-0001").context
-    no_graph_resp = client.get("/docs/BIS-2024-0003-0001").context
+    nlp_object = graph_resp["nlp"]
+    assert nlp_object.id == 308
 
-    assert "nlp" in graph_resp and "nlp" not in no_graph_resp
+
+@pytest.mark.django_db
+def test_render_no_graph(client):
+    no_graph_resp = client.get("/docs/BIS-2024-0003-0001").context
+    nlp_object = no_graph_resp["nlp"]
+    assert not nlp_object.id

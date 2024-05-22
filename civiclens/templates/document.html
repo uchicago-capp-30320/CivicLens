@@ -63,7 +63,7 @@
               {% else %}
                 <a class="font-weight-normal">0</a>
               {% endif %}
-              {% comment %} <a class="font-weight-normal">{{ doc.comment_count }}</a> {% endcomment %}
+              {% comment %} <a class="font-weight-normal">{{ nlp.num_total_comments }}</a> {% endcomment %}
             </p>
           </div>
         </div>
@@ -170,7 +170,7 @@
             </div>
           </div>
         {% if nlp.is_representative %}
-          <span class="h6">{{ nlp.num_topics }} topics emerged from {{ doc.comment_count }} total comments.</span>
+          <span class="h6">{{ nlp.num_topics }} topics emerged from {{ nlp.num_total_comments }} total comments.</span>
           <p class="mb-0">
             The
             {% if nlp.num_topics > 5 %}
@@ -261,7 +261,7 @@
           {% endfor %}
         {% endif %}
 
-        {% if nlp or comments_api  %}
+        {% if nlp.id or comments_api %}
           <div style="text-align: center;">
             <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank"
               class="btn btn-sm font-weight-normal text-white"

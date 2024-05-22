@@ -250,7 +250,7 @@ def document(request, doc_id):  # noqa: E501
             .annotate(receive_date_only=TruncDate("receive_date"))
         )
     except Comment.DoesNotExist:
-        comments_api = Comment()
+        comments_api = None
 
     try:
         nlp = NLPoutput.objects.get(document=doc_id)
