@@ -55,11 +55,13 @@ def search_page(request):
         top_commented_documents = (
             NLPoutput.objects.order_by("-num_total_comments")
             .filter(document_id__in=active_documents_ids)
+            .select_related("nlpoutput")
             .values(
                 "doc_plain_english_title",
                 "num_total_comments",
                 "document_id",
                 "num_unique_comments",
+                "document__title",
             )[:5]
         )
     except IndexError:
@@ -158,20 +160,20 @@ def search_results(request):  # noqa: C901
             )
             if not documents.exists():
                 weight_a = 1.0
-                # weight_b = 0.75
+                weight_b = 0.75
                 weight_d = 0.25
 
                 documents = (
                     Document.objects.prefetch_related("nlpoutput")
                     .annotate(
                         rank=TrigramSimilarity("title", query) * weight_a
-                        + TrigramSimilarity(
-                            "nlpoutput__doc_plain_english_title", query
-                        )
-                        * weight_a
+                        # + TrigramSimilarity(
+                        #     "nlpoutput__doc_plain_english_title", query
+                        # )
+                        # * weight_a
                         # + TrigramSimilarity("nlpoutput__search_topics", query
                         #     ) * weight_d
-                        + TrigramSimilarity("summary", query) * weight_a
+                        + TrigramSimilarity("summary", query) * weight_b
                         + TrigramSimilarity("agency_id", query) * weight_d
                         + TrigramSimilarity("agency_type", query) * weight_d
                     )

@@ -24,7 +24,7 @@
         {{ form.as_p }}
         <div class="input-group mb-4">
           <input class="form-control" id="q" name="q" type="text" required
-          placeholder="Search for topics like 'gun control' or 'reproductive health'...">
+          placeholder="Search for topics like 'healthcare' or 'immigration'...">
           <button class="btn btn-secondary">Search</button>
         </div>
       </form>
@@ -39,20 +39,20 @@
       <h6>Common Search Terms</h6>
 
       <!-- potential refactor to not hard code these links and us a get request instead -->
-      <a class="badge btn-secondary m-1" href="/search/results?q=gun+control">
-        gun control
+      <a class="badge btn-secondary m-1" href="/search/results?q=transportation">
+        transportation
       </a>
-      <a class="badge btn-secondary m-1" href="/search/results?q=reproductive+health">
-        reproductive health
+      <a class="badge btn-secondary m-1" href="/search/results?q=healthcare">
+        healthcare
       </a>
-      <a class="badge btn-secondary m-1" href="/search/results?q=COVID-19">
-        COVID-19
+      <a class="badge btn-secondary m-1" href="/search/results?q=marijuana">
+        marijuana
       </a>
-      <a class="badge btn-secondary m-1" href="/search/results?q=universal+healthcare">
-        universal healthcare
+      <a class="badge btn-secondary m-1" href="/search/results?q=immigration">
+        immigration
       </a>
-      <a class="badge btn-secondary m-1" href="/search/results?q=climate+change">
-        climate change
+      <a class="badge btn-secondary m-1" href="/search/results?q=equality">
+        equality
       </a>
   </div>
   <div class="container">
@@ -95,9 +95,13 @@
               {% for document in top_commented_documents %}
               <li>
                 <a class="btn-link" href="{% url 'document' document.document_id %}">
-                  <strong>{{document.doc_plain_english_title}}</strong>
+                  {% if document.doc_plain_english_title and document.doc_plain_english_title != "Regulation: No regulation" %}
+                    <strong>{{document.doc_plain_english_title}}</strong>
+                  {% else %}
+                    <strong>{{document.document__title}}</strong>
+                  {% endif %}
                    ({{document.num_total_comments}} total comments, {{document.num_unique_comments}} unique comments)
-                  </a>
+                </a>
               </li>
               {% endfor %}
             </ul>
