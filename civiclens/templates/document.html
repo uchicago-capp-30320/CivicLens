@@ -11,8 +11,8 @@
 <section class="slice py-3 pb-10" style="background-color:#FDFFF7" id="core-block">
   <!-- title section -->
   <div class="container p-4 py-0" style="background-color: rgba(180, 47, 55, 0.15); border: 15px solid #FDFFF7;">
-    {% if comments_nlp.doc_plain_english_title %}
-      <h5>{{ comments_nlp.doc_plain_english_title }}</h5>
+    {% if nlp.doc_plain_english_title %}
+      <h5>{{ nlp.doc_plain_english_title }}</h5>
       <h6 class="font-italic font-weight-normal">Original title: {{ doc.title }}</h6>
     {% else %}
       <h5>{{ doc.title }}</h5>
@@ -58,7 +58,12 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Comments received</a>
-              <a class="font-weight-normal">{{ doc.comment_count }}</a>
+              {% if nlp.num_total_comments %}
+                <a class="font-weight-normal">{{ nlp.num_total_comments }}</a>
+              {% else %}
+                <a class="font-weight-normal">0</a>
+              {% endif %}
+              {% comment %} <a class="font-weight-normal">{{ doc.comment_count }}</a> {% endcomment %}
             </p>
           </div>
         </div>
@@ -67,13 +72,17 @@
           <div class="card-body py-2 px-3">
             <p class="card-text">
               <a class="font-weight-bold">Unique comments received</a>
-              <a class="font-weight-normal">{{ unique_comments }}</a>
+              {% if nlp.num_unique_comments %}
+                <a class="font-weight-normal">{{ nlp.num_unique_comments }}</a>
+              {% else %}
+                <a class="font-weight-normal">0</a>
+              {% endif %}
             </p>
           </div>
         </div>
 
         <p class="text-right small">
-          <a class="font-italic">comments last updated:</a> {{ comments_last_updated }}
+          <a class="font-italic">comments last updated:</a> {{ doc.last_modified_date|date:"F j, Y"  }}
         </p>
 
         <!-- in the weeds section -->
@@ -143,19 +152,21 @@
 
       <!-- container for the document summary, NLP results -->
       <div class="col-md-8">
-        {% comment %} <span class="h6">Summary</span> {% endcomment %}
+        <span class="h6">Summary</span>
         <p></p>
           <div class="card p-3">
             <div class="card-body">
               {% if doc.summary %}
                 <p class="card-text">{{ doc.summary }}</p>
               {% else %}
-                <p class="card-text">There is no summary for this document.</p>
+                <p class="card-text">
+                  Regulations.gov has no summary for this document at this time. <a href="https://www.regulations.gov/document/{{ doc.id }}" target="_blank"><b>For relevant documentation, click here!</b></a>
+                </p>
               {% endif %}
             </div>
           </div>
-        {% if comments_nlp.rep_comments %}
-          <span class="h6">{{ comments_nlp.num_topics }} topics emerged from {{ doc.comment_count }} total comments.</span>
+        {% if nlp.is_representative %}
+          <span class="h6">{{ nlp.num_topics }} topics emerged from {{ doc.comment_count }} total comments.</span>
           <p></p>
           <span class="p">[methods here...]</span>
           <span class="p">[methods here...]</span>
@@ -164,23 +175,31 @@
             <!-- hacky way to get comments.topics into the script -->
             <!-- this is where we might be able to do alt text -->
             <div id="topics" style="display: none;">
-              {{comments_nlp.topics}}
+              {{nlp.topics}}
             </div>
             {% load static %}
             <p></p>
             <script type="text/javascript" src="{% static '/js/graph.js' %}"></script>
           </div>
           <p class="text-right small">
-            <a class="font-italic">topics last updated:</a> {{ comments_nlp.last_updated }}
+            <a class="font-italic">topics last updated:</a> {{ nlp.last_updated|date:"F j, Y" }}
           </p>
 
           <hr>
           <p></p>
-          <span class="h6">{{ comments_nlp.num_rep_comments }} representative comments representing {{ comments_nlp.num_total_comments }} total comments.</span>
+          {% if nlp.num_representative_comment == 1 %}
+            {% if nlp.num_total_comments == 1 %}
+              <span class="h6">{{ nlp.num_representative_comment }} representative comment representing {{ nlp.num_total_comments }} total comment.</span>
+            {% else %}
+              <span class="h6">{{ nlp.num_representative_comment }} representative comment representing {{ nlp.num_total_comments }} total comments.</span>
+            {% endif %}
+          {% else %}
+            <span class="h6">{{ nlp.num_representative_comment }} representative comments representing {{ nlp.num_total_comments }} total comments.</span>
+          {% endif %}
           <p>The following comments capture the core themes of the comments received.
             [potentially include some clarity on the methods used here].
           </p>
-          {% for rep_comment in comments_nlp.rep_comments|slice:":5" %}
+          {% for rep_comment in nlp.comments|slice:":5" %}
           <!-- cards for each representative comment -->
             <div class="card p-0">
               <div class="card-body">
@@ -188,8 +207,8 @@
               </div>
               <div class="card-footer p-2 d-flex justify-content-between align-items-end">
                 <div>
-                  {% if rep_comment.topic %}
-                    <p class="card-text body font-weight-bold text-dark mb-0">Topic: {{ rep_comment.topic }}</p>
+                  {% if rep_comment.topic_label %}
+                    <p class="card-text body font-weight-bold text-dark mb-0">Topic(s): {{ rep_comment.topic_label|slice:":3"|join:", " }}</p>
                   {% endif %}
                   {% if rep_comment.num_represented %}
                     <p class="card-text body text-dark">{{ rep_comment.num_represented }} comments like this</p>
@@ -206,31 +225,22 @@
             </div>
           {% endfor %}
 
-        {% elif comments_api %}
+        {% elif nlp.comments %}
           <hr>
           <p></p>
-          <span class="h6">{{ doc.comment_count }} Total Comments</span>
+          <span class="h6">Comments</span>
           <p></p>
-          {% for comment in comments_api|slice:":5" %}
+          {% for comment in nlp.comments|slice:":5" %}
           <!-- cards for each representative comment -->
             <div class="card p-0">
               <div class="card-body">
-                <p class="card-text p-2">{{ comment.comment }}</p>
-              </div>
-              <div class="card-footer p-2">
-                {% comment %} {% if comment.organization %}
-                  <p class="text-muted text-right mb-0">comment.commenter_name</p>
-                {% elif comment.last_name %}
-                  <p class="text-muted text-right mb-0">{{comment.first_name}} {{comment.last_name}}</p>
-                {% endif %} {% endcomment %}
-                <p class="text-muted text-right">commented on {{ comment.posted_date_only }}.</p>
-
+                <p class="card-text p-2">{{ comment.text }}</p>
               </div>
             </div>
           {% endfor %}
         {% endif %}
 
-        {% if comments_nlp or comments_api  %}
+        {% if nlp or comments_api  %}
           <div style="text-align: center;">
             <a href="https://www.regulations.gov/commenton/{{doc.id}}" target="_blank"
               class="btn btn-sm font-weight-normal text-white"
@@ -238,7 +248,7 @@
               Add your own comment!
             </a>
 
-            <a href="https://www.regulations.gov/commenton/{{doc.id}}/comment" target="_blank"
+            <a href="https://www.regulations.gov/docket/{{doc.docket_id}}/comments" target="_blank"
               class="btn btn-sm btn-outline-primary font-weight-normal"
               style="background-color:white; color:#21315C;">
               Browse all existing comments
