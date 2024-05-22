@@ -1255,9 +1255,7 @@ def add_comments_based_on_comment_date_range(
 
     for comment in comment_data:
         print(f"processing comment {comment['id']} ")
-        all_comment_data = merge_comment_text_and_data(
-                REG_GOV_API_KEY, comment
-            )
+        all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
 
         # clean
         print("cleaning comment")
