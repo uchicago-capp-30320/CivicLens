@@ -314,12 +314,12 @@ def find_form_letters(
 
 
 def rep_comment_analysis(
-    id: str, df: pl.DataFrame, model: SentenceTransformer
+    comment_data: RepComments, df: pl.DataFrame, model: SentenceTransformer
 ) -> RepComments:
     """Runs all representative comment code for a document
 
     Args:
-        id (str): document id
+        comment_data (RepComment): empty RepComment object
         df (dataframe): dataframe of comments pertaining to a document
         model (SentenceTransformer): SBERT model for embeddings
 
@@ -352,7 +352,7 @@ def rep_comment_analysis(
         print("Form Letter Clustering Not Possible: Empty DataFrame")
 
     # fill out comment class
-    comment_data = RepComments(document_id=id, doc_comments=df)
+    comment_data.doc_comments = df
     form_letters, num_form_letters = find_form_letters(
         df_rep_form, model, form_threshold=10
     )
