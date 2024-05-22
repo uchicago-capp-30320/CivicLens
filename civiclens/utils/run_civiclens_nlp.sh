@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # set paths for logging nlp batch info
-LOG_DIR="/usr/civiclens/log"
+LOG_DIR="/home/civiclens-nlp/CivicLens/civiclens/log"
 LAST_UPDATE_FILE="${LOG_DIR}/nlp_batch.csv"
-PROJECT_DIR="/home/civiclens/CivicLens"
-VENV_PATH="/home/civiclens/.cache/pypoetry/virtualenvs/civiclens-InIOQkFS-py3.12/bin/activate"
+PROJECT_DIR="/home/civiclens-nlp/CivicLens/"
+VENV_PATH="/home/civiclens-nlp/CivicLens/.venv/bin/activate"
 
 echo "===================================="
 echo "Running NLP Update..."
