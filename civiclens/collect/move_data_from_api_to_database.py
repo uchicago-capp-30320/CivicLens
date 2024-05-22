@@ -29,6 +29,7 @@ logging.basicConfig(
     handlers=[logging.FileHandler("pull_data.log"), logging.StreamHandler()],
 )
 
+
 def fetch_fr_document_details(fr_doc_num: str) -> str:
     """
     Retrieves xml url for document text from federal register.
@@ -39,7 +40,7 @@ def fetch_fr_document_details(fr_doc_num: str) -> str:
     Returns:
         xml url (str)
     """
-    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{fr_doc_num}.json?fields[]=full_text_xml_url"
+    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{fr_doc_num}.json?fields[]=full_text_xml_url"  # noqa: E231
     response = requests.get(api_endpoint)
     if response.status_code == 200:
         data = response.json()
@@ -202,9 +203,7 @@ def verify_database_existence(
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"SELECT * \
-                    FROM {table} \
-                    WHERE {db_field} = %s;"
+            query = f"SELECT * FROM {table} WHERE {db_field} = %s;"  # noqa: E231, E702
             cursor.execute(query, (api_field_val,))
             response = cursor.fetchall()
 
@@ -247,7 +246,6 @@ def add_data_quality_flag(
     logging.info(f"Added data quality flag for {data_id} of type {data_type}.")
 
 
-
 def get_most_recent_doc_comment_date(doc_id: str) -> str:
     """
     Returns the date of the most recent comment for a doc
@@ -261,9 +259,9 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"""SELECT MAX("posted_date") \
-                        FROM regulations_comment \
-                        WHERE "document_id" = '{doc_id}'; """
+            query = f"""SELECT MAX("posted_date")
+                FROM regulations_comment
+                WHERE "document_id" = '{doc_id}';"""  # noqa: E231, E702
             cursor.execute(query)
             response = cursor.fetchall()
 
@@ -465,7 +463,7 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
             # the doc text, so we enter None for those fields
             logging.error(
                 rf"""Error accessing federal register xml data for frDocNum
-                {fr_doc_num},\ document id {document_id}"""
+                {fr_doc_num}, \ document id {document_id}"""
             )
             blank_xml_fields = {
                 "agencyType": None,
@@ -1283,7 +1281,6 @@ def add_comments_based_on_comment_date_range(
     )
 
     for comment in comment_data:
-
         logging.info(f"processing comment {comment['id']} ")
 
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
@@ -1299,7 +1296,6 @@ def add_comments_based_on_comment_date_range(
             document_id,
             "id",
         ):
-
             logging.info(
                 f"{document_id} is in the db! begin processing comment"
             )
@@ -1313,7 +1309,6 @@ def add_comments_based_on_comment_date_range(
             # insert
             insert_response = insert_comment_into_db(all_comment_data)
             if insert_response["error"]:
-
                 logging.error(insert_response["description"])
             else:
                 logging.info(
