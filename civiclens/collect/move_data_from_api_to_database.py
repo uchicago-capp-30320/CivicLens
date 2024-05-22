@@ -1,6 +1,7 @@
 import argparse
 import datetime as dt
 import json
+import logging
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -21,6 +22,14 @@ from civiclens.utils.constants import (
 from civiclens.utils.text import clean_text
 
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # You can change this to DEBUG for more detailed logs
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("pull_data.log"), logging.StreamHandler()],
+)
+
+
 def fetch_fr_document_details(fr_doc_num: str) -> str:
     """
     Retrieves xml url for document text from federal register.
@@ -31,7 +40,7 @@ def fetch_fr_document_details(fr_doc_num: str) -> str:
     Returns:
         xml url (str)
     """
-    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{fr_doc_num}.json?fields[]=full_text_xml_url"
+    api_endpoint = f"https://www.federalregister.gov/api/v1/documents/{fr_doc_num}.json?fields[]=full_text_xml_url"  # noqa: E231
     response = requests.get(api_endpoint)
     if response.status_code == 200:
         data = response.json()
@@ -194,11 +203,13 @@ def verify_database_existence(
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"SELECT * \
-                    FROM {table} \
-                    WHERE {db_field} = %s;"
+            query = f"SELECT * FROM {table} WHERE {db_field} = %s;"  # noqa: E231, E702
             cursor.execute(query, (api_field_val,))
             response = cursor.fetchall()
+
+    if connection:
+        cursor.close()
+        connection.close()
 
     return bool(response)
 
@@ -234,6 +245,12 @@ def add_data_quality_flag(
             )
         connection.commit()
 
+    if connection:
+        cursor.close()
+        connection.close()
+
+    logging.info(f"Added data quality flag for {data_id} of type {data_type}.")
+
 
 def get_most_recent_doc_comment_date(doc_id: str) -> str:
     """
@@ -248,19 +265,21 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
     connection, cursor = connect_db_and_get_cursor()
     with connection:
         with cursor:
-            query = f"""SELECT MAX("posted_date") \
-                        FROM regulations_comment \
-                        WHERE "document_id" = '{doc_id}';"""
+            query = f"""SELECT MAX("posted_date")
+                FROM regulations_comment
+                WHERE "document_id" = '{doc_id}';"""  # noqa: E231, E702
             cursor.execute(query)
             response = cursor.fetchall()
 
+    if connection:
+        cursor.close()
+        connection.close()
+
     # format the text
     # it seems that the regulations.gov API returns postedDate rounded to the
-    # hour
-    # if we used that naively as the most recent date, we might miss some
-    # comments
-    # when we pull comments again. By backing up one hour, we trade off some
-    # unnecessary API calls for ensuring we don't miss anything
+    # hour. If we used that naively as the most recent date, we might miss some
+    # comments when we pull comments again. By backing up one hour, we trade
+    # off some unnecessary API calls for ensuring we don't miss anything
     date_dt = response[0][0]
     one_hour_prior = date_dt - dt.timedelta(hours=1)
     most_recent_date = one_hour_prior.strftime("%Y-%m-%d %H:%M:%S")
@@ -315,7 +334,7 @@ def qa_docket_data(docket_data: json) -> None:
 
     except AssertionError as e:
         id = data_for_db["id"]
-        print(f"AssertionError: docket {id} -- {e}")
+        logging.error(f"AssertionError: docket {id} -- {e}")
         add_data_quality_flag(id, "docket", e)
 
 
@@ -371,7 +390,7 @@ def insert_docket_into_db(docket_data: json) -> dict:
     except Exception as e:
         error_message = f"""Error inserting docket {data_for_db["id"]}
         into dockets table: {e}"""
-        # print(error_message)
+        logging.error(error_message)
         return {
             "error": True,
             "message": e,
@@ -419,11 +438,10 @@ def add_dockets_to_db(
             # add docket_data to docket table in the database
             insert_response = insert_docket_into_db(docket_data)
             if insert_response["error"]:
-                print(insert_response["description"])
-                # would want to add logging here
+                logging.error(insert_response["description"])
             else:
                 if print_statements:
-                    print(f"added docket {docket_id} to the db")
+                    logging.info(f"Added docket {docket_id} to the db")
 
 
 def query_register_API_and_merge_document_data(doc: json) -> json:
@@ -451,9 +469,9 @@ def query_register_API_and_merge_document_data(doc: json) -> json:
         except Exception:
             # if there's an error, that means we can't use the xml_url to get
             # the doc text, so we enter None for those fields
-            print(
+            logging.error(
                 rf"""Error accessing federal register xml data for frDocNum
-                {fr_doc_num},\ document id {document_id}"""
+                {fr_doc_num}, \ document id {document_id}"""
             )
             blank_xml_fields = {
                 "agencyType": None,
@@ -589,7 +607,7 @@ def qa_document_data(document_data: json) -> True:
 
     except AssertionError as e:
         id = document_data["id"]
-        print(f"AssertionError: document {id} -- {e}")
+        logging.error(f"AssertionError: document {id} -- {e}")
         add_data_quality_flag(id, "document", e)
 
 
@@ -630,9 +648,6 @@ def insert_document_into_db(document_data: json) -> dict:
         document_data["supplementaryInformation"],
     )
 
-    # annoying quirk:
-    # https://stackoverflow.com/questions/47723790/psycopg2-programmingerror-
-    # column-of-relation-does-not-exist
     query = """INSERT INTO regulations_document ("id",
                             "document_type",
                             "last_modified_date",
@@ -689,11 +704,14 @@ def insert_document_into_db(document_data: json) -> dict:
                     fields_to_insert,
                 )
                 connection.commit()
+        if connection:
+            cursor.close()
+            connection.close()
 
     except Exception as e:
         error_message = f"""Error inserting document
         {document_data['id']} into dockets table: {e}"""
-        # print(error_message)
+        logging.error(error_message)
         return {
             "error": True,
             "message": e,
@@ -736,11 +754,11 @@ def add_documents_to_db(
             # insert step
             insert_response = insert_document_into_db(full_doc_info)
             if insert_response["error"]:
-                print(insert_response["description"])
+                logging.info(insert_response["description"])
                 # would want to add logging here
             else:
                 if print_statements:
-                    print(f"added document {document_id} to the db")
+                    logging.info(f"added document {document_id} to the db")
 
 
 def get_comment_text(api_key: str, comment_id: str) -> dict:
@@ -779,13 +797,13 @@ def get_comment_text(api_key: str, comment_id: str) -> dict:
                 else WAIT_SECONDS
             )
             the_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(
+            logging.info(
                 f"""Rate limit exceeded at {the_time}.
                 Waiting {wait_time} seconds to retry."""
             )
             time.sleep(wait_time)
         else:
-            print(
+            logging.info(
                 f"""Failed to retrieve comment data.
                 Status code: {response.status_code}"""
             )
@@ -909,7 +927,7 @@ def qa_comment_data(comment_data: json) -> None:
 
     except AssertionError as e:
         id = comment_data["id"]
-        print(f"AssertionError: comment {id} -- {e}")
+        logging.error(f"AssertionError: comment {id} -- {e}")
         add_data_quality_flag(id, "comment", e)
 
 
@@ -1091,10 +1109,13 @@ def insert_comment_into_db(comment_data: json) -> dict:
             )
             connection.commit()
 
+        if connection:
+            connection.close()
+
     except Exception as e:
         error_message = f"""Error inserting comment {comment_data['id']} into
         comment table: {e}"""
-        # print(error_message)
+        logging.error(error_message)
         return {
             "error": True,
             "message": e,
@@ -1137,8 +1158,7 @@ def add_comments_to_db_for_new_doc(document_object_id: str) -> None:
         insert_response = insert_comment_into_db(all_comment_data)
 
         if insert_response["error"]:
-            print(insert_response["description"])
-            # would want to add logging here
+            logging.error(insert_response["description"])
 
 
 def add_comments_to_db_for_existing_doc(
@@ -1161,7 +1181,7 @@ def add_comments_to_db_for_existing_doc(
     # get date of most recent comment on this doc in the db
     most_recent_comment_date = get_most_recent_doc_comment_date(document_id)
     if print_statements:
-        print(
+        logging.info(
             f"""comments found for document {document_id}, most recent was
             {most_recent_comment_date}"""
         )
@@ -1178,6 +1198,19 @@ def add_comments_to_db_for_existing_doc(
     for comment in comment_data:
         all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
 
+        # if documumrnent is not in the db, add it
+        document_id = all_comment_data.get("commentOnDocumentId", "")
+        if not verify_database_existence(
+            "regulations_document", document_id, "id"
+        ):
+            # call the API to get the document info
+            doc_list = pull_reg_gov_data(
+                REG_GOV_API_KEY,
+                "documents",
+                params={"filter[objectId]": document_id},
+            )
+            add_documents_to_db(doc_list)
+
         # clean
         clean_comment_data(all_comment_data)
 
@@ -1186,7 +1219,7 @@ def add_comments_to_db_for_existing_doc(
 
         insert_response = insert_comment_into_db(all_comment_data)
         if insert_response["error"]:
-            print(insert_response["description"])
+            logging.error(insert_response["description"])
             # would want to add logging here
 
 
@@ -1212,7 +1245,7 @@ def add_comments_to_db(
                 "regulations_comment", document_id, "document_id"
             ):  # doc doesn't exist in the db; it's new
                 if print_statements:
-                    print(
+                    logging.info(
                         f"""no comments found in database for document
                         {document_id}"""
                     )
@@ -1220,7 +1253,7 @@ def add_comments_to_db(
                 add_comments_to_db_for_new_doc(document_object_id)
 
                 if print_statements:
-                    print(
+                    logging.info(
                         f"""tried to add comments on document
                         {document_id} to the db"""
                     )
@@ -1252,13 +1285,25 @@ def add_comments_based_on_comment_date_range(
         start_date=start_date,
         end_date=end_date,
     )
+
     for comment in comment_data:
-        object_id = comment["attributes"]["objectId"]
+        logging.info(f"processing comment {comment['id']} ")
+
+        all_comment_data = merge_comment_text_and_data(REG_GOV_API_KEY, comment)
+
+        document_id = all_comment_data["data"]["attributes"].get(
+            "commentOnDocumentId", ""
+        )
+
+        logging.info(f"checking {document_id} is in the db")
+
         if verify_database_existence(
-            "regulations_document", object_id, "object_id"
+            "regulations_document",
+            document_id,
+            "id",
         ):
-            all_comment_data = merge_comment_text_and_data(
-                REG_GOV_API_KEY, comment
+            logging.info(
+                f"{document_id} is in the db! begin processing comment"
             )
 
             # clean
@@ -1270,8 +1315,11 @@ def add_comments_based_on_comment_date_range(
             # insert
             insert_response = insert_comment_into_db(all_comment_data)
             if insert_response["error"]:
-                print(insert_response["description"])
-                # would want to add logging here
+                logging.error(insert_response["description"])
+            else:
+                logging.info(
+                    f"added comment {all_comment_data['id']} to the db"
+                )
 
 
 def pull_all_api_data_for_date_range(
@@ -1296,15 +1344,15 @@ def pull_all_api_data_for_date_range(
     """
 
     # get documents
-    print("getting list of documents within date range")
+    logging.info("getting list of documents within date range")
     doc_list = pull_reg_gov_data(
         REG_GOV_API_KEY,
         "documents",
         start_date=start_date,
         end_date=end_date,
     )
-    print(f"got {len(doc_list)} documents")
-    print("now extracting docs open for comments from that list")
+    logging.info(f"got {len(doc_list)} documents")
+    logging.info("now extracting docs open for comments from that list")
 
     # pull the commentable docs from that list
     commentable_docs = []
@@ -1316,24 +1364,26 @@ def pull_all_api_data_for_date_range(
             # added first
             # the db needs the docket primary key first
 
-    print(f"{len(commentable_docs)} documents open for comment")
+    logging.info(f"{len(commentable_docs)} documents open for comment")
 
     if pull_dockets:
-        print("getting dockets associated with the documents open for comment")
+        logging.info(
+            "getting dockets associated with the documents open for comment"
+        )
         add_dockets_to_db(commentable_docs)
-        print("no more dockets to add to db")
+        logging.info("no more dockets to add to db")
 
     if pull_documents:
-        print("adding documents to the db")
+        logging.info("adding documents to the db")
         add_documents_to_db(commentable_docs)
-        print("no more documents to add to db")
+        logging.info("no more documents to add to db")
 
     if pull_comments:
-        print("adding comments to the db")
+        logging.info("adding comments to the db")
         add_comments_based_on_comment_date_range(start_date, end_date)
-        print("no more comments to add to db")
+        logging.info("no more comments to add to db")
 
-    print("process finished")
+    logging.info("process finished")
 
 
 if __name__ == "__main__":

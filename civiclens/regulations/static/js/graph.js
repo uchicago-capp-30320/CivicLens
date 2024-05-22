@@ -1,14 +1,8 @@
-
-
-const reorderKeys = function(dict) {
-    let orderedDict = {};
-    const keyOrder = ['negative', 'neutral', 'positive'];
-    keyOrder.forEach(key => {
-        if (dict.hasOwnProperty(key)) {
-            orderedDict[key] = dict[key];
-        }
-    });
-    return orderedDict;
+function getIndices(length) {
+    if (length < 0) {
+        throw new Error("Length must be a non-negative integer");
+    }
+    return Array.from({ length }, (_, index) => index);
 }
 
 const drawOneHorizonalStackedBarGraph = function(){
@@ -83,11 +77,22 @@ const drawOneHorizonalStackedBarGraph = function(){
     // get only first 5 elements
     const raw_data = JSON.parse(validJSONString).slice(0, 5);
 
-    console.log(raw_data);
-
+    const existing_topics = [];
     const data = raw_data.map(d => {
+        console.log(d);
         let ret = {}
-        ret.topic = d.topic[0]
+
+        // use a topic name that hasn't been used before
+        for (let i = 0; i < d.topic.length; i++) {
+            const topic = d.topic[i];
+            console.log(existing_topics);
+            if (!existing_topics.includes(topic)) {
+                ret.topic = topic;
+                existing_topics.push(topic);
+                break;
+            }
+        }
+
         if (d.negative){
             ret.negative = d.negative
         }
@@ -103,24 +108,15 @@ const drawOneHorizonalStackedBarGraph = function(){
         return ret
     });
 
-    console.log(data);
-
-    const sentiment_counts = Object.keys(
-        data[0]
-        ).filter(d => (
-            (d != "topic") & (d != "source") & (d != "total")
-        ));
-
-    console.log("sentiment counts:", sentiment_counts);
-
+    const sentiment_counts = ["negative", "neutral", "positive"];
     const topics = data.map(d => d.topic);
-
+    const topics_index = getIndices(topics.length);
+    const xMax = d3.max(raw_data.map(d => d.total).flat());
     const stackedData = d3.stack().keys(sentiment_counts)(data);
-    const xMax = d3.max(stackedData[stackedData.length - 1], d => d[1]);
 
     // Scales
-    const x = d3.scaleLinear().domain([0, xMax]).nice().range([0, width]);
-    const y = d3.scaleBand().domain(topics).range([0, height]).padding(0.3);
+    const x = d3.scaleLinear().domain([0, xMax]).range([0, width]);
+    const y = d3.scaleBand().domain(topics_index).range([0, height]).padding(0.3);
     const color = d3.scaleOrdinal().domain(["negative","neutral","positive"]).range(["#EE6123", "#D9D9D9", "#00916E"]);
 
     // Axes
@@ -139,8 +135,11 @@ const drawOneHorizonalStackedBarGraph = function(){
         // .attr('transform', `translate(0,${-y.bandwidth()/2})`)
         .call(g => g.select('.domain').remove())
         .selectAll('text')
+        .data(data)
         .attr('font-weight', 700) // bold the topics
         .attr('text-align', 'center')
+        .text(d => d.topic)
+        // .title((d,i) => raw_data[i].topic)
         .attr('font-size', 14);
 
     // Draw bars
@@ -156,7 +155,7 @@ const drawOneHorizonalStackedBarGraph = function(){
             .data(d => d)
             .join('rect')
             .attr('x', d => x(d[0]))
-            .attr('y', d => y(d.data.topic))
+            .attr('y', (d, i) => y(i))
             .attr('height', y.bandwidth())
             .attr('width', d => x(d[1]) - x(d[0]))
             .attr('font-size', 14);
