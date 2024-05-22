@@ -241,7 +241,7 @@ def add_data_quality_flag(
                 (data_id, data_type, str(error_message), datetime.now()),
             )
         connection.commit()
-        
+
     if connection:
         connection.close()
     logging.info(f"Added data quality flag for {data_id} of type {data_type}.")
@@ -263,7 +263,7 @@ def get_most_recent_doc_comment_date(doc_id: str) -> str:
         with cursor:
             query = f"""SELECT MAX("posted_date") \
                         FROM regulations_comment \
-                        WHERE "document_id" = '{doc_id}';"""
+                        WHERE "document_id" = '{doc_id}'; """
             cursor.execute(query)
             response = cursor.fetchall()
 
