@@ -8,9 +8,10 @@ from functools import partial
 
 import polars as pl
 
-from civiclens.nlp import comments, titles
+from civiclens.nlp import titles
+from civiclens.nlp.comments import get_doc_comments, rep_comment_analysis
 from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
-from civiclens.nlp.tools import sentiment_analysis
+from civiclens.nlp.tools import RepComments, sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
 
@@ -79,6 +80,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.refresh:
+        docs_with_titles = []
         docs_to_update = """SELECT document_id
         FROM regulations_comment
         GROUP BY document_id;
@@ -119,12 +121,9 @@ if __name__ == "__main__":
     )
 
     for doc_id in documents:
-        # do rep comment nlp
-        comment_data = comments.rep_comment_analysis(
-            doc_id, sentence_transformer
-        )
-
         # generate title if there is not already one
+        comment_data = RepComments(document_id=doc_id)
+
         comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
         if (doc_id not in docs_with_titles and comment_data.summary) or (
             args.refresh and comment_data.summary
@@ -132,6 +131,17 @@ if __name__ == "__main__":
             new_title = title_creator.invoke(paragraph=comment_data.summary)
             comment_data.doc_plain_english_title = new_title
 
+        # do rep comment nlp
+        comment_df = get_doc_comments(doc_id)
+        if comment_df.is_empty():
+            upload_comments(Database(), comment_data)
+            continue
+
+        comment_data = rep_comment_analysis(
+            comment_data, comment_df, sentence_transformer
+        )
+
+        # topic modeling
         topic_model = HDAModel()
         comment_data = topic_comment_analysis(
             comment_data,
@@ -140,6 +150,5 @@ if __name__ == "__main__":
             sentiment_analyzer=sentiment_analyzer,
         )
 
-        # TODO logging for upload errors
         logger.info(f"Proccessed document: {doc_id}")
         upload_comments(Database(), comment_data)
