@@ -258,3 +258,7 @@ def document(request, doc_id):  # noqa: E501
             "fed_register_url": fed_register_url,
         },
     )
+
+
+def handler404(request, exception):
+    return render(request, "404.html")
