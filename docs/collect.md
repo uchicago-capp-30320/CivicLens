@@ -51,15 +51,15 @@ for commentId in comment_data[0]["attributes"]["objectId"]:
 
 ## Example 2 - Retrieving all comments made in the first two weeks of April 2024
 
-In this example, we demonstrate how to gather all public comments posted within the first ten days of April 2024. 
+In this example, we demonstrate how to gather all public comments posted within the first ten days of April 2024.
 This method can also be applied to collect documents or dockets by adjusting 'data_type'.
 ```python
 comments_apr_01_10 = pull_reg_gov_data(
     api_key,
     data_type="comments",
-    start_date="2024-05-01", 
+    start_date="2024-05-01",
     end_date="2024-05-10",
-)
+    )
 ```
 
 
