@@ -15,7 +15,7 @@ If you'd like to learn more about federal commenting here is a list of resources
 - [Library of Congress](https://guides.loc.gov/trace-federal-regulations/docket-information): How to trace regulations through the rulemaking process.
 
 ## Installation
-This project uses Poetry to manage dependencies. 
+This project uses Poetry to manage dependencies.
 
 1. [Install Poetry to Local Machine](https://python-poetry.org/docs/)
 
@@ -33,7 +33,7 @@ poetry install
 ```
 
 ## Usage
-This must be run in the Poetry virtual environment. 
+This must be run in the Poetry virtual environment.
 Upon completion of above installation requirements the virtual environment can be activated by simply running:
 
 ```bash
