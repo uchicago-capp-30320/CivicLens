@@ -44,12 +44,12 @@ nav:
   - "index.md"
   - "models.md"
   - "architecture.md"
-  - "collect.md"
-  - "nlp.md"
   - API Reference:
     - "collect.md"
     - "nlp.md"
   - Endpoints:
-    - "endpoints/regulations.md"
+    - "endpoints/home.md"
+    - "endpoints/learn.md"
     - "endpoints/search.md"
     - "endpoints/document.md"
+    - "endpoints/about.md"
