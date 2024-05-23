@@ -3,6 +3,7 @@
 - if the closing date is null or in the future:
     - call the regulations.gov API to get the current status
 """
+import logging
 from datetime import datetime
 
 from civiclens.collect.access_api_data import pull_reg_gov_data
@@ -12,6 +13,17 @@ from civiclens.collect.move_data_from_api_to_database import (
     query_register_API_and_merge_document_data,
 )
 from civiclens.utils.constants import REG_GOV_API_KEY
+
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # You can change this to DEBUG for more detailed logs
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("check_doc_status.log"),
+        logging.StreamHandler(),
+    ],
+)
 
 
 def get_open_docs() -> list:
@@ -29,7 +41,10 @@ def get_open_docs() -> list:
             ("true",),
         )
         open_docs = cur.fetchall()
-    conn.close()
+    if conn:
+        cur.close()
+        conn.close()
+
     return open_docs
 
 
@@ -49,7 +64,9 @@ def close_doc_comment(doc_id: str) -> None:
                     WHERE id = %s",
             ("false", doc_id),
         )
-    conn.close()
+    if conn:
+        cur.close()
+        conn.close()
 
 
 def check_current_status(open_docs: list) -> None:
@@ -65,19 +82,20 @@ def check_current_status(open_docs: list) -> None:
     """
     for id, closing_date in open_docs:
         if closing_date < datetime.now().date():
-            print(
+            logging.info(
                 f"""Document {id} has passed its closing date.
                 Closing the comment period."""
             )
             close_doc_comment(id)
-        # if the closing date is in the future or null, call the
-        # regulations.gov API to get the current status
+
         else:
             # call the regulations.gov API to get the current status
             doc_data = pull_reg_gov_data(
                 REG_GOV_API_KEY, "documents", params={"filter[searchTerm]": id}
             )
-            print(f"Document {id} is still open. Checking the current status.")
+            logging.info(
+                f"Document {id} is still open. Checking the current status."
+            )
             full_doc_info = query_register_API_and_merge_document_data(
                 doc_data[0]
             )
