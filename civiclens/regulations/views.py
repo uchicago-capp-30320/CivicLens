@@ -99,17 +99,22 @@ def search_page(request):
     else:
         avg_comments = None
 
+    # FACTS FOR THE SEARCH PAGE ABOUT THE DOCUMENTS AND COMMENTS
+    doc_cmt_facts = {
+        "active_documents_count": active_documents_count,
+        "active_documents_with_comments": active_documents_with_comments,
+        "active_documents_with_no_comments": active_documents_count
+        - active_documents_with_comments,
+        "avg_comments": avg_comments,
+        "last_updated": last_updated,
+        "top_commented_documents": top_commented_documents,
+    }
+
     return render(
         request,
         "search_page.html",
         {
-            "top_commented_documents": top_commented_documents,
-            "active_documents_count": active_documents_count,
-            "active_documents_with_comments": active_documents_with_comments,
-            "active_documents_with_no_comments": active_documents_count
-            - active_documents_with_comments,
-            "avg_comments": avg_comments,
-            "last_updated": last_updated,
+            "doc_cmt_facts": doc_cmt_facts,
         },
     )
 
@@ -117,7 +122,7 @@ def search_page(request):
 @require_http_methods(["GET"])
 def search_results(request):  # noqa: C901
     today = timezone.now().date()
-    context = {}
+    search_info = {}
 
     form = SearchForm(request.GET)
     if form.is_valid():
@@ -171,12 +176,6 @@ def search_results(request):  # noqa: C901
                     Document.objects.prefetch_related("nlpoutput")
                     .annotate(
                         rank=TrigramSimilarity("title", query) * weight_a
-                        # + TrigramSimilarity(
-                        #     "nlpoutput__doc_plain_english_title", query
-                        # )
-                        # * weight_a
-                        # + TrigramSimilarity("nlpoutput__search_topics", query
-                        #     ) * weight_d
                         + TrigramSimilarity("summary", query) * weight_b
                         + TrigramSimilarity("agency_id", query) * weight_d
                         + TrigramSimilarity("agency_type", query) * weight_d
@@ -211,23 +210,23 @@ def search_results(request):  # noqa: C901
             page_number = request.GET.get("page")
             page = paginator.get_page(page_number)
 
-            context["documents_page"] = page
+            search_info["documents_page"] = page
         else:
             query = ""
-            context["documents_page"] = None
+            search_info["documents_page"] = None
     else:
         logger.error("Form validation failed: %s", form.errors)
         query = ""
-        context["documents_page"] = None
+        search_info["documents_page"] = None
 
-    context["search"] = query
-    context["form"] = form
+    search_info["search"] = query
+    search_info["form"] = form
 
     return render(
         request,
         "search_results.html",
         {
-            "context": context,
+            "search_info": search_info,
             "agencies": AgencyReference.objects.all().order_by("id"),
         },
     )
@@ -235,6 +234,7 @@ def search_results(request):  # noqa: C901
 
 def document(request, doc_id):  # noqa: E501
     today = timezone.now().date()
+    document_info = {}
 
     doc = get_object_or_404(
         Document.objects.filter(id=doc_id).filter(comment_end_date__gte=today)
@@ -262,14 +262,16 @@ def document(request, doc_id):  # noqa: E501
     except NLPoutput.DoesNotExist:
         nlp = {}
 
+    document_info["doc"] = doc
+    document_info["nlp"] = nlp
+    document_info["comments_api"] = comments_api
+    document_info["fed_register_url"] = fed_register_url
+
     return render(
         request,
         "document.html",
         {
-            "doc": doc,
-            "nlp": nlp,
-            "comments_api": comments_api,
-            "fed_register_url": fed_register_url,
+            "document_info": document_info,
         },
     )
 

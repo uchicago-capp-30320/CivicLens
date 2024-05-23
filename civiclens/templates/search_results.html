@@ -33,19 +33,19 @@
             <!-- sort section -->
             <span class="h6 font-weight-bold" >Sort by:</span>
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevant" {% if context.form.sort_by.value == "most_relevant" %}checked{% endif %}>
+              <input class="form-check-input" type="radio" name="sort_by" id="most_relevant" value="most_relevant" {% if search_info.form.sort_by.value == "most_relevant" %}checked{% endif %}>
               <label class="form-check-label" for="most_relevant">Most relevant</label>
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="sort_by" id="most_recent" value="most_recent" {% if context.form.sort_by.value == "most_recent" %}checked{% endif %}>
+              <input class="form-check-input" type="radio" name="sort_by" id="most_recent" value="most_recent" {% if search_info.form.sort_by.value == "most_recent" %}checked{% endif %}>
               <label class="form-check-label" for="most_recent">Most recent</label>
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="sort_by" id="most_comments" value="most_comments" {% if context.form.sort_by.value == "most_comments" %}checked{% endif %}>
+              <input class="form-check-input" type="radio" name="sort_by" id="most_comments" value="most_comments" {% if search_info.form.sort_by.value == "most_comments" %}checked{% endif %}>
               <label class="form-check-label" for="most_comments">Most comments</label>
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="sort_by" id="least_comments" value="least_comments" {% if context.form.sort_by.value == "least_comments" %}checked{% endif %}>
+              <input class="form-check-input" type="radio" name="sort_by" id="least_comments" value="least_comments" {% if search_info.form.sort_by.value == "least_comments" %}checked{% endif %}>
               <label class="form-check-label" for="least_comments">Least comments</label>
             </div>
 
@@ -55,11 +55,11 @@
             <span class="h6 font-weight-bold">Filter by:</span>
             <h6 class="font-italic font-weight-normal">Number of comments</h6>
             <div class="custom-switch">
-              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault" name="comments_any" value="True" {% if context.form.comments_any.value %}checked{% endif %}>
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault" name="comments_any" value="True" {% if search_info.form.comments_any.value %}checked{% endif %}>
               <label class="custom-control-label" for="flexSwitchCheckDefault">Contains any comments</label>
             </div>
             <div class="custom-switch">
-              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2" name="comments_over_hundred" value="True" {% if context.form.comments_over_hundred.value %}checked{% endif %}>
+              <input class="custom-control-input" type="checkbox" id="flexSwitchCheckDefault2" name="comments_over_hundred" value="True" {% if search_info.form.comments_over_hundred.value %}checked{% endif %}>
               <label class="custom-control-label" for="flexSwitchCheckDefault2">Contains 100+ comments</label>
             </div>
             <p></p>
@@ -69,27 +69,19 @@
               <select multiple class="form-control agency-list" id="selected_agencies" name="selected_agencies" title="Selected Agencies">
                 <!-- for loop through all agencies in the database -- USE JINJA -->
                 {% for agency in agencies %}
-                <option value="{{ agency.id }}" {% if agency.id|stringformat:"s" in context.form.selected_agencies.value %}selected{% endif %}>
+                <option value="{{ agency.id }}" {% if agency.id|stringformat:"s" in search_info.form.selected_agencies.value %}selected{% endif %}>
                   {{ agency.id }}: {{ agency.name }}
                 </option>
                 {% endfor %}
               </select>
               <button type="button" class="btn btn-secondary mt-2" style="padding: 2px 6px; font-size: 12px;" onclick="uncheckAgencies()">Deselect All Agencies</button>
             </div>
-            <script>
-              function uncheckAgencies() {
-                var agencySelect = document.getElementById('selected_agencies');
-                for (var i = 0; i < agencySelect.options.length; i++) {
-                  agencySelect.options[i].selected = false;
-                }
-              }
-            </script>
 
             <!-- filter by types of documents, default to all -->
             <div class="form-group" >
               <label for="exampleFormControlSelect2" class="font-italic">Category</label>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="rule" id="rule" value="Rule" {% if not context.form.source.value %}checked{%elif context.form.rule.value %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="rule" id="rule" value="Rule" {% if not search_info.form.source.value %}checked{%elif search_info.form.rule.value %}checked{% endif %}>
                 <label class="form-check-label" for="rule">
                   Rule
                 </label>
@@ -101,13 +93,13 @@
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="notice" id="notice" value="Notice" {% if not context.form.source.value %}checked{% elif context.form.notice.value %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="notice" id="notice" value="Notice" {% if not search_info.form.source.value %}checked{% elif search_info.form.notice.value %}checked{% endif %}>
                 <label class="form-check-label" for="notice">
                   Notice
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="other" id="other" value="Other" {% if not context.form.source.value %}checked{% elif context.form.other.value %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="other" id="other" value="Other" {% if not search_info.form.source.value %}checked{% elif search_info.form.other.value %}checked{% endif %}>
                 <label class="form-check-label" for="other">
                   Other
                 </label>
@@ -119,18 +111,18 @@
 
           <!-- container for the actual Documents -->
           <div class="col-md-8 order-md-2">
-            {% if context.documents_page %}
-              {% if context.documents_page.paginator.num_pages == 1 %}
-                <span class="h6 font-weight-normal font-italic">Displaying {{ context.documents_page.paginator.count }} results for "{{ context.search }}".</span>
+            {% if search_info.documents_page %}
+              {% if search_info.documents_page.paginator.num_pages == 1 %}
+                <span class="h6 font-weight-normal font-italic">Displaying {{ search_info.documents_page.paginator.count }} results for "{{ search_info.search }}".</span>
               {% else %}
-                <span class="h6 font-weight-normal font-italic">Displaying results {{ context.documents_page.start_index }} - {{ context.documents_page.end_index }} of {{ context.documents_page.paginator.count }} for "{{ context.search }}".</span>
+                <span class="h6 font-weight-normal font-italic">Displaying results {{ search_info.documents_page.start_index }} - {{ search_info.documents_page.end_index }} of {{ search_info.documents_page.paginator.count }} for "{{ search_info.search }}".</span>
               {% endif %}
             {% else %}
-              <span class="h6 font-weight-normal font-italic">Displaying {{ context.documents_page.paginator.count }} results for "{{ context.search }}".</span>
+              <span class="h6 font-weight-normal font-italic">Displaying {{ search_info.documents_page.paginator.count }} results for "{{ search_info.search }}".</span>
             {% endif %}
             <p></p>
-            {% if context.documents_page %}
-              {% for doc in context.documents_page %}
+            {% if search_info.documents_page %}
+              {% for doc in search_info.documents_page %}
                 <div class="card p-3 mb-3">
                   <div class="card-body">
                   {% if doc.nlpoutput.doc_plain_english_title and doc.nlpoutput.doc_plain_english_title != "Regulation: No regulation" %}
@@ -175,27 +167,27 @@
 <div class="pagination-container">
   <nav aria-label="Page navigation">
     <ul class="pagination justify-content-center">
-      {% if context.documents_page.has_previous %}
+      {% if search_info.documents_page.has_previous %}
         <li class="page-item">
-          <a class="page-link" href="?q={{ context.search }}&page=1">&laquo; First</a>
+          <a class="page-link" href="?q={{ search_info.search }}&page=1">&laquo; First</a>
         </li>
         <li class="page-item">
-          <a class="page-link" href="?q={{ context.search }}&page={{ context.documents_page.previous_page_number }}">Previous</a>
+          <a class="page-link" href="?q={{ search_info.search }}&page={{ search_info.documents_page.previous_page_number }}">Previous</a>
         </li>
       {% endif %}
 
       <li class="page-item disabled">
         <span class="page-link text-dark">
-          Page {{ context.documents_page.number }} of {{ context.documents_page.paginator.num_pages }}
+          Page {{ search_info.documents_page.number }} of {{ search_info.documents_page.paginator.num_pages }}
         </span>
       </li>
 
-      {% if context.documents_page.has_next %}
+      {% if search_info.documents_page.has_next %}
         <li class="page-item">
-          <a class="page-link" href="?q={{ context.search }}&page={{ context.documents_page.next_page_number }}">Next</a>
+          <a class="page-link" href="?q={{ search_info.search }}&page={{ search_info.documents_page.next_page_number }}">Next</a>
         </li>
         <li class="page-item">
-          <a class="page-link" href="?q={{ context.search }}&page={{ context.documents_page.paginator.num_pages }}">Last &raquo;</a>
+          <a class="page-link" href="?q={{ search_info.search }}&page={{ search_info.documents_page.paginator.num_pages }}">Last &raquo;</a>
         </li>
       {% endif %}
     </ul>
