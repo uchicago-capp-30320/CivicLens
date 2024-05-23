@@ -118,5 +118,120 @@
     },
     "model": "regulations.comment",
     "pk": "HHS-OMH-2024-0004-0009"
+  },
+  {
+    "fields": {
+      "comments": [
+        {
+          "form_letter": false,
+          "id": "HHS-OMH-2024-0004-0010",
+          "num_represented": 11,
+          "sentiment": "neutral",
+          "source": "Comment",
+          "text": "Q1. What methods do you or your organization currently use to inform individuals with LEP about the availability of services in their preferred language?<br/>Ans.,  traditional language identification sheet, business card with Interpreter Services&#39; contact information in LEP&#39;s target language and a short description of LEP&#39;s language preference in English so LEP persons showing up alone in clinic make themselves known to others<br/><br/>Q.2. What are the challenges to implementing these methods? Traditional language identification sheets assume the LEP is literate with written words.  It&#39;s effectiveness depends on whether the staff is aware of that sheet and use it properly.<br/><br/>Q.3 Do you believe a new graphic symbol would increase the rate at which people request language assistance services?   with mandatory measures to display the symbol in conspicuous places of healthcare facilities and proper training to workforce, it&#39;ll have positive effect.<br/><br/>Q.4 Are you aware of any previous or existing symbols used to inform people about the availability of language assistance services?   A random search on Internet shows a lot of symbols are used/designed by different organizations.  Usually, it depicts 3 persons lined up in a triangle; the bottom left &amp; right facing towards the one on the top with speech bubbles showing an image of foreign language and English.<br/><br/>Q.5 Please share any information you have regarding the development and implementation of the symbol? <br/>* the graphic symbol should be simple, highly visual (see attached link), to the point, (https://patientengagementhit.com/features/understanding-patient-rights-to-medical-interpreters-language-access)<br/>* since this symbol applies to healthcare settings, typical characteristics of healthcare provider e.g, stethoscope, vintage nursing cap, etc should be considered in the image<br/>* a cohesive image of an interpreter/translator&#39;s image should carry something like a headset, talking, hand signing, <br/>* the symbol be designed with 3 layouts, 1 without any written description, even illiterate LEP (those who don&#39;t read) can recognize; another layout with a short caption underneath; eg., civil right: language assistance for LEP person [target language].  This serves purpose of empowering LEP persons that this is their right.<br/>",
+          "topic": 0,
+          "topic_label": [
+            "Help",
+            "Helping Others",
+            "Language"
+          ]
+        },
+        {
+          "form_letter": false,
+          "id": "HHS-OMH-2024-0004-0009",
+          "num_represented": 9,
+          "sentiment": "neutral",
+          "source": "Comment",
+          "text": "Comments are indicated with illustrations in the attached file.",
+          "topic": 0,
+          "topic_label": [
+            "Help",
+            "Helping Others",
+            "Language"
+          ]
+        }
+      ],
+      "created_at": "2024-05-16T17:21:54Z",
+      "doc_plain_english_title": "Language Access Stakeholders Request for a Universal Sign",
+      "document": "HHS-OMH-2024-0004-0001",
+      "is_representative": true,
+      "last_updated": "2024-05-21T16:41:28.876Z",
+      "num_representative_comment": 2,
+      "num_topics": 2,
+      "num_total_comments": 20,
+      "num_unique_comments": 20,
+      "search_topics": "person, persons, english, lep, proficiency, rate, provider, aware, measures, point, make, designed, informing, stakeholders, organizations, since, settings, facilities, traditional, solicitation, symbol, proposal, illiterate, layouts, image, rights, request, conspicuous, use, health, like, methods, services, assistance, interpreter, language, cohesive",
+      "topics": [
+        {
+          "neutral": 20,
+          "topic": [
+            "Help",
+            "Helping Others",
+            "Language"
+          ],
+          "total": 20
+        },
+        {
+          "neutral": 1,
+          "topic": [
+            "Product Design",
+            "Organization",
+            "Tips",
+            "Design",
+            "Creative",
+            "Creativity",
+            "Product Development",
+            "Creative Process",
+            "Writing",
+            "Tips And Tricks",
+            "Writing Tips",
+            "Business",
+            "Design Thinking"
+          ],
+          "total": 1
+        }
+      ]
+    },
+    "model": "regulations.nlpoutput",
+    "pk": 308
+  },
+  {
+    "fields": {
+      "agency_id": "BIS",
+      "docket_type": "Rulemaking",
+      "highlighted_content": null,
+      "last_modified_date": "2024-05-10T15:24:15Z",
+      "object_id": "0b000064863bab89",
+      "title": "Changes to the EAR"
+    },
+    "model": "regulations.docket",
+    "pk": "BIS-2024-0003"
+  },
+  {
+    "fields": {
+      "agency_id": "BIS",
+      "agency_type": "DEPARTMENT OF COMMERCE",
+      "cfr": "15 CFR Parts 732, 734, 738, 740, 742, 743, 748, 750, 758, 762, 772, and 774",
+      "comment_end_date": "2024-07-02",
+      "comment_start_date": "2024-04-30",
+      "dates": "Not Found",
+      "docket": "BIS-2024-0003",
+      "document_type": "Rule",
+      "fr_doc_num": "2024-08813",
+      "full_text_xml_url": "https://api.regulations.gov/v4/documents/BIS-2024-0003-0001",
+      "further_information": "\n                            Anthony Christino, Acting Director, Office of Nonproliferation and Foreign Policy Controls; tel. (202) 482-3825 or email \n                            ",
+      "last_modified_date": "2024-05-16T01:00:53Z",
+      "object_id": "09000064865274a2",
+      "open_for_comment": true,
+      "posted_date": "2024-04-30",
+      "rin": "RIN 0694-AJ46",
+      "sub_agy": null,
+      "subtype": null,
+      "summary": "In this interim final rule (IFR), the Bureau of Industry and Security (BIS) is amending the Export Administration Regulations (EAR) to enhance the control structure for firearms and related items. These changes will better protect U.S. national security and foreign policy interests, which include countering the diversion and misuse of firearms and related items and advancing human rights. This rule identifies semi-automatic firearms under new Export Control Classification Numbers (ECCNs); adds additional license requirements for Crime Control and Detection (CC) items, thereby resulting in additional restrictions on the availability of license exceptions for most destinations; amends license review policies so that they are more explicit as to the nature of review that will accompany different types of transactions and license exception availability (including adding a new list of high-risk destinations); updates and expands requirements for support documentation submitted with license applications; and better accounts for the import documentation requirements of other countries (such as an import certificate or other permit prior to importation) when firearms and related items are authorized under a BIS license exception. BIS is publishing this rule as an IFR to solicit comments from the public on additional changes to export controls on firearms and related items that would better protect U.S. national security and foreign policy interests.",
+      "title": "Firearms License Requirements",
+      "withdrawn": false
+    },
+    "model": "regulations.document",
+    "pk": "BIS-2024-0003-0001"
   }
 ]

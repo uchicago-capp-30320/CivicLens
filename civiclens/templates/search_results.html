@@ -13,13 +13,12 @@
   <form action="/search/results/" method="GET">
     <input type="hidden" name="source" value="search_results">
     {% csrf_token %}
-    {{ form.as_p }}
 
     <!-- search bar section -->
     <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
       <div class="container-sm py-0">
         <div class="input-group mb-4">
-          <input class="form-control" id="q" name="q" title="q" type="text" value="{{ context.form.q.value }}">
+          <input class="form-control" id="q" name="q" title="search term" type="text" value="{{ search_info.form.q.value }}">
           <button class="btn btn-primary">Search</button>
         </div>
       </div>
@@ -87,7 +86,7 @@
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" title="proposed_rule" name="proposed_rule" id="Proposed Rule" value="Proposed Rule" {% if not context.form.source.value %}checked{% elif context.form.proposed_rule.value %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="proposed_rule" title="proposed rule" id="Proposed Rule" value="Proposed Rule" {% if not search_info.form.source.value %}checked{% elif search_info.form.proposed_rule.value %}checked{% endif %}>
                 <label class="form-check-label" for="proposed_rule">
                   Proposed Rule
                 </label>

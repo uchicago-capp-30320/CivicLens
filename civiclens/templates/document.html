@@ -169,7 +169,7 @@
             </div>
           </div>
         {% if document_info.nlp.is_representative %}
-          <span class="h6">{{ document_info.nlp.num_topics }} topics emerged from {{ document_info.doc.comment_count }} total comments.</span>
+          <span class="h6">{{ document_info.nlp.num_topics }} topics emerged from {{ document_info.nlp.num_total_comments }} total comments.</span>
           <p class="mb-0">
             The
             {% if document_info.nlp.num_topics > 5 %}
@@ -260,7 +260,7 @@
           {% endfor %}
         {% endif %}
 
-        {% if document_info.nlp or document_info.comments_api  %}
+        {% if document_info.nlp.id or document_info.comments_api  %}
           <div style="text-align: center;">
             <a href="https://www.regulations.gov/commenton/{{document_info.doc.id}}" target="_blank"
               class="btn btn-sm font-weight-normal text-white"

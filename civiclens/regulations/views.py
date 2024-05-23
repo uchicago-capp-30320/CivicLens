@@ -35,7 +35,6 @@ def learn(request):
 
 def search_page(request):
     today = timezone.now().date()
-
     # find date for when one doc in the db was last updated (MVP technique)
     try:
         last_updated = (
@@ -260,7 +259,12 @@ def document(request, doc_id):  # noqa: E501
     try:
         nlp = NLPoutput.objects.get(document=doc_id)
     except NLPoutput.DoesNotExist:
-        nlp = {}
+        nlp = NLPoutput()
+
+    document_info["doc"] = doc
+    document_info["nlp"] = nlp
+    document_info["comments_api"] = comments_api
+    document_info["fed_register_url"] = fed_register_url
 
     document_info["doc"] = doc
     document_info["nlp"] = nlp
