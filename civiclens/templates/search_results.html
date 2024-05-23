@@ -13,7 +13,6 @@
   <form action="/search/results/" method="GET">
     <input type="hidden" name="source" value="search_results">
     {% csrf_token %}
-    {{ form.as_p }}
 
     <!-- search bar section -->
     <section class="slice py-4" style="background-color:#FDFFF7; padding:0" id="core-block">
