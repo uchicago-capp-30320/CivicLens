@@ -8,12 +8,12 @@
 
 <!-- search bar -->
 <section class="slice py-5" style="background-color:#FDFFF7" id="core-block">
-  <div class="container shape-container">
-    <h4>
+  <div class="container shape-container mb-4">
+    <h2>
       Give your feedback.
-    </h4>
+    </h2>
     <p>
-      Search for opportunities to comment on...
+      Search for opportunities to comment on an issue you care about.
     </p>
     <p>
     </p>
@@ -21,7 +21,6 @@
     <div class="form-group">
       <form action="/search/results/" method="GET">
         {% csrf_token %}
-        {{ form.as_p }}
         <div class="input-group mb-4">
           <input class="form-control" id="q" name="q" type="text" required
           placeholder="Search for topics like 'healthcare' or 'immigration'...">
@@ -34,65 +33,59 @@
 
 
 <!-- trending -->
-<section class="slice py-7" style="background-color:#FDFFF7" id="core-block">
+<section class="slice mt-5 py-7" style="background-color:#FDFFF7" id="core-block">
   <div class="container">
       <h6>Common Search Terms</h6>
 
       <!-- potential refactor to not hard code these links and us a get request instead -->
-      <a class="badge btn-secondary m-1" href="/search/results?q=transportation">
+      <a class="badge btn-secondary m-1" href="/search/results/?q=transportation">
         transportation
       </a>
-      <a class="badge btn-secondary m-1" href="/search/results?q=healthcare">
+      <a class="badge btn-secondary m-1" href="/search/results/?q=healthcare">
         healthcare
       </a>
-      <a class="badge btn-secondary m-1" href="/search/results?q=marijuana">
+      <a class="badge btn-secondary m-1" href="/search/results/?q=marijuana">
         marijuana
       </a>
-      <a class="badge btn-secondary m-1" href="/search/results?q=immigration">
+      <a class="badge btn-secondary m-1" href="/search/results/?q=immigration">
         immigration
       </a>
-      <a class="badge btn-secondary m-1" href="/search/results?q=equality">
+      <a class="badge btn-secondary m-1" href="/search/results/?q=equality">
         equality
       </a>
   </div>
   <div class="container">
     <p></p>
     <h6 class="pt-5">Quick Facts</h6>
-    <div class="card">
+    <div class="card mb-3">
       <div class="card-body m-3">
         <h6 class="card-subtitle" style="color:#B43F37">What is currently open for comment?</h6>
         <p class="card-text mb-0">
-          As of {{last_updated}}, there are:
+          As of {{doc_cmt_facts.last_updated}}, there are:
           <ul>
-            <li><strong>{{active_documents_count}}</strong> proposed rules, rules, public notices, or other documents <strong>open for comment</strong>.</li>
-            <li><strong>{{active_documents_with_comments}}</strong> proposed rules, rules, public notices, or other documents <strong>with at least one comment</strong>.</li>
-            <li><strong>{{active_documents_with_no_comments}}</strong> proposed rules, rules, public notices, or other documents <strong>with no existing comments</strong>.</li>
+            <li><strong>{{doc_cmt_facts.active_documents_count}}</strong> proposed rules, rules, public notices, or other documents <strong>open for comment</strong>.</li>
+            <li><strong>{{doc_cmt_facts.active_documents_with_comments}}</strong> proposed rules, rules, public notices, or other documents <strong>with at least one comment</strong>.</li>
+            <li><strong>{{doc_cmt_facts.active_documents_with_no_comments}}</strong> proposed rules, rules, public notices, or other documents <strong>with no existing comments</strong>.</li>
           </ul>
         </p>
         <p class="card-text mb-0">
           Of the proposed rules, rules, public notices, or other documents that have comments, there are <strong>on average</strong>:
           <ul>
-            <li><strong>{{avg_comments}}</strong> total comments per document.</li>
-            <!-- <li><strong>{avg_unique_comments}</strong> unique comments per document.
-              <br>
-              <i>This figure consolidates "form letters" submitted by multiple commenters
-                using identical language, leaving only the distinct comments.
-              </i>
-            </li> -->
+            <li><strong>{{doc_cmt_facts.avg_comments}}</strong> total comments per document.</li>
           </ul>
         </p>
       </div>
     </div>
-    <div class="card">
+    <div class="card mb-0">
       <div class="card-body m-3">
         <h6 class="card-subtitle" style="color:#B43F37">Which documents currently open for comment in the federal register have the most comments?</h6>
         <div class="card-text">
-          {% if top_commented_documents %}
+          {% if doc_cmt_facts.top_commented_documents %}
             <p class="pb-0">
               The following proposed rules, rules, or notices are the currently most commented on of all current opportunities for public comment.
             </p>
             <ul>
-              {% for document in top_commented_documents %}
+              {% for document in doc_cmt_facts.top_commented_documents %}
               <li>
                 <a class="btn-link" href="{% url 'document' document.document_id %}">
                   {% if document.doc_plain_english_title and document.doc_plain_english_title != "Regulation: No regulation" %}

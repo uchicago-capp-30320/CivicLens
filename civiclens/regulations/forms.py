@@ -33,3 +33,7 @@ class SearchForm(forms.Form):
     notice = forms.CharField(required=False, label="Notice")
     other = forms.CharField(required=False, label="Other")
     source = forms.BooleanField(required=False, label="Source")
+
+
+class SearchBar(forms.Form):
+    q = forms.CharField(max_length=255, required=False, label="Search")
