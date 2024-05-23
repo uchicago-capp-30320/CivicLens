@@ -6,7 +6,7 @@ Parameters:
 
 - topics: list of trending topics to display
 
-Example: /search/?topics=gun_control+abortion+covid-19+healthcare
+Example: `/search/?topics=gun_control+abortion+covid-19+healthcare`
 
 Response: HTML page with search bar and trending topics.
 
@@ -22,6 +22,6 @@ Parameters:
     * if_comment (whether a document has comment posted to it)
     * doc_type (All, Notice, Proposed Rule, etc)
 
-Example: /search_result/?sort=by_date&by_agency=FDA&if_comment=true&doc_type=all
+Example: `/search_result/?sort=by_date&by_agency=FDA&if_comment=true&doc_type=all`
 
 Response: HTML page with search bar and search results (list of documents). Infinitive scroll container for displaying resulting documents.

@@ -29,6 +29,10 @@ def about(request):
     return render(request, "about.html")
 
 
+def learn(request):
+    return render(request, "learn.html")
+
+
 def search_page(request):
     today = timezone.now().date()
     # find date for when one doc in the db was last updated (MVP technique)
@@ -256,6 +260,11 @@ def document(request, doc_id):  # noqa: E501
         nlp = NLPoutput.objects.get(document=doc_id)
     except NLPoutput.DoesNotExist:
         nlp = NLPoutput()
+
+    document_info["doc"] = doc
+    document_info["nlp"] = nlp
+    document_info["comments_api"] = comments_api
+    document_info["fed_register_url"] = fed_register_url
 
     document_info["doc"] = doc
     document_info["nlp"] = nlp
