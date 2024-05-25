@@ -5,6 +5,9 @@ LOG_DIR="/home/civiclens-nlp/CivicLens/civiclens/log"
 LAST_UPDATE_FILE="${LOG_DIR}/nlp_batch.csv"
 PROJECT_DIR="/home/civiclens-nlp/CivicLens/"
 VENV_PATH="/home/civiclens-nlp/CivicLens/.venv/bin/activate"
+DROPLET_ID=$(curl "http://169.254.169.254/metadata/v1/id")
+echo "DROPLET_ID=$DROPLET_ID" >> /home/civiclens-nlp/.bashrc
+source /home/civiclens-nlp/.bashrc
 
 echo "===================================="
 echo "Running NLP Update..."
@@ -24,6 +27,7 @@ fi
 
 # activate python virtual environment
 source "$VENV_PATH"
+poetry install
 
 if ! source "$VENV_PATH"; then
     echo "Failed to activate virtual environment."
@@ -39,6 +43,3 @@ else
     echo "$(date +'%Y-%m-%d %H:%M:%S'), ERROR, NLP update failed" >> "$LAST_UPDATE_FILE"
     exit 1
 fi
-
-# crontab command to run the nlp update at midnight on wednesday every week
-# 0 0 * * 3 /home/CivicLens/civiclens/utils/run_civiclens_nlp.sh (fix with linux server path)
