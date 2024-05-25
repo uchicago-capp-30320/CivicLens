@@ -12,8 +12,8 @@ with open("droplet_config.yml", "r") as f:
 droplet_data = {
     "name": "civiclens-nlp-test",
     "region": "nyc3",
-    "size": "s-1vcpu-1gb",
-    "image": "ubuntu-20-04-x64",
+    "size": "s-4vcpu-8gb",
+    "image": "ubuntu-24-04-x64",
     "user_data": cloud_config,
     "ssh_keys": [SSH_ID],
 }

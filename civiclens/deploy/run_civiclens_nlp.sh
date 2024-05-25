@@ -5,6 +5,7 @@ LOG_DIR="/home/civiclens-nlp/CivicLens/civiclens/log"
 LAST_UPDATE_FILE="${LOG_DIR}/nlp_batch.csv"
 PROJECT_DIR="/home/civiclens-nlp/CivicLens/"
 VENV_PATH="/home/civiclens-nlp/CivicLens/.venv/bin/activate"
+# fetch droplet ID for instance deletion
 DROPLET_ID=$(curl "http://169.254.169.254/metadata/v1/id")
 echo "DROPLET_ID=$DROPLET_ID" >> /home/civiclens-nlp/.bashrc
 source /home/civiclens-nlp/.bashrc
@@ -25,17 +26,11 @@ else
     exit 1
 fi
 
-# activate python virtual environment
-source "$VENV_PATH"
+# install dependencies
 poetry install
 
-if ! source "$VENV_PATH"; then
-    echo "Failed to activate virtual environment."
-    exit 1
-fi
-
 # Run NLP update
-if poetry run python3 -m civiclens.nlp.pipeline; then
+if poetry run python3 -m civiclens.nlp.pipeline --cloud; then
     # Log success
     echo "$(date +'%Y-%m-%d %H:%M:%S'), SUCCESS, NLP updated completed successfully" >> "$LAST_UPDATE_FILE"
 else
