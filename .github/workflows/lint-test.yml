@@ -63,6 +63,7 @@ jobs:
         DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
         DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
         DJANGO_SETTINGS_MODULE: civiclens.website.test_settings
+        TEST_MODE: GitHub
       run: poetry run pytest civiclens/tests
 
   pre-commit:

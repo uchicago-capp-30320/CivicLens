@@ -1,8 +1,10 @@
+import os
 import pickle
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import polars as pl
+import pytest
 
 from civiclens.nlp import comments
 from civiclens.nlp.models import sentence_transformer
@@ -75,14 +77,22 @@ def test_gen_search_vector():
     }
 
 
-def test_hda_remove_num():
+@pytest.mark.skipif(
+    os.environ.get("TEST_MODE") == "GitHub",
+    reason="avoid installing textblob corpora in runner",
+)
+def test_topic_model_remove_num():
     topic_model = TopicModel()
     test_comment = [Comment(text="twelve 12", id="123")]
     words, _ = topic_model._process_text(test_comment)
     assert words == [["twelve"]]
 
 
-def test_hda_stop_words():
+@pytest.mark.skipif(
+    os.environ.get("TEST_MODE") == "GitHub",
+    reason="avoid installing textblob corpora in runner",
+)
+def test_topic_model_stop_words():
     topic_model = TopicModel()
     test_comment = [Comment(text="the dog is black", id="123")]
     words, _ = topic_model._process_text(test_comment)
