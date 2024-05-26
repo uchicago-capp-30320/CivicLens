@@ -7,8 +7,8 @@ PROJECT_DIR="/home/civiclens-nlp/CivicLens/"
 VENV_PATH="/home/civiclens-nlp/CivicLens/.venv/bin/activate"
 # fetch droplet ID for instance deletion
 DROPLET_ID=$(curl "http://169.254.169.254/metadata/v1/id")
-echo "DROPLET_ID=$DROPLET_ID" >> /home/civiclens-nlp/.bashrc
-source /home/civiclens-nlp/.bashrc
+echo "export DROPLET_ID=$DROPLET_ID" >> ~/.zshenv
+source ~/.zshenv
 
 echo "===================================="
 echo "Running NLP Update..."
