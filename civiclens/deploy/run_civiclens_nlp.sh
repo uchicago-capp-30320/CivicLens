@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# set paths for logging nlp batch info
-LOG_DIR="/home/civiclens-nlp/CivicLens/civiclens/log"
-LAST_UPDATE_FILE="${LOG_DIR}/nlp_batch.csv"
+# set paths
 PROJECT_DIR="/home/civiclens-nlp/CivicLens/"
-VENV_PATH="/home/civiclens-nlp/CivicLens/.venv/bin/activate"
 # fetch droplet ID for instance deletion
 DROPLET_ID=$(curl "http://169.254.169.254/metadata/v1/id")
 echo "export DROPLET_ID=$DROPLET_ID" >> ~/.zshenv
@@ -12,11 +9,6 @@ source ~/.zshenv
 
 echo "===================================="
 echo "Running NLP Update..."
-
-# make sure logging directory exists
-if [ ! -d "$LOG_DIR" ]; then
-    mkdir -p "$LOG_DIR"
-fi
 
 # go to project directory if exists
 if [ -d "$PROJECT_DIR" ]; then
@@ -30,11 +22,4 @@ fi
 poetry install
 
 # Run NLP update
-if poetry run python3 -m civiclens.nlp.pipeline --cloud; then
-    # Log success
-    echo "$(date +'%Y-%m-%d %H:%M:%S'), SUCCESS, NLP updated completed successfully" >> "$LAST_UPDATE_FILE"
-else
-    # Log failure
-    echo "$(date +'%Y-%m-%d %H:%M:%S'), ERROR, NLP update failed" >> "$LAST_UPDATE_FILE"
-    exit 1
-fi
+poetry run python3 -m civiclens.nlp.pipeline --cloud
