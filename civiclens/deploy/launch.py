@@ -16,7 +16,9 @@ droplet_data = {
     "image": "ubuntu-24-04-x64",
     "user_data": cloud_config,
     "ssh_keys": [SSH_ID],
+    "monitoring": True,
 }
 
 # launch instance
 resp = do_client.droplets.create(body=droplet_data)
+print(resp)
