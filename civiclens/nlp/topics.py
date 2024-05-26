@@ -7,8 +7,12 @@ from typing import Callable
 import gensim.corpora as corpora
 from gensim.corpora import Dictionary
 from gensim.models import HdpModel, Phrases
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
+from transformers import pipeline
 
-from civiclens.nlp.models import label_model, label_tokenizer
+from civiclens.nlp.models import title_model, title_tokenizer
 from civiclens.nlp.tools import Comment, RepComments
 from civiclens.utils.text import clean_text, regex_tokenize
 
@@ -153,32 +157,69 @@ class HDAModel:
         return list(search_vector)
 
 
-class LabelChain:
-    def __init__(self):
-        self.tokenizer = label_tokenizer
-        self.model = label_model
+class FlanLabeler:
+    def __init__(self) -> None:
+        self.summary_template = """
+        You are an AI language model specialized in analyzing and summarizing
+        topics from text. Your task is to generate a concise and descriptive
+        topic label for a given list of words related to comments on a proposed
+        federal policy. Ensure the label accurately encompasses the main theme
+        represented by all the input words and relates to the provided summary
+        of the legislation.
 
-    def generate_label(self, terms: list[str]) -> tuple:
+        Summary of Legislation: {summary}
+
+        Example:
+        Input words: ["healthcare", "insurance", "coverage", "affordable"]
+        Summary: The proposed legislation aims to provide affordable healthcare
+        by increasing insurance coverage and improving access to medical
+        services for all citizens.
+        Output label: "Affordable Healthcare Access"
+
+        Now, generate a topic label for the following list of words:
+
+        Input words: {words}
         """
-        Create better topic terms.
+        self.no_summary_template = """
+        You are an AI language model specialized in analyzing and summarizing
+        topics from text. Your task is to generate a concise and descriptive
+        topic label for a given list of words related to comments on a proposed
+        federal policy. Ensure the label accurately encompasses the main theme
+        represented by all the input words.
+
+        Example:
+        Input words: ["healthcare", "insurance", "coverage", "affordable"]
+        Output label: "Affordable Healthcare Access"
+
+        Now, generate a topic label for the following list of words:
+
+        Input words: {words}
         """
-        text = ", ".join(terms)
-
-        inputs = self.tokenizer(
-            [text], max_length=512, truncation=True, return_tensors="pt"
+        self.model = title_model
+        self.tokenizer = title_tokenizer
+        self.pipe = pipeline(
+            "text2text-generation",
+            model=self.model,
+            tokenizer=self.tokenizer,
+            max_length=20,
         )
-        output = self.model.generate(
-            **inputs, num_beams=8, do_sample=True, min_length=10, max_length=64
-        )
+        self.hf_pipeline = HuggingFacePipeline(pipeline=self.pipe)
+        self.parse = StrOutputParser()
 
-        decoded_output = self.tokenizer.batch_decode(
-            output, skip_special_tokens=True
-        )[0]
+    def generate_label(self, summary, terms) -> str:
+        if summary:
+            prompt = PromptTemplate.from_template(self.summary_template)
+            chain = prompt | self.hf_pipeline | self.parse
+            return chain.invoke({"summary": summary, "words": terms})
 
-        return tuple(set(decoded_output.strip().split(", ")))
+        prompt = PromptTemplate.from_template(self.no_summary_template)
+        chain = prompt | self.hf_pipeline | self.parse
+        return chain.invoke({"words": terms})
 
 
-def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
+def label_topics(
+    topics: dict[int, list], summary: str, model: FlanLabeler
+) -> dict[int, str]:
     """
     Generates a label for all topics
 
@@ -191,7 +232,7 @@ def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
     """
     labels = {}
     for topic, terms in topics.items():
-        labels[topic] = model.generate_label(terms)
+        labels[topic] = model.generate_label(summary, terms)
 
     return labels
 
@@ -199,7 +240,7 @@ def label_topics(topics: dict[int, list], model: LabelChain) -> dict[int, str]:
 def topic_comment_analysis(
     comment_data: RepComments,
     model: HDAModel = None,
-    labeler: LabelChain = None,
+    labeler: FlanLabeler = None,
     sentiment_analyzer: Callable = None,
 ) -> RepComments:
     """
@@ -228,7 +269,7 @@ def topic_comment_analysis(
 
     comment_topics = model.run_model(comments)
     topic_terms = model.get_terms()
-    topic_labels = label_topics(topic_terms, labeler)
+    topic_labels = label_topics(topic_terms, comment_data.summary, labeler)
 
     # filter out non_rep comments
     rep_comments: list[Comment] = []

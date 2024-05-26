@@ -13,7 +13,7 @@ from civiclens.nlp import titles
 from civiclens.nlp.comments import get_doc_comments, rep_comment_analysis
 from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
 from civiclens.nlp.tools import RepComments, sentiment_analysis
-from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
+from civiclens.nlp.topics import FlanLabeler, HDAModel, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
 
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
                 SELECT COUNT(*)
                 FROM regulations_comment rc2
                 WHERE rc2.document_id = rc1.document_id
-                );"""  # noqa: E702, E231, E241
+                );"""  # noqa: E702, E231, E241, E202
         else:
             docs_to_update = """SELECT document_id
             FROM regulations_comment rc1
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     )
     documents = doc_generator(df_docs_to_update)
     title_creator = titles.TitleChain()
-    labeler = LabelChain()
+    labeler = FlanLabeler()
     sentiment_analyzer = partial(
         sentiment_analysis, pipeline=sentiment_pipeline
     )
@@ -151,4 +151,4 @@ if __name__ == "__main__":
         )
 
         logger.info(f"Proccessed document: {doc_id}")
-        upload_comments(Database(), comment_data)
+        # upload_comments(Database(), comment_data)

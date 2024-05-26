@@ -2,7 +2,6 @@ from pathlib import Path
 
 from sentence_transformers import SentenceTransformer
 from transformers import (
-    AutoModelForSeq2SeqLM,
     AutoModelForSequenceClassification,
     AutoTokenizer,
     T5ForConditionalGeneration,
@@ -74,20 +73,6 @@ sentence_transformer_path = model_path(
 )
 sentence_transformer = SentenceTransformer(sentence_transformer_path)
 
-label_token_path = model_path(
-    model="fabiochiu/t5-base-tag-generation",
-    tokenizer=True,
-    sbert=False,
-    model_func=AutoTokenizer.from_pretrained,
-)
-label_tokenizer = AutoTokenizer.from_pretrained(label_token_path)
-label_model_path = model_path(
-    model="fabiochiu/t5-base-tag-generation",
-    tokenizer=False,
-    sbert=False,
-    model_func=AutoModelForSeq2SeqLM.from_pretrained,
-)
-label_model = AutoModelForSeq2SeqLM.from_pretrained(label_model_path)
 
 # sentiment models and pipeline
 sentiment_model_path = model_path(
