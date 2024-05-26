@@ -7,7 +7,7 @@ import polars as pl
 from civiclens.nlp import comments
 from civiclens.nlp.models import sentence_transformer
 from civiclens.nlp.tools import Comment
-from civiclens.nlp.topics import HDAModel
+from civiclens.nlp.topics import TopicModel
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -63,7 +63,7 @@ def test_cluster_assignment():
 
 
 def test_gen_search_vector():
-    topic_model = HDAModel()
+    topic_model = TopicModel()
 
     topic_model.terms = {0: ["green", "red"], 1: ["blue", "orange"]}
     # check all the values are the same
@@ -76,21 +76,21 @@ def test_gen_search_vector():
 
 
 def test_hda_remove_num():
-    topic_model = HDAModel()
+    topic_model = TopicModel()
     test_comment = [Comment(text="twelve 12", id="123")]
     words, _ = topic_model._process_text(test_comment)
     assert words == [["twelve"]]
 
 
 def test_hda_stop_words():
-    topic_model = HDAModel()
+    topic_model = TopicModel()
     test_comment = [Comment(text="the dog is black", id="123")]
     words, _ = topic_model._process_text(test_comment)
-    assert words == [["dog", "black"]]
+    assert words == [["dog"]]
 
 
 def test_gen_search_unique():
-    topic_model = HDAModel()
+    topic_model = TopicModel()
 
     topic_model.terms = {0: ["green", "red"], 1: ["green", "orange"]}
     # check all values are unique
