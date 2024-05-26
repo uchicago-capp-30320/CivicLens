@@ -13,7 +13,7 @@ from civiclens.nlp import titles
 from civiclens.nlp.comments import get_doc_comments, rep_comment_analysis
 from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
 from civiclens.nlp.tools import RepComments, sentiment_analysis
-from civiclens.nlp.topics import FlanLabeler, HDAModel, topic_comment_analysis
+from civiclens.nlp.topics import FlanLabeler, TopicModel, topic_comment_analysis
 from civiclens.utils.database_access import Database, pull_data, upload_comments
 
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
         )
 
         # topic modeling
-        topic_model = HDAModel()
+        topic_model = TopicModel()
         comment_data = topic_comment_analysis(
             comment_data,
             model=topic_model,
@@ -151,4 +151,4 @@ if __name__ == "__main__":
         )
 
         logger.info(f"Proccessed document: {doc_id}")
-        # upload_comments(Database(), comment_data)
+        upload_comments(Database(), comment_data)
