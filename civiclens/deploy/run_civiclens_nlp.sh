@@ -26,9 +26,6 @@ else
     exit 1
 fi
 
-# test purposes
-git pull origin droplet-scaling
-
 # install dependencies
 poetry install
 
