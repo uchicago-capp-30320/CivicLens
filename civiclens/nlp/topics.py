@@ -51,7 +51,7 @@ class HDAModel:
         docs = []
         document_ids = {}
         for idx, comment in enumerate(comments):
-            docs.append(self.tokenizer(comment.text).lower())
+            docs.append(self.tokenizer(comment.text.lower()))
             document_ids[idx] = comment.id
 
         # remove numbers, 2 character tokens, and stop words
