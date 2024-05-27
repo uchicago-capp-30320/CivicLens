@@ -14,7 +14,6 @@ from civiclens.nlp.topics import TopicModel
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# load real model to test error catching
 
 sample_df = pl.read_csv(
     BASE_DIR / "nlp_test_data/sample_comments.csv", separator=","

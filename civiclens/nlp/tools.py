@@ -27,40 +27,46 @@ class RepComments:
     representative: bool = True
 
     # test this!
-    def get_nonrepresentative_comments(self):
+    def to_list(self, only_rep: bool = False):
         """
         Converts nonrepresentative comments to list of Comment objects.
         """
-        rep_ids = set()
-        for comment in self.rep_comments:
-            if isinstance(comment, Comment):
-                rep_ids.add(comment.id)
-            else:
-                rep_ids.add(comment["comment_id"])
+        rep_comments, rep_ids = self._from_representative()
 
-        return [
-            Comment(id=comment["id"], text=comment["comment"])
-            for comment in self.doc_comments.to_dicts()
-            if comment["id"] not in rep_ids
-        ]
+        # create and return non-representative comments
+        if not only_rep:
+            non_rep_comments = [
+                Comment(id=comment["id"], text=comment["comment"])
+                for comment in self.doc_comments.to_dicts()
+                if comment["id"] not in rep_ids
+            ]
+            return non_rep_comments + rep_comments
 
-    def to_list(self):
+        return rep_comments
+
+    def _from_representative(self):
         """
         Converts representative comments to list of Comment objects.
         """
-        if not self.rep_comments:
-            return []
+        rep_comments = []
+        rep_ids = set()
 
-        return [
-            Comment(
-                text=comment["comment_text"],
-                num_represented=comment["comments_represented"],
-                id=comment["comment_id"],
-                form_letter=comment["form_letter"],
-                representative=True,
+        if not self.rep_comments:
+            return rep_comments
+
+        for comment in self.rep_comments:
+            rep_comments.append(
+                Comment(
+                    text=comment["comment_text"],
+                    num_represented=comment["comments_represented"],
+                    id=comment["comment_id"],
+                    form_letter=comment["form_letter"],
+                    representative=True,
+                )
             )
-            for comment in self.rep_comments
-        ]
+            rep_ids.add(comment["comment_id"])
+
+        return rep_comments, rep_ids
 
 
 @dataclass

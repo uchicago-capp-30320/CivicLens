@@ -9,7 +9,7 @@ from gensim.models import LdaModel, Phrases
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
-from textblob import TextBlob
+from nltk import pos_tag, word_tokenize
 from transformers import pipeline
 
 from civiclens.nlp.models import title_model, title_tokenizer
@@ -64,7 +64,7 @@ class TopicModel:
         docs = [
             [
                 token
-                for token, tag in TextBlob(doc).tags
+                for token, tag in pos_tag(word_tokenize(doc))
                 if not token.isnumeric()
                 and len(token) > 2
                 and tag in self.pos_tags
@@ -286,10 +286,11 @@ def topic_comment_analysis(
             Comment(text=comment_data.summary, id="Summary", source="Summary")
         ]
 
-    comments += comment_data.to_list()
     if not comment_data.rep_comments:
         comment_data.representative = False
-        comments += comment_data.get_nonrepresentative_comments()
+        comments += comment_data.to_list()
+    else:
+        comments += comment_data.to_list(only_rep=True)
 
     comment_topics = model.run_model(comments)
     topic_terms = model.get_terms()
