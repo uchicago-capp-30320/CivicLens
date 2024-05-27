@@ -63,3 +63,9 @@ def test_remove_html_tags():
     dirty = "This <br/>has some <b>tags<span>"
     clean = "This has some tags"
     assert parse_html(dirty) == clean
+
+
+def test_other_qoute_tags():
+    dirty = "ldquothe black dogrdquo"
+    clean = "'the black dog'"
+    assert parse_html(dirty) == clean

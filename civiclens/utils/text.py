@@ -29,7 +29,12 @@ def parse_html(text: str) -> str:
         Text cleaned of HTML entities and tags
     """
     utf_text = text.encode("latin1").decode("utf-8")
-    return strip_tags(html.unescape(utf_text))
+    clean_text = strip_tags(html.unescape(utf_text))
+
+    # remove other qoutes not parsed
+    clean_text = re.sub(r"(rs|ls|rd|ld)?quo", "'", clean_text)
+
+    return clean_text
 
 
 def truncate(text: str, num_words: int) -> str:
