@@ -5,7 +5,7 @@ import polars as pl
 import pytest
 
 from civiclens.utils.database_access import pull_data
-from civiclens.utils.text import clean_text
+from civiclens.utils.text import parse_html
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -47,13 +47,19 @@ def test_bad_query():
         pull_data(conn, "SELECT data FROM not_a_table", return_type="list")
 
 
-def test_clean_string():
-    dirty = "<br/> Here's some text. ndash Also more text"
-    clean = "Here's some text. Also more text"
-    assert clean_text(dirty) == clean
+def test_encode_string():
+    dirty = "(âAOsâ)"
+    clean = "(“AOs”)"
+    assert parse_html(dirty) == clean
 
 
-def test_clean_user_regex():
-    dirty = "The cat is home"
-    clean = "The dog is home"
-    assert clean_text(dirty, patterns=[(r"cat", "dog")]) == clean
+def test_remove_html_entities():
+    dirty = "&quot;Family Sponsor Immigration Act of 2002,&quot;"
+    clean = '"Family Sponsor Immigration Act of 2002,"'
+    assert parse_html(dirty) == clean
+
+
+def test_remove_html_tags():
+    dirty = "This <br/>has some <b>tags<span>"
+    clean = "This has some tags"
+    assert parse_html(dirty) == clean

@@ -1,5 +1,7 @@
+import html
 import re
-from typing import Optional
+
+from django.utils.html import strip_tags
 
 
 def regex_tokenize(text: str, pattern: str = r"\W+"):
@@ -16,37 +18,18 @@ def regex_tokenize(text: str, pattern: str = r"\W+"):
     return re.split(pattern, text)
 
 
-def clean_text(text: str, patterns: Optional[list[tuple]] = None) -> str:
-    r"""
-    String cleaning function for comments.
+def parse_html(text: str) -> str:
+    """
+    Encodes Regulations.gov text as UTF-8. Removes HTML entities, tags.
 
-    Args:
-        text (str): comment text
-        patterns (list[str]): optional list of regular expression patterns
-            to pass in (eg. [(r'\w+', "-")])
+    Arg
+        text (str): string to be cleaned
 
     Returns:
-        Cleaned verison of text
+        Text cleaned of HTML entities and tags
     """
-    if patterns is None:
-        patterns = []
-
-    text = re.sub(r"&#39;", "'", text)  # this replaces html entity with '
-    text = re.sub(r"&rdquo;", '"', text)  # this replaces html entity with "
-    text = re.sub(r"&amp;", "&", text)  # this replaces html entity with &
-    text = re.sub(r"â", "", text)
-    text = re.sub(r"<br\s*/?>", "", text)
-
-    text = re.sub(r"<\s*br\s*/>", " ", text)
-    text = re.sub(r"[^a-zA-Z0-9.'\"\?\: -]", "", text)
-    text = re.sub(r"\w*ndash\w*", "", text)
-
-    if patterns:
-        for pattern, replacement in patterns:
-            text = re.sub(pattern, replacement, text)
-
-    # remove extra whitespace
-    return re.sub(r"\s+", " ", text).strip()
+    utf_text = text.encode("latin1").decode("utf-8")
+    return strip_tags(html.unescape(utf_text))
 
 
 def truncate(text: str, num_words: int) -> str:
