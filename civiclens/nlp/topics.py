@@ -10,7 +10,7 @@ from gensim.models import HdpModel, Phrases
 
 from civiclens.nlp.models import label_model, label_tokenizer
 from civiclens.nlp.tools import Comment, RepComments
-from civiclens.utils.text import clean_text, regex_tokenize
+from civiclens.utils.text import parse_html, regex_tokenize
 
 
 def stopwords(model_path: Path) -> set[str]:
@@ -51,7 +51,7 @@ class HDAModel:
         docs = []
         document_ids = {}
         for idx, comment in enumerate(comments):
-            docs.append(self.tokenizer(clean_text(comment.text).lower()))
+            docs.append(self.tokenizer(parse_html(comment.text).lower()))
             document_ids[idx] = comment.id
 
         # remove numbers, 2 character tokens, and stop words
