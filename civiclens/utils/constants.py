@@ -17,6 +17,9 @@ DATABASE_HOST = os.environ.get("DATABASE_HOST")
 DATABASE_PORT = os.environ.get("DATABASE_PORT")
 DATABASE_SSLMODE = os.environ.get("DATABASE_SSLMODE")
 DATABASE_TEST = os.environ.get("DATBASE_TEST")
+SSH_ID = os.environ.get("SSH_ID")
+
+# DigitalOcean
 DIGITAL_OCEAN = os.environ.get("DIGITAL_OCEAN")
 DROPLET_ID = os.environ.get("DROPLET_ID")
 

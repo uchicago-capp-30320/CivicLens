@@ -1,7 +1,7 @@
 """Script to autodeploy CivicLens NLP jobs"""
 import pydo
 
-from civiclens.utils.constants import DIGITAL_OCEAN
+from civiclens.utils.constants import DIGITAL_OCEAN, SSH_ID
 
 
 do_client = pydo.Client(token=DIGITAL_OCEAN)
@@ -15,6 +15,7 @@ droplet_data = {
     "size": "s-4vcpu-8gb",
     "image": "ubuntu-24-04-x64",
     "user_data": cloud_config,
+    "ssh_keys": [SSH_ID],
     "monitoring": True,
 }
 
