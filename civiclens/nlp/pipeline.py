@@ -8,12 +8,14 @@ from datetime import datetime
 from functools import partial
 
 import polars as pl
+from pydo import Client
 
 from civiclens.nlp import titles
 from civiclens.nlp.comments import get_doc_comments, rep_comment_analysis
 from civiclens.nlp.models import sentence_transformer, sentiment_pipeline
 from civiclens.nlp.tools import RepComments, sentiment_analysis
 from civiclens.nlp.topics import HDAModel, LabelChain, topic_comment_analysis
+from civiclens.utils import constants
 from civiclens.utils.database_access import Database, pull_data, upload_comments
 
 
@@ -33,6 +35,7 @@ logging.basicConfig(
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--refresh", action="store_true", required=False)
+parser.add_argument("--cloud", action="store_true", required=False)
 
 
 def doc_generator(df: pl.DataFrame, doc_idx: int = 0):
@@ -154,3 +157,8 @@ if __name__ == "__main__":
 
         logger.info(f"Proccessed document: {doc_id}")
         upload_comments(Database(), comment_data)
+
+    if args.cloud:
+        # kill instance after job finishes
+        do_client = Client(token=constants.DIGITAL_OCEAN)
+        do_client.droplets.destroy(droplet_id=constants.DROPLET_ID)
