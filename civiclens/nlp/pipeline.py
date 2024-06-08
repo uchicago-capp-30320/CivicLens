@@ -66,15 +66,15 @@ def get_last_update():
 
 def docs_have_titles():
     """Gets all docs that have nlp titles already"""
-    titles_query = """SELECT document_id
+    titles_query = """SELECT document_id, doc_plain_english_title
                     FROM regulations_nlpoutput
                     WHERE doc_plain_english_title IS NOT NULL"""
     db_title = Database()
     docs_with_titles = pull_data(
-        query=titles_query, connection=db_title, schema=["document_id"]
+        query=titles_query, connection=db_title, return_type="list"
     )
-    docs_with_titles = docs_with_titles["document_id"].to_list()
-    return docs_with_titles
+
+    return dict(docs_with_titles)
 
 
 if __name__ == "__main__":
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     else:
         args = parser.parse_args()
         last_updated = get_last_update()
-        docs_with_titles = docs_have_titles()
+        doc_titles = docs_have_titles()
         # what docs need comment nlp update
         if last_updated is not None:
             docs_to_update = f"""SELECT document_id
@@ -101,7 +101,7 @@ if __name__ == "__main__":
                 SELECT COUNT(*)
                 FROM regulations_comment rc2
                 WHERE rc2.document_id = rc1.document_id
-                );"""  # noqa: E702, E231, E241
+                );"""  # noqa: E702, E231, E241, E202
         else:
             docs_to_update = """SELECT document_id
             FROM regulations_comment rc1
@@ -125,11 +125,13 @@ if __name__ == "__main__":
         comment_data = RepComments(document_id=doc_id)
 
         comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
-        if (doc_id not in docs_with_titles and comment_data.summary) or (
+        if (doc_id not in doc_titles and comment_data.summary) or (
             args.refresh and comment_data.summary
         ):
             new_title = title_creator.invoke(paragraph=comment_data.summary)
             comment_data.doc_plain_english_title = new_title
+        else:
+            comment_data.doc_comments = doc_titles[doc_id]
 
         # do rep comment nlp
         comment_df = get_doc_comments(doc_id)
