@@ -128,7 +128,7 @@ if __name__ == "__main__":
         comment_data = RepComments(document_id=doc_id)
 
         comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
-        current_title = doc_titles.get(doc_id, None)
+        current_title = doc_titles.get(doc_id, "")
 
         if (not current_title or args.refresh) and comment_data.summary:
             comment_data.doc_plain_english_title = title_creator.invoke(
