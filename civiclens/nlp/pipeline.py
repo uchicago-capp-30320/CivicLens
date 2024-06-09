@@ -128,13 +128,14 @@ if __name__ == "__main__":
         comment_data = RepComments(document_id=doc_id)
 
         comment_data.summary = titles.get_doc_summary(id=doc_id)[0, "summary"]
-        if (doc_id not in doc_titles and comment_data.summary) or (
-            args.refresh and comment_data.summary
-        ):
-            new_title = title_creator.invoke(paragraph=comment_data.summary)
-            comment_data.doc_plain_english_title = new_title
+        current_title = doc_titles.get(doc_id, None)
+
+        if (not current_title or args.refresh) and comment_data.summary:
+            comment_data.doc_plain_english_title = title_creator.invoke(
+                paragraph=comment_data.summary
+            )
         else:
-            comment_data.doc_comments = doc_titles[doc_id]
+            comment_data.doc_plain_english_title = current_title
 
         # do rep comment nlp
         comment_df = get_doc_comments(doc_id)
