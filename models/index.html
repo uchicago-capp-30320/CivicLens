@@ -1,0 +1,1026 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../architecture/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
+    
+    
+      
+        <title>Models - CivicLens DOCS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6543a935.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#modelresource-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="CivicLens DOCS" class="md-header__button md-logo" aria-label="CivicLens DOCS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CivicLens DOCS
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Models
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/uchicago-capp-30320/CivicLens" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    uchicago-capp-30320/CivicLens
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="CivicLens DOCS" class="md-nav__button md-logo" aria-label="CivicLens DOCS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    CivicLens DOCS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/uchicago-capp-30320/CivicLens" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    uchicago-capp-30320/CivicLens
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CivicLens DOCS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Models
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Models
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#modelresource-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model/Resource Documentation
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../collect/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    collect
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nlp/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nlp
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Endpoints
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Endpoints
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../endpoints/home/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../endpoints/learn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Learn
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../endpoints/search/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Search
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../endpoints/document/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Document
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../endpoints/about/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#modelresource-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model/Resource Documentation
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>Models</h1>
+
+<h3 id="modelresource-documentation">Model/Resource Documentation<a class="headerlink" href="#modelresource-documentation" title="Permanent link">&para;</a></h3>
+<p>The following describes the tables/models comprising our relational database. Each model features a short description noting its purpose and key fields. A table listing field names, datatypes, and a short description of each field is also included. The <code>Dockets</code>, <code>PublicComments</code>, and <code>Documents</code> tables mimic the regulations.gov tables, while the <code>NLP Output</code> table is our data generated based on the regulations.gov data tables that is used to populate the website. Where adequate NLP output can't be generated due to data sparsity, information from <code>PublicComments</code> and <code>Documents</code> is used.</p>
+<p><strong>Dockets</strong></p>
+<p><code>Dockets</code> represents collections of documents relevant to a proposed rule or notice. A given docket can contain documents available for commenting that represent the proposed rule change along with supplementary documents, such as a cost-benefit analysis, that support the proposed rule.</p>
+<p>Since the dockets themselves are unavailable to comment on (only the documents contained within can recieve comments), we chose to collect only enough information to link docments to a docket (via the <code>id</code> field ) and other basic information (date, posting agency).</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>PrimaryKey (Dockets)</td>
+<td>Regulations.gov UUID for a docket</td>
+</tr>
+<tr>
+<td>docketType</td>
+<td>CharField</td>
+<td>Type of docket (i.e. Rulemaking, Nonrulemaking)</td>
+</tr>
+<tr>
+<td>lastModifiedDate</td>
+<td>DateTime</td>
+<td>Date docket was last updated</td>
+</tr>
+<tr>
+<td>agencyID</td>
+<td>CharField</td>
+<td>ID of agency who posted docket</td>
+</tr>
+<tr>
+<td>objectID</td>
+<td>CharField</td>
+<td>Regulations.gov UUID for API response object</td>
+</tr>
+</tbody>
+</table>
+<p><strong>PublicComments</strong></p>
+<p><code>PublicComments</code> represents an individual comment posted to a document. Each comment features its own UUID (<code>id</code>) and is linked to its corresponding document by the <code>document</code> id (also links this table to the <code>Documents</code> table). Each comment is represented by the text of the comment, along with any available information collected by Regulations.gov on the comment. This data describes both the comment, such as whether the comment was withdrawn by the user, if the commented was posted to a restricted document (only open to certain agencies or interest groups), or the number of comments that feature the same text.</p>
+<p>This table also stores data on individuals who posted a comment, including their name, location, and organization.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>PrimaryKey (Comment)</td>
+<td>Regulations.gov UUID for a document</td>
+</tr>
+<tr>
+<td>commentOn</td>
+<td>CharField</td>
+<td>Document the commnent is posted to</td>
+</tr>
+<tr>
+<td>document</td>
+<td>ForeignKey (Documents)</td>
+<td>Document ID a comment is posted to</td>
+</tr>
+<tr>
+<td>duplicateComments</td>
+<td>IntegerField</td>
+<td>Number of duplicate comments</td>
+</tr>
+<tr>
+<td>stateProvinceRegion</td>
+<td>CharField</td>
+<td>State or province a comment is posted from</td>
+</tr>
+<tr>
+<td>subtype</td>
+<td>CharField</td>
+<td>Classifier for source of comment (e.g Member of Congress, Mass Mail Campaign)</td>
+</tr>
+<tr>
+<td>objectId</td>
+<td>CharField</td>
+<td>Regulations.gov UUID for API response object</td>
+</tr>
+<tr>
+<td>comment</td>
+<td>TextField</td>
+<td>Text of comment</td>
+</tr>
+<tr>
+<td>firstName</td>
+<td>CharField</td>
+<td>First name of commenter</td>
+</tr>
+<tr>
+<td>lastName</td>
+<td>CharField</td>
+<td>Last name of commenter</td>
+</tr>
+<tr>
+<td>address1</td>
+<td>CharField</td>
+<td>First line of commenter's address</td>
+</tr>
+<tr>
+<td>address2</td>
+<td>CharField</td>
+<td>Second line of commenter's address</td>
+</tr>
+<tr>
+<td>city</td>
+<td>CharField</td>
+<td>City of the commenter's address</td>
+</tr>
+<tr>
+<td>country</td>
+<td>CharField</td>
+<td>Commenter's country</td>
+</tr>
+<tr>
+<td>email</td>
+<td>EmailField</td>
+<td>Email address of commenter</td>
+</tr>
+<tr>
+<td>phone</td>
+<td>CharField</td>
+<td>Phone number of commenter</td>
+</tr>
+<tr>
+<td>govAgency</td>
+<td>CharField</td>
+<td>Agency receiving comments</td>
+</tr>
+<tr>
+<td>govAgencyType</td>
+<td>CharField</td>
+<td>Type of agency receiving comments</td>
+</tr>
+<tr>
+<td>organization</td>
+<td>CharField</td>
+<td>Commenter's organization</td>
+</tr>
+<tr>
+<td>originalDocumentId</td>
+<td>CharField</td>
+<td>Regulations.gov document ID</td>
+</tr>
+<tr>
+<td>modifyDate</td>
+<td>DateTime</td>
+<td>Date the comment was last modified</td>
+</tr>
+<tr>
+<td>pageCount</td>
+<td>IntegerField</td>
+<td>Number of pages for the comment</td>
+</tr>
+<tr>
+<td>postedDate</td>
+<td>DateTime</td>
+<td>Date the comment was inital posted</td>
+</tr>
+<tr>
+<td>receiveDate</td>
+<td>DateTime</td>
+<td>Date comment was recieved by posting agency</td>
+</tr>
+<tr>
+<td>title</td>
+<td>CharField</td>
+<td>Title of the commenter</td>
+</tr>
+<tr>
+<td>withdrawn</td>
+<td>Boolean</td>
+<td>Bool if the comment was withdrawn</td>
+</tr>
+<tr>
+<td>reasonWithdrawn</td>
+<td>CharField</td>
+<td>User submitted reason a comment was withdrawn</td>
+</tr>
+<tr>
+<td>zip</td>
+<td>charField</td>
+<td>Zip code of the commenter</td>
+</tr>
+<tr>
+<td>restrictReasonType</td>
+<td>CharField</td>
+<td>If document has been restricted for comment to certain users</td>
+</tr>
+<tr>
+<td>restrictReason</td>
+<td>CharField</td>
+<td>Summary of reason for comment restriction</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Documents</strong></p>
+<p><code>Documents</code> stores metadata on documents that can have comments posted to. To minimize our data intake, CivicLens only collects documents labeled as open-for-comment by the federal government. This does not mean that every document we collect features posted comments, but that some subset of the public is able to comment on each document. Each document also stores a URL to the Federal Register's XML version of the full document text (<code>fullTextXmlUrl</code>). This is used to extract the full text of the proposed rule which is not available through regulations.gov. <code>summary</code> contains the plain English summary of the rule written by the Federal government which will be available on our site under the <code>/documents</code> endpoint.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>PrimaryKey (Documents)</td>
+<td>Regulations.gov UUID for a document</td>
+</tr>
+<tr>
+<td>documentType</td>
+<td>CharField</td>
+<td>Type of document (i.e. Proposed Rule, Notice)</td>
+</tr>
+<tr>
+<td>lastModifiedDate</td>
+<td>DateTime</td>
+<td>Date document was last updated</td>
+</tr>
+<tr>
+<td>withdrawn</td>
+<td>BooleanField</td>
+<td>Boolean if the documentment was withdrawn</td>
+</tr>
+<tr>
+<td>agencyID</td>
+<td>CharField</td>
+<td>ID of agency who posted document</td>
+</tr>
+<tr>
+<td>commentEndDate</td>
+<td>DateTime</td>
+<td>End date of document commenting period</td>
+</tr>
+<tr>
+<td>commentStartDate</td>
+<td>DateTime</td>
+<td>Start date of document commenting period</td>
+</tr>
+<tr>
+<td>objectId</td>
+<td>CharField</td>
+<td>Regulations.gov UUID for API response object</td>
+</tr>
+<tr>
+<td>fullTextXmlUrl</td>
+<td>URL</td>
+<td>Link to Federal Registar's XML text of rule</td>
+</tr>
+<tr>
+<td>subAgy</td>
+<td>CharField</td>
+<td>Relevant office or department of posting agency</td>
+</tr>
+<tr>
+<td>agencyType</td>
+<td>CharField</td>
+<td>Name of posting agency (e.g. FDA)</td>
+</tr>
+<tr>
+<td>CRF</td>
+<td>CharField</td>
+<td>Code of Federal Regulations number</td>
+</tr>
+<tr>
+<td>RIN</td>
+<td>CharField</td>
+<td>Regulation Identification Number used by Federal Register</td>
+</tr>
+<tr>
+<td>title</td>
+<td>CharField</td>
+<td>Regulations.gov document title</td>
+</tr>
+<tr>
+<td>summary</td>
+<td>TextField</td>
+<td>Plain English summary of document</td>
+</tr>
+<tr>
+<td>furtherInformation</td>
+<td>TextField</td>
+<td>Additional information provided with document</td>
+</tr>
+</tbody>
+</table>
+<p><strong>NLP Output</strong></p>
+<p>The <code>NLP Output</code> table stores the information generated by the NLP pipeline that is run by our website. There is one row for each document in the database which contains information on representative comments, new titles, sentiment, and more. This data is used to populate the <code>search</code> and <code>document</code> pages on the website with relevant information about a document.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>document_id</td>
+<td>OneToOneField (Documents)</td>
+<td>Regulations.gov UUID for a document</td>
+</tr>
+<tr>
+<td>comments</td>
+<td>JSONField</td>
+<td>Representative comments that can be form letters or unique comments</td>
+</tr>
+<tr>
+<td>doc_plain_english_title</td>
+<td>CharField</td>
+<td>AI generated simple title for a document</td>
+</tr>
+<tr>
+<td>num_total_comments</td>
+<td>IntegerField</td>
+<td>Number of all comments on a document</td>
+</tr>
+<tr>
+<td>num_unique_comments</td>
+<td>IntegerField</td>
+<td>Number of unique submissions including types of form letters</td>
+</tr>
+<tr>
+<td>num_representative_comment</td>
+<td>IntegerField</td>
+<td>Number of representative comments</td>
+</tr>
+<tr>
+<td>topics</td>
+<td>JSONField</td>
+<td>NLP generated topics for the document from the representative comments</td>
+</tr>
+<tr>
+<td>num_topics</td>
+<td>IntegerField</td>
+<td>Number of topics identified</td>
+</tr>
+<tr>
+<td>last_updated</td>
+<td>DateTimeField</td>
+<td>Last time the NLP was updated for the document</td>
+</tr>
+<tr>
+<td>created_at</td>
+<td>DateTimeField</td>
+<td>Time the document was created</td>
+</tr>
+<tr>
+<td>search_topics</td>
+<td>TextField</td>
+<td>NLP generated topics for the django search to reference</td>
+</tr>
+<tr>
+<td>is_representative</td>
+<td>BooleanField</td>
+<td>Does the document have representative comments</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.ad660dcc.min.js"></script>
+      
+    
+  </body>
+</html>
