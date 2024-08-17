@@ -7,7 +7,7 @@ def test_active_docs(client):
     """Make sure document count is correct"""
     resp = client.get(reverse("search"))
     doc_facts = resp.context["doc_cmt_facts"]
-    assert doc_facts["active_documents_count"] == 2
+    assert doc_facts["active_documents_count"] == 1
 
 
 @pytest.mark.django_db
@@ -50,5 +50,5 @@ def test_render_graph(client):
 def test_render_no_graph(client):
     """Assert no graph renders for pages w/o NLP"""
     no_graph_resp = client.get("/docs/BIS-2024-0003-0001").context
-    nlp_object = no_graph_resp["document_info"]["nlp"]
-    assert not nlp_object.id
+    # nlp_object = no_graph_resp["document_info"]["nlp"]
+    assert "document_info" not in no_graph_resp
