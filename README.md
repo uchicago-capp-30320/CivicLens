@@ -1,3 +1,4 @@
+Note: as of 2025, this project is no longer under active development and our site is no longer live. We encourage anyone interested to continue developing this project.
 
 # CivicLens
 
@@ -55,7 +56,7 @@ To run the test suite, run `poetry run pytest`.
 
 
 ## Development
-CivicLens is currently under active development with a v1 of the project live at [civic-lens.org](https://civic-lens.org/).
+CivicLens was developed with a v1 of the project live at [civic-lens.org](https://civic-lens.org/).
 
 We welcome contributors who are interested in developing the future of this project! You can see our documentation and community guidelines [here](https://uchicago-capp-30320.github.io/CivicLens/) to get started. To begin contributing, create an issue on github, submit a PR, and it will be reviewed by a member of our team.
 
