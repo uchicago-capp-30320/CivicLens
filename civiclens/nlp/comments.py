@@ -7,6 +7,7 @@ from sklearn.cluster import AgglomerativeClustering
 
 from civiclens.nlp.tools import RepComments
 from civiclens.utils.database_access import Database, pull_data
+from civiclens.utils.text import parse_html
 
 
 def get_doc_comments(id: str) -> pl.DataFrame:
@@ -41,7 +42,10 @@ def get_doc_comments(id: str) -> pl.DataFrame:
     # TODO create clusters column in comment table and delete these lines
     rows = filtered_df.shape[0]
     filtered_df = filtered_df.with_columns(
-        pl.Series("cluster", [None] * rows).cast(pl.Utf8)
+        pl.Series("cluster", [None] * rows).cast(pl.Utf8),
+        pl.col("comment")
+        .apply(parse_html, return_dtype=pl.Utf8)
+        .alias("comment"),
     )
     return filtered_df
 

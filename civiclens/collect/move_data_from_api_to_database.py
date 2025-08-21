@@ -19,7 +19,7 @@ from civiclens.utils.constants import (
     DATABASE_USER,
     REG_GOV_API_KEY,
 )
-from civiclens.utils.text import clean_text
+from civiclens.utils.text import parse_html
 
 
 # Configure logging
@@ -525,7 +525,7 @@ def clean_document_data(document_data: json) -> None:
     Clean document data in place; run cleaning code on summary
     """
     if document_data["summary"] is not None:
-        document_data["summary"] = clean_text(document_data["summary"])
+        document_data["summary"] = parse_html(document_data["summary"])
 
 
 def check_CFR_data(document_data: json) -> bool:
@@ -850,7 +850,7 @@ def clean_comment_data(comment_data: json) -> None:
 
     # clean the text
     if comment_text_attributes["comment"] is not None:
-        comment_text_attributes["comment"] = clean_text(
+        comment_text_attributes["comment"] = parse_html(
             comment_text_attributes["comment"]
         )
 
