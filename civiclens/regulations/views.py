@@ -82,7 +82,8 @@ def search_page(request):
 
     # join docs with comments, only on the docs open for comment
     joined_table = (
-        Document.objects.all()
+        Document.objects.filter(comment_end_date__gt=today)
+        .all()
         .select_related("comment_counts")
         .filter(id__in=[item["document_id"] for item in comment_counts])
     )
